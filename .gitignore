@@ -1,0 +1,15 @@
+# JetBrains IDE
+.idea/
+
+# Gradle build files
+build/
+.gradle/
+
+# Java compiled classes
+*.class
+
+# OS files
+.DS_Store
+
+# Environment variables
+.env
