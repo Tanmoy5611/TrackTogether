@@ -83,6 +83,7 @@ public class TravelGroup {
     // Method to add a member
     public void addMember(TravelGroupMember member) {
         members.add(member);
+        member.setGroup(this);
     }
 }
 

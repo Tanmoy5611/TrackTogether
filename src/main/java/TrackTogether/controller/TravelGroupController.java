@@ -3,10 +3,7 @@ package TrackTogether.controller;
 import TrackTogether.domain.TransportMode;
 import TrackTogether.domain.TravelGroup;
 import TrackTogether.service.TravelGroupService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -34,5 +31,13 @@ public class TravelGroupController {
                 location,
                 mode
         );
+    }
+
+    // Endpoint that allows a member to join a travel group
+    @PostMapping("/{groupId}/join")
+    public void joinTravelGroup(@PathVariable UUID groupId,
+                                @RequestParam UUID memberId) {
+
+        travelGroupService.joinTravelGroup(groupId, memberId);
     }
 }
