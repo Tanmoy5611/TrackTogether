@@ -86,7 +86,6 @@ public class TravelGroup {
         member.setGroup(this);
     }
 
-
     // Method to check the availability of spots (Domain-driven Design)
     public boolean hasAvailableSpots(long currentMembers) {
         return currentMembers < maxMembers;
