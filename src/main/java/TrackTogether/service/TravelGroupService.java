@@ -2,6 +2,7 @@ package TrackTogether.service;
 
 import TrackTogether.domain.*;
 import TrackTogether.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,6 +34,7 @@ public class TravelGroupService {
     }
 
     // Creates a new TravelGroup for a given activity
+    @Transactional
     public TravelGroup createTravelGroup(UUID activityId,
                                          Integer maxMembers,
                                          String location,
@@ -40,7 +42,10 @@ public class TravelGroupService {
 
         // Retrieve the activity from the database
         Activity activity = activityRepository.findById(activityId)
-                .orElseThrow(() -> new RuntimeException("Activity not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Activity not found"
+                ));
 
         // Create a new TravelGroup with the provided information
         TravelGroup group = new TravelGroup(maxMembers, location, mode);
@@ -61,14 +66,20 @@ public class TravelGroupService {
         return savedGroup;
     }
 
+    @Transactional
     public void joinTravelGroup(UUID groupId, UUID memberId) {
 
         TravelGroup group = travelGroupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Travel group not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Travel group not found"
+                ));
 
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
-
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Member not found"
+                ));
         // Prevent duplicate joins
         boolean alreadyJoined =
                 travelGroupMemberRepository.existsByGroupAndMember(group, member);
@@ -80,16 +91,17 @@ public class TravelGroupService {
             );
         }
 
-        // check capacity
+        // Validate available spots
         long memberCount = travelGroupMemberRepository.countByGroup(group);
 
-        if (memberCount >= group.getMaxMembers()) {
+        if (!group.hasAvailableSpots(memberCount)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Travel group is full"
             );
         }
 
+        // Create membership
         TravelGroupMember groupMember = new TravelGroupMember();
         groupMember.setGroup(group);
         groupMember.setMember(member);
@@ -97,6 +109,7 @@ public class TravelGroupService {
         travelGroupMemberRepository.save(groupMember);
     }
 
+    @Transactional
     public void leaveTravelGroup(UUID groupId, UUID memberId) {
 
         TravelGroup group = travelGroupRepository.findById(groupId)
