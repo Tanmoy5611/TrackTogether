@@ -96,4 +96,37 @@ public class TravelGroupService {
 
         travelGroupMemberRepository.save(groupMember);
     }
+
+    public void leaveTravelGroup(UUID groupId, UUID memberId) {
+
+        TravelGroup group = travelGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Travel group not found"
+                ));
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Member not found"
+                ));
+
+        TravelGroupMember membership = travelGroupMemberRepository
+                .findByGroupAndMember(group, member)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Member is not part of this travel group"
+                ));
+
+        // remove membership
+        travelGroupMemberRepository.delete(membership);
+
+        // check if group is empty
+        // If the last member leaves, remove the travel group to prevent empty or inactive groups
+        long remainingMembers = travelGroupMemberRepository.countByGroup(group);
+
+        if (remainingMembers == 0) {
+            travelGroupRepository.delete(group);
+        }
+    }
 }

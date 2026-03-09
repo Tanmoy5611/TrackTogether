@@ -40,4 +40,12 @@ public class TravelGroupController {
 
         travelGroupService.joinTravelGroup(groupId, memberId);
     }
+
+
+    @DeleteMapping("/{groupId}/leave")
+    public void leaveTravelGroup(@PathVariable UUID groupId,
+                                 @RequestParam UUID memberId) {
+
+        travelGroupService.leaveTravelGroup(groupId, memberId);
+    }
 }
