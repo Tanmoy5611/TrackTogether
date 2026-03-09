@@ -134,7 +134,6 @@ public class TravelGroupService {
         // remove membership
         travelGroupMemberRepository.delete(membership);
 
-
         // check if group is empty
         // If the last member leaves, remove the travel group to prevent empty or inactive groups
         long remainingMembers = travelGroupMemberRepository.countByGroup(group);
