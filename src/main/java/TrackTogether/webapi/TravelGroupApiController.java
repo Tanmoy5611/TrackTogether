@@ -1,4 +1,4 @@
-package TrackTogether.controller;
+package TrackTogether.webapi;
 
 import TrackTogether.domain.TransportMode;
 import TrackTogether.domain.TravelGroup;
@@ -9,11 +9,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/travelgroups")
-public class TravelGroupController {
+public class TravelGroupApiController {
 
     private final TravelGroupService travelGroupService;
 
-    public TravelGroupController(TravelGroupService travelGroupService) {
+    public TravelGroupApiController(TravelGroupService travelGroupService) {
         this.travelGroupService = travelGroupService;
     }
 
