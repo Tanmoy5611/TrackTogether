@@ -24,22 +24,18 @@ public class TravelGroupMember {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
+
     public TravelGroupMember(){
 
     }
 
-    public TravelGroupMember(Member member, TravelGroup group, Integer id) {
+    public TravelGroupMember(TravelGroup group, Member member, Location location) {
         this.group = group;
         this.member = member;
-        this.id = id;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
+        this.location = location;
     }
 
     public TravelGroup getGroup() {
@@ -57,4 +53,13 @@ public class TravelGroupMember {
     public void setMember(Member member) {
         this.member = member;
     }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
 }

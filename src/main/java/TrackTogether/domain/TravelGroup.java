@@ -19,8 +19,8 @@ public class TravelGroup {
     private String location;         // meeting location
     private Integer maxMembers;  // number of available spots
 
-    @ManyToOne
-    @JoinColumn(name = "activity_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "activity_id", nullable = false)
     private Activity activity;       // the activity this group belongs to
 
     @OneToOne(mappedBy = "travelGroup", optional = false)

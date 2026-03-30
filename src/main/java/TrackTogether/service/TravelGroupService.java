@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,6 +32,11 @@ public class TravelGroupService {
         this.conversationRepository = conversationRepository;
         this.travelGroupMemberRepository = travelGroupMemberRepository;
         this.memberRepository = memberRepository;
+    }
+
+    // Get all travel groups
+    public List<TravelGroup> getAllTravelGroups() {
+        return travelGroupRepository.findAll();
     }
 
     // Creates a new TravelGroup for a given activity
