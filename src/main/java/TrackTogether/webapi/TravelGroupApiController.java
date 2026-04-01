@@ -1,51 +1,66 @@
 package TrackTogether.webapi;
 
-import TrackTogether.domain.TransportMode;
 import TrackTogether.domain.TravelGroup;
 import TrackTogether.service.TravelGroupService;
+import TrackTogether.webapi.dto.TravelGroupDto;
+import TrackTogether.webapi.dto.TravelGroupRequestDto;
+import TrackTogether.webapi.mapper.TravelGroupMapper;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
+// REST controller for TravelGroup API endpoints
 @RestController
 @RequestMapping("/api/travelgroups")
 public class TravelGroupApiController {
 
-    private final TravelGroupService travelGroupService;
+    private final TravelGroupService service;
+    private final TravelGroupMapper mapper;
 
-    public TravelGroupApiController(TravelGroupService travelGroupService) {
-        this.travelGroupService = travelGroupService;
+    // Constructor injection
+    public TravelGroupApiController(TravelGroupService service,
+                                    TravelGroupMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
     }
 
-    // Endpoint to create a new travel group for an activity
+    // Create TravelGroup
     @PostMapping
-    public TravelGroup createGroup(@RequestParam UUID activityId,
-                                   @RequestParam Integer maxMembers,
-                                   @RequestParam String location,
-                                   @RequestParam TransportMode mode) {
+    public TravelGroupDto createTravelGroup(@RequestBody TravelGroupRequestDto request) {
 
-        // Delegate the creation logic to the service layer
-        return travelGroupService.createTravelGroup(
-                activityId,
-                maxMembers,
-                location,
-                mode
+        TravelGroup group = service.createTravelGroup(
+                request.getActivityId(),
+                request.getMaxMembers(),
+                request.getLocation(),
+                request.getTransportMode()
         );
+
+        return mapper.toDto(group);
     }
 
-    // Endpoint that allows a member to join a travel group
-    @PostMapping("/{groupId}/join")
+    // Get all TravelGroups
+    @GetMapping
+    public List<TravelGroupDto> getAllTravelGroups() {
+        return service.getAllTravelGroups()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    // Join TravelGroup (add member)
+    @PostMapping("/{groupId}/members/{memberId}")
     public void joinTravelGroup(@PathVariable UUID groupId,
-                                @RequestParam UUID memberId) {
+                                @PathVariable UUID memberId) {
 
-        travelGroupService.joinTravelGroup(groupId, memberId);
+        service.joinTravelGroup(groupId, memberId);
     }
 
-
-    @DeleteMapping("/{groupId}/leave")
+    // Leave TravelGroup (remove member)
+    @DeleteMapping("/{groupId}/members/{memberId}")
     public void leaveTravelGroup(@PathVariable UUID groupId,
-                                 @RequestParam UUID memberId) {
+                                 @PathVariable UUID memberId) {
 
-        travelGroupService.leaveTravelGroup(groupId, memberId);
+        service.leaveTravelGroup(groupId, memberId);
     }
 }

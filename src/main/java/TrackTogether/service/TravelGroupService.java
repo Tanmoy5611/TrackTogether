@@ -53,8 +53,22 @@ public class TravelGroupService {
                         "Activity not found"
                 ));
 
+        // Validate input first
+        if (maxMembers == null || maxMembers <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max members must be positive");
+        }
+
+        if (location == null || location.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
+        }
+
+        if (mode == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transport mode is required");
+        }
+
         // Create a new TravelGroup with the provided information
         TravelGroup group = new TravelGroup(maxMembers, location, mode);
+
 
         // Link the group to the activity
         group.setActivity(activity);
@@ -66,6 +80,8 @@ public class TravelGroupService {
         Conversation conversation = new Conversation();
         conversation.setTravelGroup(savedGroup);
         conversation.setCreatedAt(LocalDateTime.now());
+
+        savedGroup.setConversation(conversation);
 
         conversationRepository.save(conversation);
 
