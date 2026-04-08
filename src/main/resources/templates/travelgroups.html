@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="#{travelgroup.list.title}">Travel Groups</title>
+
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h1 class="h3 fw-bold mb-1"
+                th:text="#{travelgroup.list.heading}">
+                Travel Groups
+            </h1>
+            <p class="text-muted mb-0"
+               th:text="#{travelgroup.list.subtitle}">
+                Explore and join available travel groups.
+            </p>
+        </div>
+
+        <a th:href="@{/travelgroups/create}"
+           class="btn btn-primary"
+           th:text="#{travelgroup.list.create}">
+            Create Group
+        </a>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(groups)}"
+         class="text-center py-5">
+        <p class="text-muted"
+           th:text="#{travelgroup.list.empty}">
+            No travel groups available.
+        </p>
+    </div>
+
+    <!-- Groups List -->
+    <div class="row g-4" th:if="${!#lists.isEmpty(groups)}">
+
+        <div class="col-md-6 col-lg-4"
+             th:each="group : ${groups}">
+
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+
+                <div class="card-body d-flex flex-column">
+
+                    <!-- Title -->
+                    <h5 class="card-title fw-semibold mb-2"
+                        th:text="${group.location}">
+                        Antwerp
+                    </h5>
+
+                    <!-- Transport -->
+                    <p class="text-muted mb-2">
+                        <strong th:text="#{travelgroup.list.transport}">
+                            Transport:
+                        </strong>
+                        <span th:text="${group.transportMode}">
+                            CAR
+                        </span>
+                    </p>
+
+                    <!-- Capacity -->
+                    <p class="text-muted mb-3">
+                        <strong th:text="#{travelgroup.list.capacity}">
+                            Capacity:
+                        </strong>
+                        <span th:text="${group.maxMembers}">
+                            5
+                        </span>
+                    </p>
+
+                    <!-- Actions -->
+                    <div class="mt-auto d-flex gap-2 flex-wrap">
+
+                        <!-- Join -->
+                        <form th:action="@{|/travelgroups/${group.groupId}/join|}"
+                              method="post">
+                            <input type="hidden" name="memberId"
+                                   value="11111111-1111-1111-1111-111111111111"/>
+                            <button type="submit"
+                                    class="btn btn-success btn-sm"
+                                    th:text="#{travelgroup.list.join}">
+                                Join
+                            </button>
+                        </form>
+
+                        <!-- Leave -->
+                        <form th:action="@{|/travelgroups/${group.groupId}/leave|}"
+                              method="post">
+                            <input type="hidden" name="memberId"
+                                   value="11111111-1111-1111-1111-111111111111"/>
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm"
+                                    th:text="#{travelgroup.list.leave}">
+                                Leave
+                            </button>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
