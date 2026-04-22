@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>Home</title>
+</head>
+<body class="kdg-page">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+ <main class="kdg-main">
+ <h1>My events</h1>
+ <div>
+     <a th:each="event : ${events}"
+        th:href="@{/events/{id}(id=${event.id})}"
+        class="event">
+         <h3 th:text="${event.title}">Event Title</h3>
+         <p><strong>Date:</strong> <span th:text="${event.date}">2026-01-01</span></p>
+         <p th:text="${event.description}">Description here</p>
+     </a>
+ </div>
+ </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+
+</div>
+
+<script type="module"
+        th:src="@{/js/main.js}">
+</script>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          href="../../static/css/main.css"
+          th:href="@{/css/main.css}">
+</head>
+<body>
+<header th:fragment="appNav">
+    <nav class="kdg-nav" aria-label="Main navigation">
+        <div class="kdg-nav__inner">
+            <a class="kdg-brand"
+               href="../index.html"
+               th:href="@{/}">
+                <img class="kdg-brand__logo"
+                     src="../../static/images/logo.png"
+                     th:src="@{/images/logo.png}"
+                     alt="TrackTogether">
+            </a>
+
+            <ul class="kdg-nav__links">
+                <li>
+                    <a class="kdg-nav__link"
+                       data-nav-item="home"
+                       href="../index.html"
+                       th:href="@{/}">
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <a class="kdg-nav__link"
+                       data-nav-item="travelgroups"
+                       href="../travelgroups.html"
+                       th:href="@{/travelgroups}">
+                        Travel Groups
+                    </a>
+                </li>
+                <li>
+                    <a class="kdg-nav__link"
+                       data-nav-item="chats"
+                       href="../chat-overview.html"
+                       th:href="@{/chat}">
+                        Chats
+                    </a>
+                </li>
+                <li>
+                    <a class="kdg-nav__link"
+                       data-nav-item="moderation"
+                       href="../moderator.html"
+                       th:href="@{/moderator}">
+                        Moderation
+                    </a>
+                </li>
+                <li>
+                    <a class="kdg-enrol"
+                       data-nav-item="profile"
+                       href="../userOverview.html"
+                       th:href="@{/member/profile}">
+                        Profile
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <script type="module"
+            th:src="@{/js/main.js}">
+    </script>
+</header>
+</body>
+</html>
