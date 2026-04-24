@@ -2,160 +2,201 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
     <title th:text="#{travelgroup.create.title}">Create Travel Group</title>
-
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body class="bg-light">
+<body class="kdg-page">
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-6">
+<div class="kdg-shell">
 
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-body p-4 p-md-5">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
 
-                    <div class="mb-4 text-center">
-                        <h1 class="h3 fw-bold mb-2"
-                            th:text="#{travelgroup.create.heading}">
-                            Create Travel Group
-                        </h1>
-                        <p class="text-muted mb-0"
-                           th:text="#{travelgroup.create.subtitle}">
-                            Fill in the details to create a new travel group.
-                        </p>
-                    </div>
+    <main class="kdg-main">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html"
+               th:href="@{/}">
+                <i class="bi bi-house-door" aria-hidden="true"></i>
+                Home
+            </a>
+            <span>&gt;</span>
+            <a href="travelgroups.html"
+               th:href="@{/travelgroups}">
+                <i class="bi bi-people" aria-hidden="true"></i>
+                Travel Groups
+            </a>
+            <span>&gt;</span>
+            <span th:text="#{travelgroup.create.heading}">Create Travel Group</span>
+        </nav>
 
-                    <form th:action="@{/travelgroups/create}"
-                          th:object="${travelGroupForm}"
-                          method="post"
-                          class="needs-validation"
-                          novalidate>
-
-                        <div class="mb-3">
-                            <label for="activityId" class="form-label"
-                                   th:text="#{travelgroup.form.activityId}">
-                                Activity ID
-                            </label>
-                            <input type="text"
-                                   id="activityId"
-                                   th:field="*{activityId}"
-                                   class="form-control"
-                                   placeholder="Enter activity UUID"
-                                   required>
-                            <div class="form-text"
-                                 th:text="#{travelgroup.form.activityId.help}">
-                                Enter the UUID of the activity.
-                            </div>
-                            <div class="invalid-feedback"
-                                 th:text="#{travelgroup.form.activityId.invalid}">
-                                Please enter a valid activity id.
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="maxMembers" class="form-label"
-                                   th:text="#{travelgroup.form.maxMembers}">
-                                Maximum Members
-                            </label>
-                            <input type="number"
-                                   id="maxMembers"
-                                   th:field="*{maxMembers}"
-                                   class="form-control"
-                                   min="1"
-                                   placeholder="Enter maximum number of members"
-                                   required>
-                            <div class="invalid-feedback"
-                                 th:text="#{travelgroup.form.maxMembers.invalid}">
-                                Please enter a valid number greater than 0.
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="location" class="form-label"
-                                   th:text="#{travelgroup.form.location}">
-                                Location
-                            </label>
-                            <input type="text"
-                                   id="location"
-                                   th:field="*{location}"
-                                   class="form-control"
-                                   placeholder="Enter meeting location"
-                                   required>
-                            <div class="invalid-feedback"
-                                 th:text="#{travelgroup.form.location.invalid}">
-                                Please enter a location.
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="mode" class="form-label"
-                                   th:text="#{travelgroup.form.mode}">
-                                Transport Mode
-                            </label>
-                            <select id="mode"
-                                    th:field="*{mode}"
-                                    class="form-select"
-                                    required>
-                                <option value=""
-                                        disabled
-                                        selected
-                                        th:text="#{travelgroup.form.mode.placeholder}">
-                                    Select a transport mode
-                                </option>
-                                <option th:value="CAR"
-                                        th:text="#{transportMode.car}">
-                                    Car
-                                </option>
-                                <option th:value="BIKE"
-                                        th:text="#{transportMode.bike}">
-                                    Bike
-                                </option>
-                                <option th:value="BUS"
-                                        th:text="#{transportMode.bus}">
-                                    Bus
-                                </option>
-                                <option th:value="TRAIN"
-                                        th:text="#{transportMode.train}">
-                                    Train
-                                </option>
-                                <option th:value="WALK"
-                                        th:text="#{transportMode.walk}">
-                                    Walk
-                                </option>
-                            </select>
-                            <div class="invalid-feedback"
-                                 th:text="#{travelgroup.form.mode.invalid}">
-                                Please select a transport mode.
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between gap-2 flex-wrap">
-                            <a th:href="@{/travelgroups}"
-                               class="btn btn-outline-secondary"
-                               th:text="#{common.cancel}">
-                                Cancel
-                            </a>
-
-                            <button type="submit"
-                                    class="btn btn-primary"
-                                    th:text="#{travelgroup.create.submit}">
-                                Create Travel Group
-                            </button>
-                        </div>
-                    </form>
-
-                </div>
+        <section class="kdg-page-header">
+            <div>
+                <p class="kdg-eyebrow">TrackTogether</p>
+                <h1 class="kdg-title"
+                    th:text="#{travelgroup.create.heading}">
+                    Create Travel Group
+                </h1>
+                <p class="kdg-subtitle"
+                   th:text="#{travelgroup.create.subtitle}">
+                    Fill in the details to create a new travel group.
+                </p>
             </div>
+        </section>
 
-        </div>
-    </div>
+        <section class="kdg-panel kdg-panel--form">
+            <form action="#"
+                  th:action="@{/travelgroups/create}"
+                  th:object="${travelGroupForm}"
+                  method="post"
+                  class="kdg-form">
+
+                <div class="kdg-form-row">
+                    <label for="activityId" class="kdg-label">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        <span th:text="#{travelgroup.form.activityId}">Activity ID</span>
+                    </label>
+                    <div class="kdg-input-shell">
+                        <i class="bi bi-hash" aria-hidden="true"></i>
+                        <input type="text"
+                               id="activityId"
+                               name="activityId"
+                               th:field="*{activityId}"
+                               class="kdg-control"
+                               th:errorclass="is-invalid"
+                               placeholder="Enter activity UUID"
+                               required>
+                    </div>
+                    <div class="kdg-help"
+                         th:text="#{travelgroup.form.activityId.help}">
+                        Enter the UUID of the activity.
+                    </div>
+                    <div class="invalid-feedback"
+                         th:text="#{travelgroup.form.activityId.invalid}">
+                        Please enter a valid activity id.
+                    </div>
+                </div>
+
+                <div class="kdg-form-row">
+                    <label for="maxMembers" class="kdg-label">
+                        <i class="bi bi-people" aria-hidden="true"></i>
+                        <span th:text="#{travelgroup.form.maxMembers}">Maximum Members</span>
+                    </label>
+                    <div class="kdg-input-shell">
+                        <i class="bi bi-person-plus" aria-hidden="true"></i>
+                        <input type="number"
+                               id="maxMembers"
+                               name="maxMembers"
+                               th:field="*{maxMembers}"
+                               class="kdg-control"
+                               th:errorclass="is-invalid"
+                               min="1"
+                               placeholder="Enter maximum number of members"
+                               required>
+                    </div>
+                    <div class="invalid-feedback"
+                         th:text="#{travelgroup.form.maxMembers.invalid}">
+                        Please enter a valid number greater than 0.
+                    </div>
+                </div>
+
+                <div class="kdg-form-row">
+                    <label for="location" class="kdg-label">
+                        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                        <span th:text="#{travelgroup.form.location}">Location</span>
+                    </label>
+                    <div class="kdg-input-shell">
+                        <i class="bi bi-pin-map" aria-hidden="true"></i>
+                        <input type="text"
+                               id="location"
+                               name="location"
+                               th:field="*{location}"
+                               class="kdg-control"
+                               th:errorclass="is-invalid"
+                               placeholder="Enter meeting location"
+                               required>
+                    </div>
+                    <div class="invalid-feedback"
+                         th:text="#{travelgroup.form.location.invalid}">
+                        Please enter a location.
+                    </div>
+                </div>
+
+                <div class="kdg-form-row">
+                    <label for="mode" class="kdg-label">
+                        <i class="bi bi-signpost-split" aria-hidden="true"></i>
+                        <span th:text="#{travelgroup.form.mode}">Transport Mode</span>
+                    </label>
+                    <div class="kdg-input-shell">
+                        <i class="bi bi-car-front" aria-hidden="true"></i>
+                        <select id="mode"
+                                name="mode"
+                                th:field="*{mode}"
+                                class="kdg-control"
+                                th:errorclass="is-invalid"
+                                required>
+                            <option value=""
+                                    disabled
+                                    selected
+                                    th:text="#{travelgroup.form.mode.placeholder}">
+                                Select a transport mode
+                            </option>
+                            <option value="CAR"
+                                    th:value="CAR"
+                                    th:text="#{transportMode.car}">
+                                Car
+                            </option>
+                            <option value="CARPOOL"
+                                    th:value="CARPOOL"
+                                    th:text="#{transportMode.carpool}">
+                                Carpool
+                            </option>
+                            <option value="BIKE"
+                                    th:value="BIKE"
+                                    th:text="#{transportMode.bike}">
+                                Bike
+                            </option>
+                            <option value="WALK"
+                                    th:value="WALK"
+                                    th:text="#{transportMode.walk}">
+                                Walk
+                            </option>
+                            <option value="PUBLIC_TRANSPORT"
+                                    th:value="PUBLIC_TRANSPORT"
+                                    th:text="#{transportMode.publicTransport}">
+                                Public Transport
+                            </option>
+                        </select>
+                    </div>
+                    <div class="invalid-feedback"
+                         th:text="#{travelgroup.form.mode.invalid}">
+                        Please select a transport mode.
+                    </div>
+                </div>
+
+                <div class="kdg-form-actions">
+                    <a th:href="@{/travelgroups}"
+                       href="travelgroups.html"
+                       class="kdg-button kdg-button--secondary">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        <span th:text="#{common.cancel}">Cancel</span>
+                    </a>
+
+                    <button type="submit"
+                            class="kdg-button">
+                        <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                        <span th:text="#{travelgroup.create.submit}">Create Travel Group</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
 </div>
 
-<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
-<script type="module" th:src="@{/js/main.js}"></script>
+<script src="/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<script type="module"
+        src="../static/js/main.js"
+        th:src="@{/js/main.js}"></script>
 </body>
 </html>

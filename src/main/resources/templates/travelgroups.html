@@ -2,114 +2,157 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="#{travelgroup.list.title}">Travel Groups</title>
-
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body class="bg-light">
 
-<div class="container py-5">
+<body class="kdg-page">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h1 class="h3 fw-bold mb-1"
-                th:text="#{travelgroup.list.heading}">
-                Travel Groups
-            </h1>
-            <p class="text-muted mb-0"
-               th:text="#{travelgroup.list.subtitle}">
-                Explore and join available travel groups.
-            </p>
-        </div>
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
 
-        <a th:href="@{/travelgroups/create}"
-           class="btn btn-primary"
-           th:text="#{travelgroup.list.create}">
-            Create Group
-        </a>
-    </div>
+    <main class="kdg-main">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+            <a href="index.html"
+               th:href="@{/}">
+                <i class="bi bi-house-door" aria-hidden="true"></i>
+                Home
+            </a>
+            <span>&gt;</span>
+            <span th:text="#{travelgroup.list.heading}">Travel Groups</span>
+        </nav>
 
-    <!-- Empty State -->
-    <div th:if="${#lists.isEmpty(groups)}"
-         class="text-center py-5">
-        <p class="text-muted"
-           th:text="#{travelgroup.list.empty}">
-            No travel groups available.
-        </p>
-    </div>
+        <section class="kdg-page-header">
+            <div>
+                <p class="kdg-eyebrow">TrackTogether</p>
+                <h1 class="kdg-title"
+                    th:text="#{travelgroup.list.heading}">
+                    Travel Groups
+                </h1>
 
-    <!-- Groups List -->
-    <div class="row g-4" th:if="${!#lists.isEmpty(groups)}">
-
-        <div class="col-md-6 col-lg-4"
-             th:each="group : ${groups}">
-
-            <div class="card h-100 shadow-sm border-0 rounded-4">
-
-                <div class="card-body d-flex flex-column">
-
-                    <!-- Title -->
-                    <h5 class="card-title fw-semibold mb-2"
-                        th:text="${group.location}">
-                        Antwerp
-                    </h5>
-
-                    <!-- Transport -->
-                    <p class="text-muted mb-2">
-                        <strong th:text="#{travelgroup.list.transport}">
-                            Transport:
-                        </strong>
-                        <span th:text="${group.transportMode}">
-                            CAR
-                        </span>
-                    </p>
-
-                    <!-- Capacity -->
-                    <p class="text-muted mb-3">
-                        <strong th:text="#{travelgroup.list.capacity}">
-                            Capacity:
-                        </strong>
-                        <span th:text="${group.maxMembers}">
-                            5
-                        </span>
-                    </p>
-
-                    <!-- Actions -->
-                    <div class="mt-auto d-flex gap-2 flex-wrap">
-
-                        <!-- Join -->
-                        <form th:action="@{|/travelgroups/${group.groupId}/join|}"
-                              method="post">
-                            <input type="hidden" name="memberId"
-                                   value="11111111-1111-1111-1111-111111111111"/>
-                            <button type="submit"
-                                    class="btn btn-success btn-sm"
-                                    th:text="#{travelgroup.list.join}">
-                                Join
-                            </button>
-                        </form>
-
-                        <!-- Leave -->
-                        <form th:action="@{|/travelgroups/${group.groupId}/leave|}"
-                              method="post">
-                            <input type="hidden" name="memberId"
-                                   value="11111111-1111-1111-1111-111111111111"/>
-                            <button type="submit"
-                                    class="btn btn-outline-danger btn-sm"
-                                    th:text="#{travelgroup.list.leave}">
-                                Leave
-                            </button>
-                        </form>
-
-                    </div>
-
-                </div>
-
+                <p class="kdg-subtitle"
+                   th:text="#{travelgroup.list.subtitle}">
+                    Explore and join available travel groups.
+                </p>
             </div>
+
+            <a th:href="@{/travelgroups/create}"
+               href="create-travelgroup.html"
+               class="kdg-button"
+               >
+                <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                <span th:text="#{travelgroup.list.create}">Create Group</span>
+            </a>
+        </section>
+
+        <section th:if="${#lists.isEmpty(groups)}"
+                 class="kdg-empty">
+            <i class="bi bi-compass kdg-empty__icon" aria-hidden="true"></i>
+            <h2 th:text="#{travelgroup.list.empty}">
+                No travel groups available.
+            </h2>
+
+            <p>Be the first one to create a travel group.</p>
+
+            <a th:href="@{/travelgroups/create}"
+               href="create-travelgroup.html"
+               class="kdg-button">
+                <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                Create Travel Group
+            </a>
+        </section>
+
+        <section class="kdg-grid"
+                 th:if="${!#lists.isEmpty(groups)}">
+            <article class="kdg-group-card"
+                     th:each="group : ${groups}"
+                     th:id="'group-card-' + ${group.groupId}">
+                <div class="kdg-group-card__body">
+                    <h2 th:text="${group.location}">
+                        Antwerp Central
+                    </h2>
+
+                    <dl class="kdg-meta">
+                        <div class="kdg-meta__row">
+                            <dt class="kdg-meta__label"
+                                >
+                                <i class="bi bi-signpost-split" aria-hidden="true"></i>
+                                <span th:text="#{travelgroup.list.transport}">Transport</span>
+                            </dt>
+                            <dd class="kdg-meta__value"
+                                th:text="${group.transportMode}">
+                                CAR
+                            </dd>
+                        </div>
+
+                        <div class="kdg-meta__row">
+                            <dt class="kdg-meta__label"
+                                >
+                                <i class="bi bi-people" aria-hidden="true"></i>
+                                <span th:text="#{travelgroup.list.capacity}">Capacity</span>
+                            </dt>
+                            <dd class="kdg-meta__value"
+                                th:text="${group.maxMembers}">
+                                5
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div class="kdg-actions">
+                        <button type="button"
+                                class="kdg-button join-btn"
+                                th:attr="data-group-id=${group.groupId}">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i>
+                            <span class="btn-text"
+                                  th:text="#{travelgroup.list.join}">
+                                Join
+                            </span>
+                            <span class="spinner-border spinner-border-sm d-none"
+                                  role="status"></span>
+                        </button>
+
+                        <button type="button"
+                                class="kdg-button kdg-button--danger leave-btn"
+                                th:attr="data-group-id=${group.groupId}">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            <span class="btn-text"
+                                  th:text="#{travelgroup.list.leave}">
+                                Leave
+                            </span>
+                            <span class="spinner-border spinner-border-sm d-none"
+                                  role="status"></span>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+
+
+<!-- Toast Notification -->
+<div class="position-fixed top-0 end-0 p-3"
+     style="z-index: 1080">
+
+    <div id="actionToast"
+         class="toast align-items-center border-0 kdg-toast"
+         role="alert">
+
+        <div class="d-flex">
+
+            <div class="toast-body"
+                 id="toastMessage">
+            </div>
+
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast">
+            </button>
 
         </div>
 
@@ -117,6 +160,14 @@
 
 </div>
 
-<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<script src="/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<script type="module"
+        th:src="@{/js/main.js}">
+</script>
+<script type="module"
+        src="../static/js/travelgroups.js"
+        th:src="@{/js/travelgroups.js}"></script>
+
 </body>
 </html>

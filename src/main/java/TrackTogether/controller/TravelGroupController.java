@@ -1,8 +1,10 @@
 package TrackTogether.controller;
 
-import TrackTogether.view.TravelGroupForm;
 import TrackTogether.service.TravelGroupService;
+import TrackTogether.view.TravelGroupForm;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,10 @@ public class TravelGroupController {
     @GetMapping
     public String showAllTravelGroups(Model model) {
 
-        model.addAttribute("groups", travelGroupService.getAllTravelGroups());
+        model.addAttribute(
+                "groups",
+                travelGroupService.getAllTravelGroups()
+        );
 
         return "travelgroups";
     }
@@ -31,15 +36,22 @@ public class TravelGroupController {
     @GetMapping("/create")
     public String showTravelGroupCreateForm(Model model) {
 
-        //  bind empty form
-        model.addAttribute("travelGroupForm", new TravelGroupForm());
+        model.addAttribute(
+                "travelGroupForm",
+                new TravelGroupForm()
+        );
 
         return "create-travelgroup";
     }
 
     // Handle create form submit
     @PostMapping("/create")
-    public String createTravelGroup(@ModelAttribute TravelGroupForm form) {
+    public String createTravelGroup(@Valid @ModelAttribute TravelGroupForm form,
+                                    BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            return "create-travelgroup";
+        }
 
         travelGroupService.createTravelGroup(
                 form.getActivityId(),
@@ -51,22 +63,20 @@ public class TravelGroupController {
         return "redirect:/travelgroups";
     }
 
-    // Join group
+    // MVC Join group
     @PostMapping("/{groupId}/join")
-    public String joinTravelGroup(@PathVariable UUID groupId,
-                                  @RequestParam UUID memberId) {
+    public String joinTravelGroup(@PathVariable UUID groupId) {
 
-        travelGroupService.joinTravelGroup(groupId, memberId);
+        travelGroupService.joinTravelGroup(groupId);
 
         return "redirect:/travelgroups";
     }
 
-    // Leave group
+    // MVC Leave group
     @PostMapping("/{groupId}/leave")
-    public String leaveTravelGroup(@PathVariable UUID groupId,
-                                   @RequestParam UUID memberId) {
+    public String leaveTravelGroup(@PathVariable UUID groupId) {
 
-        travelGroupService.leaveTravelGroup(groupId, memberId);
+        travelGroupService.leaveTravelGroup(groupId);
 
         return "redirect:/travelgroups";
     }

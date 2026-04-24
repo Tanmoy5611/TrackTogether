@@ -20,18 +20,18 @@ public class TravelGroupService {
     private final ActivityRepository activityRepository;
     private final ConversationRepository conversationRepository;
     private final TravelGroupMemberRepository travelGroupMemberRepository;
-    private final MemberRepository memberRepository;
+    private final CurrentUserService currentUserService;
 
     public TravelGroupService(TravelGroupRepository travelGroupRepository,
                               ActivityRepository activityRepository,
                               ConversationRepository conversationRepository,
                               TravelGroupMemberRepository travelGroupMemberRepository,
-                              MemberRepository memberRepository) {
+                              CurrentUserService currentUserService) {
         this.travelGroupRepository = travelGroupRepository;
         this.activityRepository = activityRepository;
         this.conversationRepository = conversationRepository;
         this.travelGroupMemberRepository = travelGroupMemberRepository;
-        this.memberRepository = memberRepository;
+        this.currentUserService = currentUserService;
     }
 
     // Get all travel groups
@@ -89,7 +89,7 @@ public class TravelGroupService {
     }
 
     @Transactional
-    public void joinTravelGroup(UUID groupId, UUID memberId) {
+    public void joinTravelGroup(UUID groupId) {
 
         TravelGroup group = travelGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -97,11 +97,8 @@ public class TravelGroupService {
                         "Travel group not found"
                 ));
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Member not found"
-                ));
+        Member member = currentUserService.getCurrentUser();
+
         // Prevent duplicate joins
         boolean alreadyJoined =
                 travelGroupMemberRepository.existsByGroupAndMember(group, member);
@@ -132,7 +129,7 @@ public class TravelGroupService {
     }
 
     @Transactional
-    public void leaveTravelGroup(UUID groupId, UUID memberId) {
+    public void leaveTravelGroup(UUID groupId) {
 
         TravelGroup group = travelGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -140,11 +137,7 @@ public class TravelGroupService {
                         "Travel group not found"
                 ));
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Member not found"
-                ));
+        Member member = currentUserService.getCurrentUser();
 
         TravelGroupMember membership = travelGroupMemberRepository
                 .findByGroupAndMember(group, member)
@@ -161,6 +154,13 @@ public class TravelGroupService {
         long remainingMembers = travelGroupMemberRepository.countByGroup(group);
 
         if (remainingMembers == 0) {
+            Conversation conversation = group.getConversation();
+            if (conversation != null) {
+                conversation.setTravelGroup(null);
+                group.setConversation(null);
+                conversationRepository.save(conversation);
+            }
+
             travelGroupRepository.delete(group);
         }
     }

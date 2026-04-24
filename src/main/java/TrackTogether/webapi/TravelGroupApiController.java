@@ -5,6 +5,7 @@ import TrackTogether.service.TravelGroupService;
 import TrackTogether.webapi.dto.TravelGroupDto;
 import TrackTogether.webapi.dto.TravelGroupRequestDto;
 import TrackTogether.webapi.mapper.TravelGroupMapper;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class TravelGroupApiController {
 
     // Create TravelGroup
     @PostMapping
-    public TravelGroupDto createTravelGroup(@RequestBody TravelGroupRequestDto request) {
+    public TravelGroupDto createTravelGroup(@Valid @RequestBody TravelGroupRequestDto request) {
 
         TravelGroup group = service.createTravelGroup(
                 request.getActivityId(),
@@ -48,19 +49,17 @@ public class TravelGroupApiController {
                 .toList();
     }
 
-    // Join TravelGroup (add member)
-    @PostMapping("/{groupId}/members/{memberId}")
-    public void joinTravelGroup(@PathVariable UUID groupId,
-                                @PathVariable UUID memberId) {
+    // Join TravelGroup as the logged-in member
+    @PostMapping("/{groupId}/join")
+    public void joinTravelGroup(@PathVariable UUID groupId) {
 
-        service.joinTravelGroup(groupId, memberId);
+        service.joinTravelGroup(groupId);
     }
 
-    // Leave TravelGroup (remove member)
-    @DeleteMapping("/{groupId}/members/{memberId}")
-    public void leaveTravelGroup(@PathVariable UUID groupId,
-                                 @PathVariable UUID memberId) {
+    // Leave TravelGroup as the logged-in member
+    @DeleteMapping("/{groupId}/leave")
+    public void leaveTravelGroup(@PathVariable UUID groupId) {
 
-        service.leaveTravelGroup(groupId, memberId);
+        service.leaveTravelGroup(groupId);
     }
 }

@@ -18,6 +18,8 @@ public class TravelGroupForm {
 
     @NotBlank
     private String location;
+
+    @NotNull
     private TransportMode mode;
 
     public UUID getActivityId() {
