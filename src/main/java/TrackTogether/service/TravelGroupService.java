@@ -99,7 +99,8 @@ public class TravelGroupService {
 
         Member member = currentUserService.getCurrentUser();
 
-        // Prevent duplicate joins
+
+        // Prevent duplicate joins when the member is already joined
         boolean alreadyJoined =
                 travelGroupMemberRepository.existsByGroupAndMember(group, member);
 
