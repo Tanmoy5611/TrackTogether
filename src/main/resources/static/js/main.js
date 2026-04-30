@@ -7,6 +7,19 @@ document.addEventListener("DOMContentLoaded", () => {
     let active = "home";
 
     if (
+        path.includes("super_admin/home") ||
+        file === "superadmindashboard.html"
+    ) {
+        active = "dashboard";
+
+    } else if (
+        path.includes("activities") ||
+        file === "activities.html" ||
+        file === "newactivity.html"
+    ) {
+        active = "activities";
+
+    } else if (
         path.includes("travelgroups") ||
         file === "travelgroups.html" ||
         file === "create-travelgroup.html"
@@ -46,5 +59,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
     });
+
+    const navToggle = document.querySelector(".kdg-nav__toggle");
+    const navLinks = document.querySelector(".kdg-nav__links");
+
+    if (navToggle && navLinks) {
+        navToggle.addEventListener("click", () => {
+            const isOpen = navLinks.classList.toggle("is-open");
+            navToggle.classList.toggle("is-open", isOpen);
+            navToggle.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        navLinks.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", () => {
+                navLinks.classList.remove("is-open");
+                navToggle.classList.remove("is-open");
+                navToggle.setAttribute("aria-expanded", "false");
+            });
+        });
+    }
 
 });

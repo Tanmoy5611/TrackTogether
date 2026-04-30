@@ -11,6 +11,7 @@
 <header th:fragment="appNav">
     <nav class="kdg-nav" aria-label="Main navigation">
         <div class="kdg-nav__inner">
+
             <a class="kdg-brand"
                href="../index.html"
                th:href="@{/}">
@@ -20,7 +21,28 @@
                      alt="TrackTogether">
             </a>
 
-            <ul class="kdg-nav__links">
+            <button class="kdg-nav__toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="primary-navigation"
+                    aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="kdg-nav__links"
+                id="primary-navigation">
+
+                <li th:if="${showDashboardNav}">
+                    <a class="kdg-nav__link"
+                       data-nav-item="dashboard"
+                       href="../superAdminDashboard.html"
+                       th:href="@{/super_admin/home}">
+                        Dashboard
+                    </a>
+                </li>
+
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="home"
@@ -29,6 +51,17 @@
                         Home
                     </a>
                 </li>
+
+                <!-- ✅ ACTIVITIES ADDED HERE -->
+                <li>
+                    <a class="kdg-nav__link"
+                       data-nav-item="activities"
+                       href="../activities.html"
+                       th:href="@{/activities}">
+                        Activities
+                    </a>
+                </li>
+
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="travelgroups"
@@ -37,6 +70,7 @@
                         Travel Groups
                     </a>
                 </li>
+
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="chats"
@@ -45,6 +79,7 @@
                         Chats
                     </a>
                 </li>
+
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="moderation"
@@ -53,6 +88,7 @@
                         Moderation
                     </a>
                 </li>
+
                 <li>
                     <a class="kdg-enrol"
                        data-nav-item="profile"
@@ -61,9 +97,11 @@
                         Profile
                     </a>
                 </li>
+
             </ul>
         </div>
     </nav>
+
     <script type="module"
             th:src="@{/js/main.js}">
     </script>
