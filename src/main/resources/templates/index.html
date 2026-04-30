@@ -2,27 +2,259 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title>Home</title>
+    <title>TrackTogether | Home</title>
 </head>
 <body class="kdg-page">
 <div class="kdg-shell">
     <header th:replace="~{fragments/nav :: appNav}"></header>
 
- <main class="kdg-main">
- <h1>My events</h1>
- <div>
-     <a th:each="event : ${events}"
-        th:href="@{/events/{id}(id=${event.id})}"
-        class="event">
-         <h3 th:text="${event.title}">Event Title</h3>
-         <p><strong>Date:</strong> <span th:text="${event.date}">2026-01-01</span></p>
-         <p th:text="${event.description}">Description here</p>
-     </a>
- </div>
- </main>
+    <main class="kdg-main">
+        <section class="home-hero">
+            <div class="home-band">
+                <div class="home-band__meta">
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    <span>Today at a glance</span>
+                </div>
+                <h1 th:text="${homePage.welcomeTitle}">Good evening, welcome back.</h1>
+                <p th:text="${homePage.welcomeSubtitle}">
+                    Keep an eye on your latest update, upcoming events, and practical suggestions for matching activities.
+                </p>
+            </div>
+
+            <div class="home-stats">
+                <article class="home-panel home-stat">
+                    <div class="home-stat__label">
+                        <i class="bi bi-calendar2-week" aria-hidden="true"></i>
+                        <span>Upcoming</span>
+                    </div>
+                    <div class="home-stat__value" th:text="${#lists.size(homePage.upcomingActivities)}">0</div>
+                    <div class="home-stat__hint">events currently in your dashboard</div>
+                </article>
+
+                <article class="home-panel home-stat">
+                    <div class="home-stat__label">
+                        <i class="bi bi-signpost-2" aria-hidden="true"></i>
+                        <span>Travel Groups</span>
+                    </div>
+                    <div class="home-stat__value" th:text="${#lists.size(homePage.openTravelGroups)}">0</div>
+                    <div class="home-stat__hint">open groups you can explore today</div>
+                </article>
+
+                <article class="home-panel home-stat">
+                    <div class="home-stat__label">
+                        <i class="bi bi-leaf" aria-hidden="true"></i>
+                        <span>CO2 Saved</span>
+                    </div>
+                    <div class="home-stat__value" th:text="${#numbers.formatDecimal(homePage.co2Saved, 1, 1)}">0.0</div>
+                    <div class="home-stat__hint">tracked on your member profile</div>
+                </article>
+            </div>
+        </section>
+
+        <section class="home-alert">
+            <div class="home-alert__icon">
+                <i class="bi bi-bell" aria-hidden="true"></i>
+            </div>
+            <div>
+                <p class="home-alert__eyebrow">Latest</p>
+                <h2 class="home-alert__title" th:text="${homePage.latestHeadline}">Your dashboard is ready.</h2>
+                <p class="home-alert__meta" th:text="${homePage.latestMeta}">
+                    We will keep the most useful update for your next step right here.
+                </p>
+            </div>
+            <a class="kdg-button kdg-button--secondary"
+               th:href="${homePage.latestLink}"
+               href="/activities">
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                <span th:text="${homePage.latestLinkLabel}">Open</span>
+            </a>
+        </section>
+
+        <section class="home-grid">
+            <div class="home-column">
+                <article class="home-panel">
+                    <div class="home-panel__header">
+                        <div>
+                            <p class="home-panel__eyebrow">Upcoming Events</p>
+                            <h2>Your next moments</h2>
+                            <p>Events ordered by date so the next thing you should care about is always on top.</p>
+                        </div>
+                        <a class="kdg-button"
+                           href="/activities">
+                            <i class="bi bi-grid" aria-hidden="true"></i>
+                            <span>All Activities</span>
+                        </a>
+                    </div>
+
+                    <div class="home-list" th:if="${homePage.upcomingActivities != null and !#lists.isEmpty(homePage.upcomingActivities)}">
+                        <a class="home-item"
+                           th:each="activity : ${homePage.upcomingActivities}"
+                           href="/activities"
+                           th:href="@{/activities}">
+                            <div class="home-item__icon">
+                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="home-item__title" th:text="${activity.name}">Event title</h3>
+                                <p class="home-item__meta">
+                                    <span th:text="${activity.location}">Location</span>
+                                    <span>·</span>
+                                    <span th:text="${activity.date}">2026-04-28</span>
+                                    <span>·</span>
+                                    <span th:text="${activity.time}">09:00</span>
+                                </p>
+                            </div>
+                            <span class="home-item__tag">
+                                <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                                View
+                            </span>
+                        </a>
+                    </div>
+
+                    <div class="home-empty" th:if="${homePage.upcomingActivities == null or #lists.isEmpty(homePage.upcomingActivities)}">
+                        No upcoming events yet. Create or join an activity to start filling your schedule.
+                    </div>
+                </article>
+
+                <article class="home-panel">
+                    <div class="home-panel__header">
+                        <div>
+                            <p class="home-panel__eyebrow">Suggested Activities</p>
+                            <h2>Matched for you</h2>
+                            <p>We highlight activities that line up with your usual locations, timing, or simply what is coming up soon.</p>
+                        </div>
+                    </div>
+
+                    <div class="home-list" th:if="${homePage.suggestedActivities != null and !#lists.isEmpty(homePage.suggestedActivities)}">
+                        <div class="home-item home-suggestion"
+                             th:each="suggestion : ${homePage.suggestedActivities}">
+                            <div class="home-suggestion__body">
+                                <div>
+                                    <h3 class="home-item__title" th:text="${suggestion.activity.name}">Suggested activity</h3>
+                                    <p class="home-item__meta">
+                                        <span th:text="${suggestion.activity.location}">Antwerp</span>
+                                        <span>·</span>
+                                        <span th:text="${suggestion.activity.date}">2026-04-30</span>
+                                        <span>·</span>
+                                        <span th:text="${suggestion.activity.time}">18:30</span>
+                                    </p>
+                                </div>
+                                <span class="home-item__tag" th:text="${suggestion.reason.label}">Same location</span>
+                            </div>
+                            <a class="kdg-button kdg-button--secondary"
+                               href="/activities"
+                               th:href="@{/activities}">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                <span>See Activity</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="home-empty" th:if="${homePage.suggestedActivities == null or #lists.isEmpty(homePage.suggestedActivities)}">
+                        We do not have enough matching activity data yet, so for now we only show the next upcoming events.
+                    </div>
+                </article>
+            </div>
+
+            <div class="home-column">
+                <article class="home-panel">
+                    <div class="home-panel__header">
+                        <div>
+                            <p class="home-panel__eyebrow">Travel Buddies</p>
+                            <h2>Travel groups worth checking</h2>
+                            <p>Open travel groups can help you sync routes and timing with other people going to activities.</p>
+                        </div>
+                        <a class="kdg-button"
+                           href="/travelgroups">
+                            <i class="bi bi-people" aria-hidden="true"></i>
+                            <span>Travel Groups</span>
+                        </a>
+                    </div>
+
+                    <div class="home-list" th:if="${homePage.openTravelGroups != null and !#lists.isEmpty(homePage.openTravelGroups)}">
+                        <a class="home-item"
+                           th:each="group : ${homePage.openTravelGroups}"
+                           th:href="@{/travelgroups}"
+                           href="/travelgroups">
+                            <div class="home-item__icon">
+                                <i class="bi bi-signpost-2" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="home-item__title" th:text="${group.location}">Central Station</h3>
+                                <p class="home-item__meta">
+                                    <span th:text="${group.transportMode}">CARPOOL</span>
+                                    <span>·</span>
+                                    <span th:text="${group.maxMembers}">4</span>
+                                    <span> spots</span>
+                                </p>
+                            </div>
+                            <span class="home-item__tag">Open</span>
+                        </a>
+                    </div>
+
+                    <div class="home-empty" th:if="${homePage.openTravelGroups == null or #lists.isEmpty(homePage.openTravelGroups)}">
+                        No travel groups are open right now. As soon as new groups appear, they will show up here.
+                    </div>
+                </article>
+
+                <article class="home-panel">
+                    <div class="home-panel__header">
+                        <div>
+                            <p class="home-panel__eyebrow">Quick Insight</p>
+                            <h2>What looks relevant today</h2>
+                        </div>
+                    </div>
+
+                    <div class="home-list">
+                        <div class="home-item">
+                            <div class="home-item__icon">
+                                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="home-item__title">Location matches</h3>
+                                <p class="home-item__meta">
+                                    <span th:text="${homePage.locationSuggestionCount}">0</span>
+                                    suggestions line up with places you already use.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="home-item">
+                            <div class="home-item__icon">
+                                <i class="bi bi-clock-history" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="home-item__title">Time matches</h3>
+                                <p class="home-item__meta">
+                                    <span th:text="${homePage.timeSuggestionCount}">0</span>
+                                    activities happen around the same time as your existing plans.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="home-item">
+                            <div class="home-item__icon">
+                                <i class="bi bi-person-badge" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="home-item__title">Profile ready</h3>
+                                <p class="home-item__meta">
+                                    Your account is active and ready for joining activities and travel groups.
+                                </p>
+                            </div>
+                            <a class="kdg-button kdg-button--secondary"
+                               href="/member/profile">
+                                <i class="bi bi-person" aria-hidden="true"></i>
+                                <span>Profile</span>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
 
     <footer th:replace="~{fragments/footer :: appFooter}"></footer>
-
 </div>
 
 <script type="module"
