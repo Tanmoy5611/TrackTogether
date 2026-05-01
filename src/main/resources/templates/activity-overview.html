@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+  <title>Activity Details</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body class="kdg-page">
+
+<div class="kdg-shell">
+
+  <header th:replace="~{fragments/nav :: appNav}"></header>
+
+  <main class="kdg-main">
+
+    <section class="kdg-page-header">
+      <div>
+        <p class="kdg-eyebrow">Activity Details</p>
+        <h1 class="kdg-title" th:text="${activity.name}"></h1>
+        <p class="kdg-subtitle">Overview of the selected activity</p>
+      </div>
+    </section>
+
+    <section class="kdg-panel">
+
+      <div class="kdg-meta">
+
+        <div class="kdg-meta__row">
+          <span class="kdg-meta__label">Date</span>
+          <span class="kdg-meta__value" th:text="${activity.date}"></span>
+        </div>
+
+        <div class="kdg-meta__row">
+          <span class="kdg-meta__label">Time</span>
+          <span class="kdg-meta__value" th:text="${activity.time}"></span>
+        </div>
+
+        <div class="kdg-meta__row">
+          <span class="kdg-meta__label">Location</span>
+          <span class="kdg-meta__value" th:text="${activity.location}"></span>
+        </div>
+
+      </div>
+
+      <div class="kdg-form-row">
+        <label class="kdg-label">Description</label>
+        <p class="kdg-help" th:text="${activity.description}"></p>
+      </div>
+
+      <!-- MAP -->
+      <div id="map" style="height:350px; margin-top:20px;"></div>
+
+      <div class="kdg-form-actions">
+        <a th:href="@{/travelgroups/create(activityId=${activity.id})}" class="kdg-button">
+          Create Travel Group
+        </a>
+        <a th:href="@{/activities}" class="kdg-button kdg-button--secondary">
+          Back
+        </a>
+      </div>
+
+    </section>
+
+    <section class="kdg-panel" style="margin-top: 1.5rem;">
+      <div class="kdg-page-header">
+        <div>
+          <p class="kdg-eyebrow">Travel Groups</p>
+          <h2 class="kdg-title" style="font-size: 2rem;">Travel groups for this activity</h2>
+          <p class="kdg-subtitle">Create a group for this activity or join one that already exists.</p>
+        </div>
+      </div>
+
+      <div th:if="${#lists.isEmpty(activityTravelGroups)}" class="kdg-empty">
+        No travel groups have been created for this activity yet.
+      </div>
+
+      <div th:if="${activityTravelGroups != null and !#lists.isEmpty(activityTravelGroups)}" class="kdg-grid">
+        <article th:each="group : ${activityTravelGroups}" class="kdg-group-card">
+          <div class="kdg-group-card__body">
+            <h2 th:text="${group.location}">Meeting point</h2>
+
+            <div class="kdg-meta">
+              <div class="kdg-meta__row">
+                <span class="kdg-meta__label">Transport</span>
+                <span class="kdg-meta__value" th:text="${group.transportMode}">CAR</span>
+              </div>
+              <div class="kdg-meta__row">
+                <span class="kdg-meta__label">Capacity</span>
+                <span class="kdg-meta__value" th:text="${memberCounts[group.groupId] + ' / ' + group.maxMembers}">2 / 5</span>
+              </div>
+            </div>
+
+            <div class="kdg-actions activity-group-actions">
+              <a class="kdg-button kdg-button--secondary"
+                 th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
+                View details
+              </a>
+
+              <form th:if="${!joinedGroupIds.contains(group.groupId)}"
+                    th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
+                    method="post">
+                <input type="hidden" name="redirectTo" th:value="${'/activities/' + activity.id}">
+                <button type="submit" class="kdg-button">Join</button>
+              </form>
+
+              <form th:if="${joinedGroupIds.contains(group.groupId)}"
+                    th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
+                    method="post"
+                    class="activity-group-actions__leave">
+                <button type="submit" class="kdg-button kdg-button--danger">Leave</button>
+              </form>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<!-- MAP SCRIPT -->
+<script th:inline="javascript">
+  /*<![CDATA[*/
+
+  let lat = [[${activity.latitude}]];
+  let lng = [[${activity.longitude}]];
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // fallback if missing
+    if (lat == null || lng == null) {
+      lat = 51.0543;
+      lng = 3.7174;
+    }
+
+    const map = L.map('map').setView([lat, lng], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([lat, lng]).addTo(map);
+
+  });
+
+  /*]]>*/
+</script>
+
+</body>
+</html>

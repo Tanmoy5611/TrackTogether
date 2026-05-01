@@ -3,9 +3,6 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-
-    <meta name="_csrf" th:content="${_csrf.token}">
-    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:text="#{travelgroup.list.title}">Travel Groups</title>
 </head>
 
@@ -75,6 +72,14 @@
                         Antwerp Central
                     </h2>
 
+                    <p class="kdg-help">
+                        For activity:
+                        <a th:href="@{/activities/{id}(id=${group.activity.id})}"
+                           th:text="${group.activity.name}">
+                            Activity Name
+                        </a>
+                    </p>
+
                     <dl class="kdg-meta">
                         <div class="kdg-meta__row">
                             <dt class="kdg-meta__label"
@@ -95,36 +100,36 @@
                                 <span th:text="#{travelgroup.list.capacity}">Capacity</span>
                             </dt>
                             <dd class="kdg-meta__value"
-                                th:text="${group.maxMembers}">
+                                th:text="${memberCounts[group.groupId] + ' / ' + group.maxMembers}">
                                 5
                             </dd>
                         </div>
                     </dl>
 
                     <div class="kdg-actions">
-                        <button type="button"
-                                class="kdg-button join-btn"
-                                th:attr="data-group-id=${group.groupId}">
-                            <i class="bi bi-person-plus" aria-hidden="true"></i>
-                            <span class="btn-text"
-                                  th:text="#{travelgroup.list.join}">
-                                Join
-                            </span>
-                            <span class="spinner-border spinner-border-sm d-none"
-                                  role="status"></span>
-                        </button>
+                        <a class="kdg-button kdg-button--secondary"
+                           th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                            <span>View details</span>
+                        </a>
 
-                        <button type="button"
-                                class="kdg-button kdg-button--danger leave-btn"
-                                th:attr="data-group-id=${group.groupId}">
-                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                            <span class="btn-text"
-                                  th:text="#{travelgroup.list.leave}">
-                                Leave
-                            </span>
-                            <span class="spinner-border spinner-border-sm d-none"
-                                  role="status"></span>
-                        </button>
+                        <form th:if="${!joinedGroupIds.contains(group.groupId)}"
+                              th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
+                              method="post">
+                            <button type="submit" class="kdg-button">
+                                <i class="bi bi-person-plus" aria-hidden="true"></i>
+                                <span>Join</span>
+                            </button>
+                        </form>
+
+                        <form th:if="${joinedGroupIds.contains(group.groupId)}"
+                              th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
+                              method="post">
+                            <button type="submit" class="kdg-button kdg-button--danger">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                                <span>Leave</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </article>
@@ -135,39 +140,8 @@
 </div>
 
 
-<!-- Toast Notification -->
-<div class="position-fixed top-0 end-0 p-3"
-     style="z-index: 1080">
-
-    <div id="actionToast"
-         class="toast align-items-center border-0 kdg-toast"
-         role="alert">
-
-        <div class="d-flex">
-
-            <div class="toast-body"
-                 id="toastMessage">
-            </div>
-
-            <button type="button"
-                    class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast">
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script src="/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
-        th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
 <script type="module"
         th:src="@{/js/main.js}">
 </script>
-<script type="module"
-        src="../static/js/travelgroups.js"
-        th:src="@{/js/travelgroups.js}"></script>
-
 </body>
 </html>
