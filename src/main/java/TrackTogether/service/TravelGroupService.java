@@ -9,7 +9,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TravelGroupService {
@@ -37,6 +40,69 @@ public class TravelGroupService {
     // Get all travel groups
     public List<TravelGroup> getAllTravelGroups() {
         return travelGroupRepository.findAll();
+    }
+
+    public TravelGroup getTravelGroupById(UUID groupId) {
+        return travelGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Travel group not found"
+                ));
+    }
+
+    public List<TravelGroup> getTravelGroupsForActivity(UUID activityId) {
+        return travelGroupRepository.findAllByActivity_Id(activityId);
+    }
+
+    public boolean isCurrentUserMember(TravelGroup group) {
+        Member member = currentUserService.getCurrentUser();
+        return travelGroupMemberRepository.existsByGroupAndMember(group, member);
+    }
+
+    public long getMemberCount(TravelGroup group) {
+        return travelGroupMemberRepository.countByGroup(group);
+    }
+
+    public Map<UUID, Long> getMemberCounts(List<TravelGroup> groups) {
+        return groups.stream()
+                .collect(Collectors.toMap(
+                        TravelGroup::getGroupId,
+                        this::getMemberCount
+                ));
+    }
+
+    public Set<UUID> getJoinedGroupIds(List<TravelGroup> groups) {
+        Member member = currentUserService.getCurrentUser();
+
+        return groups.stream()
+                .filter(group -> travelGroupMemberRepository.existsByGroupAndMember(group, member))
+                .map(TravelGroup::getGroupId)
+                .collect(Collectors.toSet());
+    }
+
+    public List<TravelGroupMember> getMembersForGroup(TravelGroup group) {
+        return travelGroupMemberRepository.findAllByGroup(group);
+    }
+
+    @Transactional
+    public void deleteTravelGroupsForActivity(UUID activityId) {
+        List<TravelGroup> groups = travelGroupRepository.findAllByActivity_Id(activityId);
+
+        for (TravelGroup group : groups) {
+            List<TravelGroupMember> memberships = travelGroupMemberRepository.findAllByGroup(group);
+            if (!memberships.isEmpty()) {
+                travelGroupMemberRepository.deleteAll(memberships);
+            }
+
+            Conversation conversation = group.getConversation();
+            if (conversation != null) {
+                conversation.setTravelGroup(null);
+                group.setConversation(null);
+                conversationRepository.save(conversation);
+            }
+
+            travelGroupRepository.delete(group);
+        }
     }
 
     // Creates a new TravelGroup for a given activity

@@ -5,6 +5,7 @@ import TrackTogether.domain.TravelGroup;
 import TrackTogether.domain.TravelGroupMember;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface TravelGroupMemberRepository extends JpaRepository<TravelGroupMember, Integer> {
@@ -14,4 +15,6 @@ public interface TravelGroupMemberRepository extends JpaRepository<TravelGroupMe
     long countByGroup(TravelGroup group);
 
     Optional<TravelGroupMember> findByGroupAndMember(TravelGroup group, Member member);
+
+    List<TravelGroupMember> findAllByGroup(TravelGroup group);
 }
