@@ -52,22 +52,29 @@
                 <div class="kdg-form-row">
                     <label for="activityId" class="kdg-label">
                         <i class="bi bi-calendar-event" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.activityId}">Activity ID</span>
+                        <span>Select Activity</span>
                     </label>
                     <div class="kdg-input-shell">
-                        <i class="bi bi-hash" aria-hidden="true"></i>
-                        <input type="text"
-                               id="activityId"
-                               name="activityId"
-                               th:field="*{activityId}"
-                               class="kdg-control"
-                               th:errorclass="is-invalid"
-                               placeholder="Enter activity UUID"
-                               required>
+                        <i class="bi bi-list-ul" aria-hidden="true"></i>
+                        <select id="activityId"
+                                name="activityId"
+                                th:field="*{activityId}"
+                                class="kdg-control"
+                                th:errorclass="is-invalid"
+                                required>
+                            <option value="" disabled selected>Select an activity</option>
+                            <option th:each="activity : ${activities}"
+                                    th:value="${activity.id}"
+                                    th:text="${activity.name + ' - ' + activity.date + ' - ' + activity.location}">
+                                Activity option
+                            </option>
+                        </select>
                     </div>
-                    <div class="kdg-help"
-                         th:text="#{travelgroup.form.activityId.help}">
-                        Enter the UUID of the activity.
+                    <div class="kdg-help" th:if="${selectedActivity != null}">
+                        Creating a travel group for the selected activity.
+                    </div>
+                    <div class="kdg-help" th:if="${selectedActivity == null}">
+                        Choose the activity this travel group belongs to.
                     </div>
                     <div class="invalid-feedback"
                          th:text="#{travelgroup.form.activityId.invalid}">

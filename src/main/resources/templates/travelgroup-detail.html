@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>Travel Group Details</title>
+</head>
+<body class="kdg-page">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+            <a th:href="@{/}"><i class="bi bi-house-door" aria-hidden="true"></i> Home</a>
+            <span>&gt;</span>
+            <a th:href="@{/travelgroups}">Travel Groups</a>
+            <span>&gt;</span>
+            <span th:text="${group.activity.name}">Activity</span>
+        </nav>
+
+        <section class="kdg-page-header">
+            <div>
+                <p class="kdg-eyebrow">Travel Group</p>
+                <h1 class="kdg-title" th:text="${group.activity.name}">Public Transport Group Info</h1>
+                <p class="kdg-subtitle">
+                    Meeting point:
+                    <span th:text="${group.location}">Antwerp Central</span>
+                </p>
+            </div>
+        </section>
+
+        <section class="kdg-panel">
+            <div class="kdg-meta">
+                <div class="kdg-meta__row">
+                    <span class="kdg-meta__label">Transport</span>
+                    <span class="kdg-meta__value" th:text="${group.transportMode}">PUBLIC_TRANSPORT</span>
+                </div>
+                <div class="kdg-meta__row">
+                    <span class="kdg-meta__label">Members</span>
+                    <span class="kdg-meta__value" th:text="${memberCount + ' / ' + group.maxMembers}">2 / 5</span>
+                </div>
+                <div class="kdg-meta__row">
+                    <span class="kdg-meta__label">Remaining spots</span>
+                    <span class="kdg-meta__value" th:text="${remainingSpots}">3</span>
+                </div>
+                <div class="kdg-meta__row">
+                    <span class="kdg-meta__label">Activity date</span>
+                    <span class="kdg-meta__value" th:text="${group.activity.date}">2026-05-31</span>
+                </div>
+                <div class="kdg-meta__row">
+                    <span class="kdg-meta__label">Activity time</span>
+                    <span class="kdg-meta__value" th:text="${group.activity.time}">20:34</span>
+                </div>
+                <div class="kdg-meta__row">
+                    <span class="kdg-meta__label">Activity address</span>
+                    <span class="kdg-meta__value" th:text="${group.activity.location}">Groenplaats</span>
+                </div>
+            </div>
+
+            <div class="kdg-form-row">
+                <label class="kdg-label">Joined Members</label>
+                <div class="travelgroup-member-list" th:if="${!#lists.isEmpty(groupMembers)}">
+                    <div class="travelgroup-member-card" th:each="groupMember : ${groupMembers}">
+                        <strong th:text="${groupMember.member.name}">John S</strong>
+                        <span th:text="${groupMember.member.email}">john@student.kdg.be</span>
+                    </div>
+                </div>
+                <div class="kdg-empty" th:if="${#lists.isEmpty(groupMembers)}">
+                    No members have joined this travel group yet.
+                </div>
+            </div>
+
+            <div class="kdg-actions travelgroup-detail__actions">
+                <a class="kdg-button kdg-button--secondary" th:href="@{/travelgroups}">
+                    Back to groups
+                </a>
+                <a class="kdg-button kdg-button--secondary"
+                   th:href="@{/activities/{id}(id=${group.activity.id})}">
+                    Back to activity
+                </a>
+
+                <form th:if="${!isJoined}"
+                      th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
+                      method="post">
+                    <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
+                    <button type="submit" class="kdg-button">
+                        <i class="bi bi-person-plus" aria-hidden="true"></i>
+                        <span>Join</span>
+                    </button>
+                </form>
+
+                <form th:if="${isJoined}"
+                      th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
+                      method="post"
+                      class="travelgroup-detail__leave">
+                    <button type="submit" class="kdg-button kdg-button--danger">
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        <span>Leave</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+</body>
+</html>
