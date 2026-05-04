@@ -31,6 +31,10 @@
             </div>
 
             <div class="travelgroup-hero__actions">
+                <div class="travelgroup-status travelgroup-status--owner" th:if="${isOwner}">
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    <span>You created this group</span>
+                </div>
                 <div class="travelgroup-status travelgroup-status--joined" th:if="${isJoined}">
                     <i class="bi bi-check-circle" aria-hidden="true"></i>
                     <span>You are part of this group</span>
@@ -63,6 +67,15 @@
 
         <section class="kdg-detail-layout">
             <div class="travelgroup-detail__summary">
+                <div class="travelgroup-owner-panel">
+                    <div class="travelgroup-owner-panel__avatar"
+                         th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
+                    <div>
+                        <span class="travelgroup-stat__label">Created by</span>
+                        <strong th:text="${group.owner.name}">Tanmoy Das</strong>
+                        <p th:text="${group.owner.email}">tanmoy.das@student.kdg.be</p>
+                    </div>
+                </div>
                 <div class="travelgroup-stat">
                     <span class="travelgroup-stat__icon">
                         <i class="bi bi-people" aria-hidden="true"></i>

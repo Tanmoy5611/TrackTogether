@@ -86,6 +86,19 @@
           <div class="kdg-group-card__body">
             <h2 th:text="${group.location}">Meeting point</h2>
 
+            <div class="travelgroup-owner-card">
+              <div class="travelgroup-owner-card__avatar"
+                   th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
+              <div class="travelgroup-owner-card__body">
+                <span>Created by</span>
+                <strong th:text="${group.owner.name}">Tanmoy Das</strong>
+              </div>
+              <span class="travelgroup-owner-card__badge"
+                    th:if="${ownedGroupIds.contains(group.groupId)}">
+                You
+              </span>
+            </div>
+
             <dl class="kdg-meta">
               <div class="kdg-meta__row">
                 <dt class="kdg-meta__label">

@@ -433,6 +433,69 @@ body.kdg-page {
     overflow-wrap: anywhere;
 }
 
+.travelgroup-owner-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.15rem 0 1rem;
+    padding: 0.75rem;
+    border: 1px solid #e4e7e3;
+    border-radius: 0.5rem;
+    background: #fbfcfa;
+    transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+}
+
+.travelgroup-owner-card:hover {
+    border-color: rgba(47, 127, 163, 0.35);
+    background: #f6faf8;
+    transform: translateY(-1px);
+}
+
+.travelgroup-owner-card__avatar,
+.travelgroup-owner-panel__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--kdg-blue);
+    color: var(--kdg-white);
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.travelgroup-owner-card__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.travelgroup-owner-card__body {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.travelgroup-owner-card__body span {
+    color: var(--kdg-muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.travelgroup-owner-card__body strong {
+    overflow-wrap: anywhere;
+}
+
+.travelgroup-owner-card__badge {
+    margin-left: auto;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(47, 143, 91, 0.1);
+    color: #257449;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
 .travelgroup-member-list {
     display: grid;
     gap: 0.85rem;
@@ -628,12 +691,19 @@ body.kdg-page {
     color: #257449;
 }
 
+.travelgroup-status--owner {
+    border-color: rgba(47, 127, 163, 0.28);
+    background: rgba(47, 127, 163, 0.1);
+    color: var(--kdg-blue-dark);
+}
+
 .travelgroup-detail__summary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
     gap: 1rem;
 }
 
+.travelgroup-owner-panel,
 .travelgroup-stat {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -647,15 +717,44 @@ body.kdg-page {
     transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
+.travelgroup-owner-panel {
+    align-items: center;
+}
+
+.travelgroup-owner-panel:hover,
 .travelgroup-stat:hover {
     border-color: rgba(47, 127, 163, 0.38);
     box-shadow: 0 1rem 2rem rgba(34, 34, 34, 0.075);
     transform: translateY(-2px);
 }
 
+.travelgroup-owner-panel:hover .travelgroup-owner-panel__avatar,
 .travelgroup-stat:hover .travelgroup-stat__icon {
     background: var(--kdg-blue);
     color: var(--kdg-white);
+}
+
+.travelgroup-owner-panel__avatar {
+    width: 3.2rem;
+    height: 3.2rem;
+    font-size: 1.2rem;
+    box-shadow: inset 0 0 0 0.15rem rgba(255, 255, 255, 0.35);
+}
+
+.travelgroup-owner-panel strong {
+    display: block;
+    color: var(--kdg-blue);
+    font-size: 1.2rem;
+    font-weight: 900;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.travelgroup-owner-panel p {
+    margin: 0.25rem 0 0;
+    color: var(--kdg-muted);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
 }
 
 .travelgroup-stat__icon {
