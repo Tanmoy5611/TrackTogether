@@ -87,8 +87,8 @@
                                 <i class="bi bi-signpost-split" aria-hidden="true"></i>
                                 <span th:text="#{travelgroup.list.transport}">Transport</span>
                             </dt>
-                            <dd class="kdg-meta__value"
-                                th:text="${group.transportMode}">
+                            <dd class="kdg-meta__value kdg-meta__value--transport"
+                                th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(group.transportMode.name(), '_', ' ')))}">
                                 CAR
                             </dd>
                         </div>
@@ -106,7 +106,7 @@
                         </div>
                     </dl>
 
-                    <div class="kdg-actions">
+                    <div class="kdg-actions kdg-card-actions">
                         <a class="kdg-button kdg-button--secondary"
                            th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
                             <i class="bi bi-eye" aria-hidden="true"></i>
@@ -116,7 +116,7 @@
                         <form th:if="${!joinedGroupIds.contains(group.groupId)}"
                               th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                               method="post">
-                            <button type="submit" class="kdg-button">
+                            <button type="submit" class="kdg-button kdg-button--success">
                                 <i class="bi bi-person-plus" aria-hidden="true"></i>
                                 <span>Join</span>
                             </button>

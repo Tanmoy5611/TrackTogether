@@ -291,12 +291,14 @@ body.kdg-page {
     font-weight: 800;
     line-height: 1.1;
     text-decoration: none;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
 .kdg-button:hover {
     background: var(--kdg-blue-dark);
     color: var(--kdg-white);
     text-decoration: none;
+    transform: translateY(-1px);
 }
 
 .kdg-button--secondary {
@@ -307,6 +309,18 @@ body.kdg-page {
 
 .kdg-button--secondary:hover {
     background: var(--kdg-ink);
+    color: var(--kdg-white);
+}
+
+.kdg-button--success {
+    border-color: #2f8f5b;
+    background: #2f8f5b;
+    color: var(--kdg-white);
+}
+
+.kdg-button--success:hover {
+    border-color: #257449;
+    background: #257449;
     color: var(--kdg-white);
 }
 
@@ -326,8 +340,8 @@ body.kdg-page {
 .kdg-group-card {
     background: var(--kdg-white);
     border: 3px solid var(--kdg-border);
-    border-radius: 0;
-    box-shadow: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.85rem 1.7rem rgba(34, 34, 34, 0.045);
 }
 
 .kdg-empty,
@@ -367,7 +381,7 @@ body.kdg-page {
 
 .kdg-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
     gap: 1.35rem;
 }
 
@@ -375,12 +389,25 @@ body.kdg-page {
     display: flex;
     min-height: 15rem;
     padding: 1.35rem;
+    min-width: 0;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.kdg-group-card:hover {
+    border-color: rgba(47, 127, 163, 0.38);
+    box-shadow: 0 1rem 2rem rgba(34, 34, 34, 0.07);
+    transform: translateY(-2px);
 }
 
 .kdg-group-card__body {
     display: flex;
     flex: 1;
     flex-direction: column;
+    min-width: 0;
+}
+
+.kdg-group-card h2 {
+    overflow-wrap: anywhere;
 }
 
 .travelgroup-member-list {
@@ -410,10 +437,12 @@ body.kdg-page {
 
 .kdg-meta__row {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
     border-top: 1px solid #e5e5e5;
     padding-top: 0.65rem;
+    min-width: 0;
 }
 
 .kdg-meta__label {
@@ -422,11 +451,19 @@ body.kdg-page {
     gap: 0.45rem;
     color: var(--kdg-muted);
     font-weight: 800;
+    min-width: 0;
 }
 
 .kdg-meta__value {
+    min-width: 0;
+    margin: 0;
     text-align: right;
     font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.kdg-meta__value--transport {
+    text-transform: capitalize;
 }
 
 .kdg-actions {
@@ -434,10 +471,26 @@ body.kdg-page {
     flex-wrap: wrap;
     gap: 0.65rem;
     margin-top: auto;
+    min-width: 0;
 }
 
 .kdg-actions form {
     margin: 0;
+    min-width: 0;
+}
+
+.kdg-actions .kdg-button {
+    max-width: 100%;
+    white-space: nowrap;
+}
+
+.kdg-card-actions {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kdg-card-actions form {
+    margin-left: auto;
 }
 
 .activity-group-actions__leave,
@@ -943,4 +996,203 @@ body.kdg-page {
     .kdg-button{
         width:100%;
     }
+
+}
+
+.chat-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 360px) 1fr;
+    gap: 1.5rem;
+    min-height: 620px;
+}
+
+.chat-sidebar,
+.chat-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.chat-sidebar {
+    overflow: hidden;
+}
+
+.chat-sidebar-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-sidebar-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.chat-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-list-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.9rem;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-list-item:hover {
+    background: rgba(13, 110, 253, 0.06);
+}
+
+.chat-avatar {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    background: rgba(13, 110, 253, 0.12);
+    color: #0d6efd;
+}
+
+.chat-list-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.chat-list-content span {
+    color: #6b7280;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-empty {
+    padding: 1.25rem;
+    color: #6b7280;
+}
+
+.chat-panel {
+    padding: 1.5rem;
+}
+
+.chat-panel-empty {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    text-align: center;
+    color: #6b7280;
+}
+
+.chat-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+    .chat-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chat-section-title {
+    padding: 1rem 1.25rem 0.5rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.chat-sidebar .form-control {
+    border-radius: 0.9rem;
+}
+
+form.chat-list-item {
+    width: 100%;
+    background: transparent;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+}
+
+/* ===== Chat active panel styling: start ===== */
+.chat-active-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.chat-active-panel h2 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.chat-send-form {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.chat-send-form .form-control {
+    flex: 1;
+}
+/* ===== Chat active panel styling: end ===== */
+
+.dashboard-tile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    height: 100%;
+    padding: 1.5rem;
+
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+
+    color: inherit;
+    text-decoration: none;
+
+    transition: 0.2s ease;
+}
+
+.dashboard-tile:hover {
+    transform: translateY(-3px);
+    border-color: #adb5bd;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    color: inherit;
+}
+
+.dashboard-tile-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 0.75rem;
+    background-color: #f8f9fa;
+
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.dashboard-tile h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.dashboard-tile p {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0;
 }
