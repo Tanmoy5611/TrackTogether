@@ -96,6 +96,7 @@ public class ActivityController {
         model.addAttribute("activity", activity);
         model.addAttribute("activityTravelGroups", activityTravelGroups);
         model.addAttribute("joinedGroupIds", travelGroupService.getJoinedGroupIds(activityTravelGroups));
+        model.addAttribute("ownedGroupIds", travelGroupService.getOwnedGroupIds(activityTravelGroups));
         model.addAttribute("memberCounts", travelGroupService.getMemberCounts(activityTravelGroups));
         return "activity-overview";
     }

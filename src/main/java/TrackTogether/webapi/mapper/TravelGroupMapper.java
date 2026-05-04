@@ -21,7 +21,9 @@ public class TravelGroupMapper {
                 group.getGroupId(),
                 group.getMaxMembers(),
                 group.getLocation(),
-                group.getTransportMode()
+                group.getTransportMode(),
+                group.getOwner() != null ? group.getOwner().getUserId() : null,
+                group.getOwner() != null ? group.getOwner().getName() : null
         );
     }
 }

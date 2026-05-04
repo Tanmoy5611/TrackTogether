@@ -34,10 +34,12 @@ public class TravelGroupController {
     public String showAllTravelGroups(Model model) {
         List<TravelGroup> groups = travelGroupService.getAllTravelGroups();
         Set<UUID> joinedGroupIds = travelGroupService.getJoinedGroupIds(groups);
+        Set<UUID> ownedGroupIds = travelGroupService.getOwnedGroupIds(groups);
         Map<UUID, Long> memberCounts = travelGroupService.getMemberCounts(groups);
 
         model.addAttribute("groups", groups);
         model.addAttribute("joinedGroupIds", joinedGroupIds);
+        model.addAttribute("ownedGroupIds", ownedGroupIds);
         model.addAttribute("memberCounts", memberCounts);
 
         return "travelgroups";
@@ -122,6 +124,7 @@ public class TravelGroupController {
         TravelGroup group = travelGroupService.getTravelGroupById(groupId);
         List<TravelGroupMember> groupMembers = travelGroupService.getMembersForGroup(group);
         boolean joined = travelGroupService.isCurrentUserMember(group);
+        boolean owner = travelGroupService.isCurrentUserOwner(group);
         long memberCount = groupMembers.size();
 
         model.addAttribute("group", group);
@@ -129,6 +132,7 @@ public class TravelGroupController {
         model.addAttribute("memberCount", memberCount);
         model.addAttribute("remainingSpots", Math.max(group.getMaxMembers() - memberCount, 0));
         model.addAttribute("isJoined", joined);
+        model.addAttribute("isOwner", owner);
 
         return "travelgroup-detail";
     }
