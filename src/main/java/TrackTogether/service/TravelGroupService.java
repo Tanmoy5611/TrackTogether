@@ -80,6 +80,22 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
+    public boolean isCurrentUserOwner(TravelGroup group) {
+        Member member = currentUserService.getCurrentUser();
+        return group.getOwner() != null
+                && group.getOwner().getUserId().equals(member.getUserId());
+    }
+
+    public Set<UUID> getOwnedGroupIds(List<TravelGroup> groups) {
+        Member member = currentUserService.getCurrentUser();
+
+        return groups.stream()
+                .filter(group -> group.getOwner() != null)
+                .filter(group -> group.getOwner().getUserId().equals(member.getUserId()))
+                .map(TravelGroup::getGroupId)
+                .collect(Collectors.toSet());
+    }
+
     public List<TravelGroupMember> getMembersForGroup(TravelGroup group) {
         return travelGroupMemberRepository.findAllByGroup(group);
     }
@@ -134,10 +150,11 @@ public class TravelGroupService {
 
         // Create a new TravelGroup with the provided information
         TravelGroup group = new TravelGroup(maxMembers, location, mode);
+        Member owner = currentUserService.getCurrentUser();
 
-
-        // Link the group to the activity
+        // Link the group to the activity and remember who created it
         group.setActivity(activity);
+        group.setOwner(owner);
 
         // Save the group first in the database
         TravelGroup savedGroup = travelGroupRepository.save(group);
