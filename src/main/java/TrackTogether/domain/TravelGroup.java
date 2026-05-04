@@ -23,6 +23,10 @@ public class TravelGroup {
     @JoinColumn(name = "activity_id", nullable = false)
     private Activity activity;       // the activity this group belongs to
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private Member owner;            // member who created the group
+
     @OneToOne(mappedBy = "travelGroup", optional = false)
     private Conversation conversation;  // conversation for the group
 
@@ -67,6 +71,12 @@ public class TravelGroup {
     public void setActivity(Activity activity) {
         this.activity = activity;
     }
+    public Member getOwner() {
+        return owner;
+    }
+    public void setOwner(Member owner) {
+        this.owner = owner;
+    }
     public Conversation getConversation() {
         return conversation;
     }
@@ -91,4 +101,3 @@ public class TravelGroup {
         return currentMembers < maxMembers;
     }
 }
-
