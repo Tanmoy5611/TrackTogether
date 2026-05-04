@@ -4,6 +4,9 @@
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
     <title th:text="#{travelgroup.create.title}">Create Travel Group</title>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="kdg-page">
 
@@ -65,6 +68,9 @@
                             <option value="" disabled selected>Select an activity</option>
                             <option th:each="activity : ${activities}"
                                     th:value="${activity.id}"
+                                    th:data-location="${activity.location}"
+                                    th:data-latitude="${activity.latitude}"
+                                    th:data-longitude="${activity.longitude}"
                                     th:text="${activity.name + ' - ' + activity.date + ' - ' + activity.location}">
                                 Activity option
                             </option>
@@ -127,13 +133,32 @@
                     </div>
                 </div>
 
+                <div class="kdg-map-picker">
+                    <div class="kdg-map-picker__header">
+                        <div>
+                            <p class="kdg-map-picker__eyebrow">Meeting point</p>
+                            <h2>Pick a location on the map</h2>
+                        </div>
+                        <button type="button"
+                                class="kdg-button kdg-button--secondary kdg-map-picker__activity-button"
+                                id="useActivityLocation">
+                            <i class="bi bi-crosshair" aria-hidden="true"></i>
+                            <span>Use activity location</span>
+                        </button>
+                    </div>
+                    <div id="travelgroup-location-map" class="kdg-map-picker__map"></div>
+                    <p class="kdg-help">
+                        Click the map or type an address. The meeting location field will update automatically.
+                    </p>
+                </div>
+
                 <div class="kdg-form-row">
                     <label for="mode" class="kdg-label">
                         <i class="bi bi-signpost-split" aria-hidden="true"></i>
                         <span th:text="#{travelgroup.form.mode}">Transport Mode</span>
                     </label>
                     <div class="kdg-input-shell">
-                        <i class="bi bi-car-front" aria-hidden="true"></i>
+                        <i class="bi bi-car-front" id="transportModeIcon" aria-hidden="true"></i>
                         <select id="mode"
                                 name="mode"
                                 th:field="*{mode}"
@@ -148,26 +173,31 @@
                             </option>
                             <option value="CAR"
                                     th:value="CAR"
+                                    data-icon="bi-car-front"
                                     th:text="#{transportMode.car}">
                                 Car
                             </option>
                             <option value="CARPOOL"
                                     th:value="CARPOOL"
+                                    data-icon="bi-people"
                                     th:text="#{transportMode.carpool}">
                                 Carpool
                             </option>
                             <option value="BIKE"
                                     th:value="BIKE"
+                                    data-icon="bi-bicycle"
                                     th:text="#{transportMode.bike}">
                                 Bike
                             </option>
                             <option value="WALK"
                                     th:value="WALK"
+                                    data-icon="bi-person-walking"
                                     th:text="#{transportMode.walk}">
                                 Walk
                             </option>
                             <option value="PUBLIC_TRANSPORT"
                                     th:value="PUBLIC_TRANSPORT"
+                                    data-icon="bi-bus-front"
                                     th:text="#{transportMode.publicTransport}">
                                 Public Transport
                             </option>
@@ -176,6 +206,28 @@
                     <div class="invalid-feedback"
                          th:text="#{travelgroup.form.mode.invalid}">
                         Please select a transport mode.
+                    </div>
+                    <div class="transport-mode-options" aria-label="Transport mode quick choices">
+                        <button type="button" class="transport-mode-option" data-mode="CAR">
+                            <i class="bi bi-car-front" aria-hidden="true"></i>
+                            <span>Car</span>
+                        </button>
+                        <button type="button" class="transport-mode-option" data-mode="CARPOOL">
+                            <i class="bi bi-people" aria-hidden="true"></i>
+                            <span>Carpool</span>
+                        </button>
+                        <button type="button" class="transport-mode-option" data-mode="BIKE">
+                            <i class="bi bi-bicycle" aria-hidden="true"></i>
+                            <span>Bike</span>
+                        </button>
+                        <button type="button" class="transport-mode-option" data-mode="WALK">
+                            <i class="bi bi-person-walking" aria-hidden="true"></i>
+                            <span>Walk</span>
+                        </button>
+                        <button type="button" class="transport-mode-option" data-mode="PUBLIC_TRANSPORT">
+                            <i class="bi bi-bus-front" aria-hidden="true"></i>
+                            <span>Public Transport</span>
+                        </button>
                     </div>
                 </div>
 
@@ -205,5 +257,8 @@
 <script type="module"
         src="../static/js/main.js"
         th:src="@{/js/main.js}"></script>
+<script defer
+        src="../static/js/travelgroup-map.js"
+        th:src="@{/js/travelgroup-map.js}"></script>
 </body>
 </html>
