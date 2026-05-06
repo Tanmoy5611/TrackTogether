@@ -102,6 +102,24 @@
         </div>
     </nav>
 
+    <div class="toast-container position-fixed top-0 end-0 p-3 kdg-toast-container"
+         th:if="${toastMessage != null}">
+        <div id="flashToast"
+             class="toast kdg-toast"
+             th:classappend="${toastType == 'success'} ? ' kdg-toast--success' : (${toastType == 'danger'} ? ' kdg-toast--danger' : ' kdg-toast--info')"
+             role="status"
+             aria-live="polite"
+             aria-atomic="true"
+             data-bs-delay="3200">
+            <div class="toast-body">
+                <i class="bi"
+                   th:classappend="${toastType == 'success'} ? ' bi-check-circle' : (${toastType == 'danger'} ? ' bi-exclamation-triangle' : ' bi-info-circle')"
+                   aria-hidden="true"></i>
+                <span th:text="${toastMessage}">Request sent.</span>
+            </div>
+        </div>
+    </div>
+
     <script type="module"
             th:src="@{/js/main.js}">
     </script>

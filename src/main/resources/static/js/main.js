@@ -79,4 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const flashToast = document.getElementById("flashToast");
+    if (flashToast && window.bootstrap) {
+        bootstrap.Toast.getOrCreateInstance(flashToast).show();
+    }
+
 });
