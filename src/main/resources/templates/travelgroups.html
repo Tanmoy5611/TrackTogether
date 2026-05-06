@@ -32,7 +32,7 @@
 
                 <p class="kdg-subtitle"
                    th:text="#{travelgroup.list.subtitle}">
-                    Explore and join available travel groups.
+                    Explore available travel groups and request approval to join.
                 </p>
             </div>
 
@@ -91,6 +91,11 @@
                               th:if="${ownedGroupIds.contains(group.groupId)}">
                             You
                         </span>
+                        <span class="travelgroup-owner-card__badge travelgroup-owner-card__badge--requests"
+                              th:if="${ownedGroupIds.contains(group.groupId) and pendingJoinRequestCounts[group.groupId] > 0}"
+                              th:text="${pendingJoinRequestCounts[group.groupId] + ' requests'}">
+                            2 requests
+                        </span>
                     </div>
 
                     <dl class="kdg-meta">
@@ -127,16 +132,28 @@
                             <span>View details</span>
                         </a>
 
-                        <form th:if="${!joinedGroupIds.contains(group.groupId)}"
+                        <form th:if="${!joinedGroupIds.contains(group.groupId)
+                                      and !ownedGroupIds.contains(group.groupId)
+                                      and !pendingJoinRequestGroupIds.contains(group.groupId)}"
                               th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                               method="post">
                             <button type="submit" class="kdg-button kdg-button--success">
-                                <i class="bi bi-person-plus" aria-hidden="true"></i>
-                                <span>Join</span>
+                                <i class="bi bi-send" aria-hidden="true"></i>
+                                <span th:text="${rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join'}">
+                                    Request to join
+                                </span>
                             </button>
                         </form>
 
-                        <form th:if="${joinedGroupIds.contains(group.groupId)}"
+                        <button th:if="${pendingJoinRequestGroupIds.contains(group.groupId)}"
+                                type="button"
+                                class="kdg-button kdg-button--subtle kdg-button--pending"
+                                disabled>
+                            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                            <span>Request pending</span>
+                        </button>
+
+                        <form th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}"
                               th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
                               method="post">
                             <button type="submit" class="kdg-button kdg-button--danger">

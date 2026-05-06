@@ -35,26 +35,37 @@
                     <i class="bi bi-stars" aria-hidden="true"></i>
                     <span>You created this group</span>
                 </div>
-                <div class="travelgroup-status travelgroup-status--joined" th:if="${isJoined}">
+                <div class="travelgroup-status travelgroup-status--joined" th:if="${isJoined and !isOwner}">
                     <i class="bi bi-check-circle" aria-hidden="true"></i>
                     <span>You are part of this group</span>
                 </div>
-                <div class="travelgroup-status" th:if="${!isJoined}">
+                <div class="travelgroup-status travelgroup-status--pending" th:if="${hasPendingJoinRequest}">
+                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                    <span>Your request is pending</span>
+                </div>
+                <div class="travelgroup-status travelgroup-status--rejected" th:if="${hasRejectedJoinRequest}">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>You can request again</span>
+                </div>
+                <div class="travelgroup-status"
+                     th:if="${!isJoined and !isOwner and !hasPendingJoinRequest and !hasRejectedJoinRequest}">
                     <i class="bi bi-info-circle" aria-hidden="true"></i>
-                    <span>You can join this group</span>
+                    <span>Request approval to join</span>
                 </div>
 
-                <form th:if="${!isJoined}"
+                <form th:if="${!isJoined and !isOwner and !hasPendingJoinRequest}"
                       th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                       method="post">
                     <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
                     <button type="submit" class="kdg-button kdg-button--success travelgroup-detail__primary-action">
-                        <i class="bi bi-person-plus" aria-hidden="true"></i>
-                        <span>Join</span>
+                        <i class="bi bi-send" aria-hidden="true"></i>
+                        <span th:text="${hasRejectedJoinRequest ? 'Request again' : 'Request to join'}">
+                            Request to join
+                        </span>
                     </button>
                 </form>
 
-                <form th:if="${isJoined}"
+                <form th:if="${isJoined and !isOwner}"
                       th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
                       method="post">
                     <button type="submit" class="kdg-button kdg-button--danger travelgroup-detail__primary-action">
@@ -129,6 +140,54 @@
                         </span>
                         <span class="kdg-meta__value" th:text="${group.activity.location}">Groenplaats</span>
                     </div>
+                </div>
+            </section>
+
+            <section class="kdg-panel travelgroup-detail__section" th:if="${isOwner}">
+                <div class="travelgroup-section-heading">
+                    <div>
+                        <p class="kdg-eyebrow">Requests</p>
+                        <h2>Join requests</h2>
+                    </div>
+                    <span class="travelgroup-request-count"
+                          th:text="${#lists.size(pendingJoinRequests) + ' pending'}">2 pending</span>
+                </div>
+
+                <div class="travelgroup-request-list" th:if="${!#lists.isEmpty(pendingJoinRequests)}">
+                    <article class="travelgroup-request-card" th:each="joinRequest : ${pendingJoinRequests}">
+                        <div class="travelgroup-request-card__avatar"
+                             th:text="${#strings.substring(joinRequest.member.name, 0, 1)}">N</div>
+                        <div class="travelgroup-request-card__body">
+                            <strong th:text="${joinRequest.member.name}">Noah Janssens</strong>
+                            <span>
+                                <i class="bi bi-envelope" aria-hidden="true"></i>
+                                <span th:text="${joinRequest.member.email}">noah@student.kdg.be</span>
+                            </span>
+                        </div>
+                        <div class="travelgroup-request-card__actions">
+                            <form th:action="@{/travelgroups/requests/{requestId}/accept(requestId=${joinRequest.id})}"
+                                  method="post">
+                                <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
+                                <button type="submit" class="kdg-button kdg-button--success kdg-button--subtle-success">
+                                    <i class="bi bi-check2" aria-hidden="true"></i>
+                                    <span>Accept</span>
+                                </button>
+                            </form>
+                            <form th:action="@{/travelgroups/requests/{requestId}/reject(requestId=${joinRequest.id})}"
+                                  method="post">
+                                <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
+                                <button type="submit" class="kdg-button kdg-button--danger kdg-button--subtle-danger">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                    <span>Reject</span>
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="kdg-empty travelgroup-request-empty" th:if="${#lists.isEmpty(pendingJoinRequests)}">
+                    <i class="bi bi-inbox" aria-hidden="true"></i>
+                    No pending join requests for this group.
                 </div>
             </section>
 
