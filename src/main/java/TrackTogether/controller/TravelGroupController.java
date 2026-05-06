@@ -157,6 +157,7 @@ public class TravelGroupController {
         return "redirect:/travelgroups";
     }
 
+
     @GetMapping("/{groupId}")
     public String showTravelGroupDetails(@PathVariable UUID groupId, Model model) {
         TravelGroup group = travelGroupService.getTravelGroupById(groupId);
