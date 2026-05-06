@@ -85,7 +85,12 @@ VALUES
     (19, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb8', '44444444-4444-4444-4444-444444444444', NULL),
     (20, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb9', '55555555-5555-5555-5555-555555555555', NULL),
     (21, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb9', '66666666-6666-6666-6666-666666666666', NULL),
-    (22, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb9', '77777777-7777-7777-7777-777777777777', NULL);
+    (22, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb9', '77777777-7777-7777-7777-777777777777', NULL),
+    (23, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', '22222222-2222-2222-2222-222222222222', NULL),
+    (24, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', '22222222-2222-2222-2222-222222222222', NULL),
+    (25, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb6', '55555555-5555-5555-5555-555555555555', NULL),
+    (26, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb7', '44444444-4444-4444-4444-444444444444', NULL),
+    (27, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb8', '22222222-2222-2222-2222-222222222222', NULL);
 
 INSERT INTO conversation (conversation_id, created_at, travel_group_id)
 VALUES
