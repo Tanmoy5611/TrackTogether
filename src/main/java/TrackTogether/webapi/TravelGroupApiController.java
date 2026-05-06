@@ -49,11 +49,21 @@ public class TravelGroupApiController {
                 .toList();
     }
 
-    // Join TravelGroup as the logged-in member
+    // Request access to a TravelGroup as the logged-in member
     @PostMapping("/{groupId}/join")
     public void joinTravelGroup(@PathVariable UUID groupId) {
 
-        service.joinTravelGroup(groupId);
+        service.requestToJoinTravelGroup(groupId);
+    }
+
+    @PostMapping("/requests/{requestId}/accept")
+    public void acceptJoinRequest(@PathVariable Integer requestId) {
+        service.acceptJoinRequest(requestId);
+    }
+
+    @PostMapping("/requests/{requestId}/reject")
+    public void rejectJoinRequest(@PathVariable Integer requestId) {
+        service.rejectJoinRequest(requestId);
     }
 
     // Leave TravelGroup as the logged-in member

@@ -23,17 +23,20 @@ public class TravelGroupService {
     private final ActivityRepository activityRepository;
     private final ConversationRepository conversationRepository;
     private final TravelGroupMemberRepository travelGroupMemberRepository;
+    private final JoinRequestRepository joinRequestRepository;
     private final CurrentUserService currentUserService;
 
     public TravelGroupService(TravelGroupRepository travelGroupRepository,
                               ActivityRepository activityRepository,
                               ConversationRepository conversationRepository,
                               TravelGroupMemberRepository travelGroupMemberRepository,
+                              JoinRequestRepository joinRequestRepository,
                               CurrentUserService currentUserService) {
         this.travelGroupRepository = travelGroupRepository;
         this.activityRepository = activityRepository;
         this.conversationRepository = conversationRepository;
         this.travelGroupMemberRepository = travelGroupMemberRepository;
+        this.joinRequestRepository = joinRequestRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -96,6 +99,34 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
+    public Set<UUID> getPendingJoinRequestGroupIds(List<TravelGroup> groups) {
+        return getJoinRequestGroupIds(groups, JoinRequestStatus.PENDING);
+    }
+
+    public Set<UUID> getRejectedJoinRequestGroupIds(List<TravelGroup> groups) {
+        return getJoinRequestGroupIds(groups, JoinRequestStatus.REJECTED);
+    }
+
+    public Map<UUID, Long> getPendingJoinRequestCounts(List<TravelGroup> groups) {
+        return groups.stream()
+                .collect(Collectors.toMap(
+                        TravelGroup::getGroupId,
+                        group -> joinRequestRepository.countByGroupAndStatus(group, JoinRequestStatus.PENDING)
+                ));
+    }
+
+    public JoinRequestStatus getCurrentUserJoinRequestStatus(TravelGroup group) {
+        Member member = currentUserService.getCurrentUser();
+        return joinRequestRepository.findByGroupAndMember(group, member)
+                .map(JoinRequest::getStatus)
+                .orElse(null);
+    }
+
+    public List<JoinRequest> getPendingJoinRequestsForGroup(TravelGroup group) {
+        ensureCurrentUserOwns(group);
+        return joinRequestRepository.findAllByGroupAndStatusOrderByRequestedAtAsc(group, JoinRequestStatus.PENDING);
+    }
+
     public List<TravelGroupMember> getMembersForGroup(TravelGroup group) {
         return travelGroupMemberRepository.findAllByGroup(group);
     }
@@ -105,6 +136,11 @@ public class TravelGroupService {
         List<TravelGroup> groups = travelGroupRepository.findAllByActivity_Id(activityId);
 
         for (TravelGroup group : groups) {
+            List<JoinRequest> joinRequests = joinRequestRepository.findAllByGroup(group);
+            if (!joinRequests.isEmpty()) {
+                joinRequestRepository.deleteAll(joinRequests);
+            }
+
             List<TravelGroupMember> memberships = travelGroupMemberRepository.findAllByGroup(group);
             if (!memberships.isEmpty()) {
                 travelGroupMemberRepository.deleteAll(memberships);
@@ -168,12 +204,16 @@ public class TravelGroupService {
 
         conversationRepository.save(conversation);
 
+        TravelGroupMember ownerMembership = new TravelGroupMember();
+        ownerMembership.setGroup(savedGroup);
+        ownerMembership.setMember(owner);
+        travelGroupMemberRepository.save(ownerMembership);
+
         return savedGroup;
     }
 
     @Transactional
-    public void joinTravelGroup(UUID groupId) {
-
+    public void requestToJoinTravelGroup(UUID groupId) {
         TravelGroup group = travelGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -182,8 +222,13 @@ public class TravelGroupService {
 
         Member member = currentUserService.getCurrentUser();
 
+        if (isCurrentUserOwner(group)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Group owners cannot request to join their own travel group"
+            );
+        }
 
-        // Prevent duplicate joins when the member is already joined
         boolean alreadyJoined =
                 travelGroupMemberRepository.existsByGroupAndMember(group, member);
 
@@ -194,7 +239,6 @@ public class TravelGroupService {
             );
         }
 
-        // Validate available spots
         long memberCount = travelGroupMemberRepository.countByGroup(group);
 
         if (!group.hasAvailableSpots(memberCount)) {
@@ -204,12 +248,89 @@ public class TravelGroupService {
             );
         }
 
-        // Create membership
+        JoinRequest joinRequest = joinRequestRepository.findByGroupAndMember(group, member)
+                .orElseGet(JoinRequest::new);
+
+        if (joinRequest.getStatus() == JoinRequestStatus.PENDING) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Join request is already pending"
+            );
+        }
+
+        joinRequest.setGroup(group);
+        joinRequest.setMember(member);
+        joinRequest.setStatus(JoinRequestStatus.PENDING);
+        joinRequest.setRequestedAt(LocalDateTime.now());
+        joinRequest.setRespondedAt(null);
+
+        joinRequestRepository.save(joinRequest);
+    }
+
+    @Transactional
+    public void joinTravelGroup(UUID groupId) {
+        requestToJoinTravelGroup(groupId);
+    }
+
+    @Transactional
+    public void acceptJoinRequest(Integer requestId) {
+        JoinRequest joinRequest = getJoinRequestById(requestId);
+        TravelGroup group = joinRequest.getGroup();
+
+        ensureCurrentUserOwns(group);
+
+        if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only pending join requests can be accepted"
+            );
+        }
+
+        boolean alreadyJoined =
+                travelGroupMemberRepository.existsByGroupAndMember(group, joinRequest.getMember());
+
+        if (alreadyJoined) {
+            joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
+            joinRequest.setRespondedAt(LocalDateTime.now());
+            joinRequestRepository.save(joinRequest);
+            return;
+        }
+
+        long memberCount = travelGroupMemberRepository.countByGroup(group);
+        if (!group.hasAvailableSpots(memberCount)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Travel group is full"
+            );
+        }
+
         TravelGroupMember groupMember = new TravelGroupMember();
         groupMember.setGroup(group);
-        groupMember.setMember(member);
+        groupMember.setMember(joinRequest.getMember());
 
         travelGroupMemberRepository.save(groupMember);
+
+        joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
+        joinRequest.setRespondedAt(LocalDateTime.now());
+        joinRequestRepository.save(joinRequest);
+    }
+
+    @Transactional
+    public void rejectJoinRequest(Integer requestId) {
+        JoinRequest joinRequest = getJoinRequestById(requestId);
+
+        ensureCurrentUserOwns(joinRequest.getGroup());
+
+        if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only pending join requests can be rejected"
+            );
+        }
+
+        joinRequest.setStatus(JoinRequestStatus.REJECTED);
+        joinRequest.setRespondedAt(LocalDateTime.now());
+        joinRequestRepository.save(joinRequest);
     }
 
     @Transactional
@@ -222,6 +343,13 @@ public class TravelGroupService {
                 ));
 
         Member member = currentUserService.getCurrentUser();
+
+        if (isCurrentUserOwner(group)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Group owners cannot leave their own travel group"
+            );
+        }
 
         TravelGroupMember membership = travelGroupMemberRepository
                 .findByGroupAndMember(group, member)
@@ -238,6 +366,11 @@ public class TravelGroupService {
         long remainingMembers = travelGroupMemberRepository.countByGroup(group);
 
         if (remainingMembers == 0) {
+            List<JoinRequest> joinRequests = joinRequestRepository.findAllByGroup(group);
+            if (!joinRequests.isEmpty()) {
+                joinRequestRepository.deleteAll(joinRequests);
+            }
+
             Conversation conversation = group.getConversation();
             if (conversation != null) {
                 conversation.setTravelGroup(null);
@@ -246,6 +379,37 @@ public class TravelGroupService {
             }
 
             travelGroupRepository.delete(group);
+        }
+    }
+
+    private Set<UUID> getJoinRequestGroupIds(List<TravelGroup> groups, JoinRequestStatus status) {
+        if (groups.isEmpty()) {
+            return Set.of();
+        }
+
+        Member member = currentUserService.getCurrentUser();
+
+        return joinRequestRepository.findAllByMemberAndGroupIn(member, groups)
+                .stream()
+                .filter(joinRequest -> joinRequest.getStatus() == status)
+                .map(joinRequest -> joinRequest.getGroup().getGroupId())
+                .collect(Collectors.toSet());
+    }
+
+    private JoinRequest getJoinRequestById(Integer requestId) {
+        return joinRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Join request not found"
+                ));
+    }
+
+    private void ensureCurrentUserOwns(TravelGroup group) {
+        if (!isCurrentUserOwner(group)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only the group creator can manage join requests"
+            );
         }
     }
 }
