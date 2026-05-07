@@ -50,7 +50,9 @@
                 <div class="travelgroup-status"
                      th:if="${!isJoined and !isOwner and !hasPendingJoinRequest and !hasRejectedJoinRequest}">
                     <i class="bi bi-info-circle" aria-hidden="true"></i>
-                    <span>Request approval to join</span>
+                    <span th:text="${joinApprovalRequired ? 'Request approval to join' : 'You can join this group'}">
+                        You can join this group
+                    </span>
                 </div>
 
                 <form th:if="${!isJoined and !isOwner and !hasPendingJoinRequest}"
@@ -58,9 +60,11 @@
                       method="post">
                     <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
                     <button type="submit" class="kdg-button kdg-button--success travelgroup-detail__primary-action">
-                        <i class="bi bi-send" aria-hidden="true"></i>
-                        <span th:text="${hasRejectedJoinRequest ? 'Request again' : 'Request to join'}">
-                            Request to join
+                        <i class="bi"
+                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                           aria-hidden="true"></i>
+                        <span th:text="${joinApprovalRequired ? (hasRejectedJoinRequest ? 'Request again' : 'Request to join') : 'Join'}">
+                            Join
                         </span>
                     </button>
                 </form>
@@ -143,7 +147,7 @@
                 </div>
             </section>
 
-            <section class="kdg-panel travelgroup-detail__section" th:if="${isOwner}">
+            <section class="kdg-panel travelgroup-detail__section" th:if="${isOwner and joinApprovalRequired}">
                 <div class="travelgroup-section-heading">
                     <div>
                         <p class="kdg-eyebrow">Requests</p>

@@ -32,7 +32,7 @@
 
                 <p class="kdg-subtitle"
                    th:text="#{travelgroup.list.subtitle}">
-                    Explore available travel groups and request approval to join.
+                    Explore available travel groups and join one that fits your trip.
                 </p>
             </div>
 
@@ -92,7 +92,7 @@
                             You
                         </span>
                         <span class="travelgroup-owner-card__badge travelgroup-owner-card__badge--requests"
-                              th:if="${ownedGroupIds.contains(group.groupId) and pendingJoinRequestCounts[group.groupId] > 0}"
+                              th:if="${joinApprovalRequired and ownedGroupIds.contains(group.groupId) and pendingJoinRequestCounts[group.groupId] > 0}"
                               th:text="${pendingJoinRequestCounts[group.groupId] + ' requests'}">
                             2 requests
                         </span>
@@ -134,18 +134,20 @@
 
                         <form th:if="${!joinedGroupIds.contains(group.groupId)
                                       and !ownedGroupIds.contains(group.groupId)
-                                      and !pendingJoinRequestGroupIds.contains(group.groupId)}"
+                                      and (!joinApprovalRequired or !pendingJoinRequestGroupIds.contains(group.groupId))}"
                               th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                               method="post">
                             <button type="submit" class="kdg-button kdg-button--success">
-                                <i class="bi bi-send" aria-hidden="true"></i>
-                                <span th:text="${rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join'}">
-                                    Request to join
+                                <i class="bi"
+                                   th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                                   aria-hidden="true"></i>
+                                <span th:text="${joinApprovalRequired ? (rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join') : 'Join'}">
+                                    Join
                                 </span>
                             </button>
                         </form>
 
-                        <button th:if="${pendingJoinRequestGroupIds.contains(group.groupId)}"
+                        <button th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}"
                                 type="button"
                                 class="kdg-button kdg-button--subtle kdg-button--pending"
                                 disabled>
