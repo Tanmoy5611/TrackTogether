@@ -1574,6 +1574,20 @@ body.kdg-page {
     .travelgroup-request-card__actions .kdg-button {
         width: 100%;
     }
+
+    .system-setting {
+        grid-template-columns: 1fr;
+    }
+
+    .system-setting__form,
+    .system-setting-toggle {
+        width: 100%;
+    }
+
+    .system-setting-toggle {
+        justify-content: center;
+    }
+
 }
 
 @media (max-width: 992px) {
@@ -1826,7 +1840,7 @@ form.chat-list-item {
 .chat-send-form .form-control {
     flex: 1;
 }
-/* ===== Chat active panel styling: end ===== */
+/* Chat active panel styling: end */
 
 .dashboard-tile {
     display: flex;
@@ -1834,6 +1848,7 @@ form.chat-list-item {
     gap: 1rem;
 
     height: 100%;
+    min-height: 8.75rem;
     padding: 1.5rem;
 
     background: #ffffff;
@@ -1868,6 +1883,11 @@ form.chat-list-item {
     flex-shrink: 0;
 }
 
+.dashboard-tile-icon--settings {
+    background-color: rgba(126, 87, 194, 0.1);
+    color: #6f42c1;
+}
+
 .dashboard-tile h2 {
     font-size: 1.1rem;
     font-weight: 700;
@@ -1878,4 +1898,158 @@ form.chat-list-item {
     font-size: 0.9rem;
     color: #6c757d;
     margin: 0;
+}
+
+.system-settings-panel {
+    max-width: 72rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0.9rem 2rem rgba(34, 34, 34, 0.07);
+}
+
+.system-settings-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 0.35rem;
+    background: linear-gradient(90deg, var(--kdg-blue), #2f8f5b);
+}
+
+.system-setting {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.system-setting__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.6rem;
+    height: 3.6rem;
+    border-radius: 0.75rem;
+    background: rgba(47, 127, 163, 0.12);
+    color: var(--kdg-blue-dark);
+    font-size: 1.45rem;
+    box-shadow: inset 0 0 0 1px rgba(47, 127, 163, 0.08);
+    transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.system-setting.is-enabled .system-setting__icon {
+    background: rgba(47, 143, 91, 0.13);
+    color: #257449;
+}
+
+.system-setting__body {
+    min-width: 0;
+}
+
+.system-setting__body h2 {
+    margin: 0 0 0.35rem;
+}
+
+.system-setting__body p:not(.kdg-eyebrow) {
+    max-width: 46rem;
+    margin: 0;
+    color: var(--kdg-muted);
+    line-height: 1.55;
+}
+
+.system-setting__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(47, 127, 163, 0.1);
+    color: var(--kdg-blue-dark);
+    font-weight: 900;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    margin-top: 0.8rem;
+}
+
+.system-setting__status.is-on {
+    background: rgba(47, 143, 91, 0.13);
+    color: #257449;
+}
+
+.system-setting__status.is-off {
+    background: rgba(47, 127, 163, 0.1);
+    color: var(--kdg-blue-dark);
+}
+
+.system-setting__form {
+    margin: 0;
+}
+
+.system-setting-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 7rem;
+    padding: 0.65rem 0.85rem;
+    border: 2px solid #cbd8d3;
+    border-radius: 999px;
+    background: var(--kdg-white);
+    color: var(--kdg-muted);
+    font-weight: 900;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.system-setting-toggle:hover {
+    border-color: rgba(47, 127, 163, 0.42);
+    box-shadow: 0 0.75rem 1.35rem rgba(34, 34, 34, 0.07);
+    transform: translateY(-1px);
+}
+
+.system-setting-toggle.is-on {
+    border-color: #2f8f5b;
+    color: #257449;
+}
+
+.system-setting-toggle__track {
+    position: relative;
+    width: 2.35rem;
+    height: 1.3rem;
+    border-radius: 999px;
+    background: #cbd8d3;
+    transition: background-color 0.16s ease;
+}
+
+.system-setting-toggle.is-on .system-setting-toggle__track {
+    background: #2f8f5b;
+}
+
+.system-setting-toggle__thumb {
+    position: absolute;
+    top: 0.18rem;
+    left: 0.18rem;
+    width: 0.94rem;
+    height: 0.94rem;
+    border-radius: 999px;
+    background: var(--kdg-white);
+    transition: transform 0.16s ease;
+}
+
+.system-setting-toggle.is-on .system-setting-toggle__thumb {
+    transform: translateX(1.05rem);
+}
+
+@media (max-width: 760px) {
+
+    .system-setting {
+        grid-template-columns: 1fr;
+    }
+
+    .system-setting__form,
+    .system-setting-toggle {
+        width: 100%;
+    }
+
+    .system-setting-toggle {
+        justify-content: center;
+    }
 }
