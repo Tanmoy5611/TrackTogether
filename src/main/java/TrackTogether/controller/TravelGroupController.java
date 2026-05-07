@@ -39,11 +39,13 @@ public class TravelGroupController {
         Set<UUID> joinedGroupIds = travelGroupService.getJoinedGroupIds(groups);
         Set<UUID> ownedGroupIds = travelGroupService.getOwnedGroupIds(groups);
         Map<UUID, Long> memberCounts = travelGroupService.getMemberCounts(groups);
+        boolean joinApprovalRequired = travelGroupService.isJoinApprovalRequired();
 
         model.addAttribute("groups", groups);
         model.addAttribute("joinedGroupIds", joinedGroupIds);
         model.addAttribute("ownedGroupIds", ownedGroupIds);
         model.addAttribute("memberCounts", memberCounts);
+        model.addAttribute("joinApprovalRequired", joinApprovalRequired);
         model.addAttribute("pendingJoinRequestGroupIds", travelGroupService.getPendingJoinRequestGroupIds(groups));
         model.addAttribute("rejectedJoinRequestGroupIds", travelGroupService.getRejectedJoinRequestGroupIds(groups));
         model.addAttribute("pendingJoinRequestCounts", travelGroupService.getPendingJoinRequestCounts(groups));
@@ -101,9 +103,15 @@ public class TravelGroupController {
                                   RedirectAttributes redirectAttributes) {
 
         try {
-            travelGroupService.requestToJoinTravelGroup(groupId);
+            boolean joinApprovalRequired = travelGroupService.isJoinApprovalRequired();
+            travelGroupService.joinTravelGroup(groupId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Join request sent. The group creator can accept or reject it.");
+            redirectAttributes.addFlashAttribute(
+                    "toastMessage",
+                    joinApprovalRequired
+                            ? "Join request sent. The group creator can accept or reject it."
+                            : "Joined travel group."
+            );
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -164,18 +172,20 @@ public class TravelGroupController {
         boolean joined = travelGroupService.isCurrentUserMember(group);
         boolean owner = travelGroupService.isCurrentUserOwner(group);
         JoinRequestStatus joinRequestStatus = travelGroupService.getCurrentUserJoinRequestStatus(group);
+        boolean joinApprovalRequired = travelGroupService.isJoinApprovalRequired();
         long memberCount = groupMembers.size();
 
         model.addAttribute("group", group);
         model.addAttribute("groupMembers", groupMembers);
-        model.addAttribute("pendingJoinRequests", owner ? travelGroupService.getPendingJoinRequestsForGroup(group) : List.of());
+        model.addAttribute("pendingJoinRequests", owner && joinApprovalRequired ? travelGroupService.getPendingJoinRequestsForGroup(group) : List.of());
         model.addAttribute("memberCount", memberCount);
         model.addAttribute("remainingSpots", Math.max(group.getMaxMembers() - memberCount, 0));
         model.addAttribute("isJoined", joined);
         model.addAttribute("isOwner", owner);
+        model.addAttribute("joinApprovalRequired", joinApprovalRequired);
         model.addAttribute("joinRequestStatus", joinRequestStatus);
-        model.addAttribute("hasPendingJoinRequest", joinRequestStatus == JoinRequestStatus.PENDING);
-        model.addAttribute("hasRejectedJoinRequest", joinRequestStatus == JoinRequestStatus.REJECTED);
+        model.addAttribute("hasPendingJoinRequest", joinApprovalRequired && joinRequestStatus == JoinRequestStatus.PENDING);
+        model.addAttribute("hasRejectedJoinRequest", joinApprovalRequired && joinRequestStatus == JoinRequestStatus.REJECTED);
 
         return "travelgroup-detail";
     }

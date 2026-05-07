@@ -25,19 +25,22 @@ public class TravelGroupService {
     private final TravelGroupMemberRepository travelGroupMemberRepository;
     private final JoinRequestRepository joinRequestRepository;
     private final CurrentUserService currentUserService;
+    private final SystemSettingsService systemSettingsService;
 
     public TravelGroupService(TravelGroupRepository travelGroupRepository,
                               ActivityRepository activityRepository,
                               ConversationRepository conversationRepository,
                               TravelGroupMemberRepository travelGroupMemberRepository,
                               JoinRequestRepository joinRequestRepository,
-                              CurrentUserService currentUserService) {
+                              CurrentUserService currentUserService,
+                              SystemSettingsService systemSettingsService) {
         this.travelGroupRepository = travelGroupRepository;
         this.activityRepository = activityRepository;
         this.conversationRepository = conversationRepository;
         this.travelGroupMemberRepository = travelGroupMemberRepository;
         this.joinRequestRepository = joinRequestRepository;
         this.currentUserService = currentUserService;
+        this.systemSettingsService = systemSettingsService;
     }
 
     // Get all travel groups
@@ -125,6 +128,11 @@ public class TravelGroupService {
     public List<JoinRequest> getPendingJoinRequestsForGroup(TravelGroup group) {
         ensureCurrentUserOwns(group);
         return joinRequestRepository.findAllByGroupAndStatusOrderByRequestedAtAsc(group, JoinRequestStatus.PENDING);
+    }
+
+    public boolean isJoinApprovalRequired() {
+        // Central helper so controllers and templates all use the same setting.
+        return systemSettingsService.isTravelGroupJoinApprovalEnabled();
     }
 
     public List<TravelGroupMember> getMembersForGroup(TravelGroup group) {
@@ -269,7 +277,13 @@ public class TravelGroupService {
 
     @Transactional
     public void joinTravelGroup(UUID groupId) {
-        requestToJoinTravelGroup(groupId);
+        // The same join button can either create a request or join directly.
+        if (isJoinApprovalRequired()) {
+            requestToJoinTravelGroup(groupId);
+            return;
+        }
+
+        joinTravelGroupDirectly(groupId);
     }
 
     @Transactional
@@ -402,6 +416,53 @@ public class TravelGroupService {
                         HttpStatus.NOT_FOUND,
                         "Join request not found"
                 ));
+    }
+
+    private void joinTravelGroupDirectly(UUID groupId) {
+        TravelGroup group = travelGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Travel group not found"
+                ));
+
+        Member member = currentUserService.getCurrentUser();
+
+        if (isCurrentUserOwner(group)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Group owners are already part of their own travel group"
+            );
+        }
+
+        boolean alreadyJoined = travelGroupMemberRepository.existsByGroupAndMember(group, member);
+        if (alreadyJoined) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Member already joined this travel group"
+            );
+        }
+
+        long memberCount = travelGroupMemberRepository.countByGroup(group);
+        if (!group.hasAvailableSpots(memberCount)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Travel group is full"
+            );
+        }
+
+        TravelGroupMember groupMember = new TravelGroupMember();
+        groupMember.setGroup(group);
+        groupMember.setMember(member);
+
+        travelGroupMemberRepository.save(groupMember);
+
+        // If approval was turned off later, old requests should not stay pending.
+        joinRequestRepository.findByGroupAndMember(group, member)
+                .ifPresent(joinRequest -> {
+                    joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
+                    joinRequest.setRespondedAt(LocalDateTime.now());
+                    joinRequestRepository.save(joinRequest);
+                });
     }
 
     private void ensureCurrentUserOwns(TravelGroup group) {

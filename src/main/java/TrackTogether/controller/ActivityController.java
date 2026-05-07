@@ -98,6 +98,7 @@ public class ActivityController {
         model.addAttribute("joinedGroupIds", travelGroupService.getJoinedGroupIds(activityTravelGroups));
         model.addAttribute("ownedGroupIds", travelGroupService.getOwnedGroupIds(activityTravelGroups));
         model.addAttribute("memberCounts", travelGroupService.getMemberCounts(activityTravelGroups));
+        model.addAttribute("joinApprovalRequired", travelGroupService.isJoinApprovalRequired());
         model.addAttribute("pendingJoinRequestGroupIds", travelGroupService.getPendingJoinRequestGroupIds(activityTravelGroups));
         model.addAttribute("rejectedJoinRequestGroupIds", travelGroupService.getRejectedJoinRequestGroupIds(activityTravelGroups));
         model.addAttribute("pendingJoinRequestCounts", travelGroupService.getPendingJoinRequestCounts(activityTravelGroups));
