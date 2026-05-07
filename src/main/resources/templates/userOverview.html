@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title th:text="|${user.name} - User Overview|">User Overview</title>
+</head>
+<body>
+
+<h1 th:text="${user.name}">user Name</h1>
+
+<table border="1">
+    <tr>
+        <th>User ID</th>
+        <td th:text="${user.userId}"></td>
+    </tr>
+
+    <tr>
+        <th>Original ID</th>
+        <td th:text="${user.originalId}"></td>
+    </tr>
+
+    <tr>
+        <th>Name</th>
+        <td th:text="${user.name}"></td>
+    </tr>
+
+    <tr>
+        <th>Email</th>
+        <td th:text="${user.email}"></td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+        <td th:text="${user.status}"></td>
+    </tr>
+    <tr>
+        <th>UserType</th>
+        <td th:text="${userType}"></td>
+    </tr>
+    <tr th:if="${userType == 'Member'}">
+        <th>Preferred Transport Mode</th>
+        <td th:text="${user.preferredTransportMode ?: 'Not set'}"></td>
+    </tr>
+    <tr th:if="${userType == 'Member'}">
+        <th>Default Departure Location</th>
+        <td th:text="${user.defaultDepartureLocation ?: 'Not set'}"></td>
+    </tr>
+    <tr th:if="${userType == 'Member'}">
+        <th>Default Coordinates</th>
+        <td th:text="${user.defaultLatitude != null and user.defaultLongitude != null ? user.defaultLatitude + ', ' + user.defaultLongitude : 'Not set'}"></td>
+    </tr>
+</table>
+
+<section th:if="${canEditTravelPreferences}">
+    <h2>Travel Preferences</h2>
+
+    <form th:action="@{/member/profile/travel-preferences}" method="post">
+        <div>
+            <label for="preferredTransportMode">Preferred transport mode</label>
+            <select id="preferredTransportMode" name="preferredTransportMode" required>
+                <option value="" disabled th:selected="${user.preferredTransportMode == null}">Select a transport mode</option>
+                <option th:each="mode : ${T(TrackTogether.domain.TransportMode).values()}"
+                        th:value="${mode}"
+                        th:text="${mode}"
+                        th:selected="${mode == user.preferredTransportMode}">
+                    Transport mode
+                </option>
+            </select>
+        </div>
+
+        <div>
+            <label for="defaultDepartureLocation">Default departure location</label>
+            <input id="defaultDepartureLocation"
+                   name="defaultDepartureLocation"
+                   type="text"
+                   th:value="${user.defaultDepartureLocation}"
+                   required>
+        </div>
+
+        <div>
+            <label for="defaultLatitude">Default latitude</label>
+            <input id="defaultLatitude"
+                   name="defaultLatitude"
+                   type="number"
+                   step="any"
+                   min="-90"
+                   max="90"
+                   th:value="${user.defaultLatitude}">
+        </div>
+
+        <div>
+            <label for="defaultLongitude">Default longitude</label>
+            <input id="defaultLongitude"
+                   name="defaultLongitude"
+                   type="number"
+                   step="any"
+                   min="-180"
+                   max="180"
+                   th:value="${user.defaultLongitude}">
+        </div>
+
+        <button type="submit">Save travel preferences</button>
+    </form>
+</section>
+
+</body>
+</html>
