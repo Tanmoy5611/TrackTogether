@@ -93,7 +93,7 @@
               <div class="travelgroup-owner-card__avatar"
                    th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
               <div class="travelgroup-owner-card__body">
-                <span>Created by</span>
+                <span>Owner</span>
                 <strong th:text="${group.owner.name}">Tanmoy Das</strong>
               </div>
               <span class="travelgroup-owner-card__badge"
@@ -111,7 +111,19 @@
               <span class="travelgroup-status travelgroup-status--owner"
                     th:if="${ownedGroupIds.contains(group.groupId)}">
                 <i class="bi bi-stars" aria-hidden="true"></i>
-                <span>You created this group</span>
+                <span>You own this group</span>
+              </span>
+              <span class="travelgroup-owner-note"
+                    th:if="${ownedGroupIds.contains(group.groupId) and !deletableOwnedGroupIds.contains(group.groupId)}">
+                <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                <span th:text="${ownerCannotLeaveMessage}">
+                  Transfer ownership before leaving this travel group.
+                </span>
+              </span>
+              <span class="travelgroup-owner-note travelgroup-owner-note--danger"
+                    th:if="${deletableOwnedGroupIds.contains(group.groupId)}">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                <span>Only you are in this group. Leaving will delete it.</span>
               </span>
               <span class="travelgroup-status travelgroup-status--joined"
                     th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
@@ -198,11 +210,54 @@
                   <span>Leave</span>
                 </button>
               </form>
+
+              <button th:if="${deletableOwnedGroupIds.contains(group.groupId)}"
+                      type="button"
+                      class="kdg-button kdg-button--danger activity-group-actions__leave js-travelgroup-delete-button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#deleteTravelGroupModal"
+                      th:data-delete-url="@{/travelgroups/{groupId}/delete(groupId=${group.groupId})}"
+                      th:data-redirect-to="@{/activities/{id}(id=${activity.id})}">
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                  <span>Delete &amp; Leave</span>
+              </button>
             </div>
           </div>
         </article>
       </div>
     </section>
+
+    <div class="modal fade"
+         id="deleteTravelGroupModal"
+         tabindex="-1"
+         aria-labelledby="deleteTravelGroupModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteTravelGroupModalLabel">
+              <i class="bi bi-exclamation-triangle text-danger" aria-hidden="true"></i>
+              Delete Travel Group?
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>You are the owner and the only member of this travel group.</p>
+            <p class="mb-0">Leaving will permanently delete this travel group and its chat.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <form id="deleteTravelGroupForm" method="post">
+              <input id="deleteTravelGroupRedirect" type="hidden" name="redirectTo" th:value="${'/activities/' + activity.id}">
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+                Delete Group
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main>
 
@@ -235,6 +290,7 @@
 
   /*]]>*/
 </script>
+<script defer th:src="@{/js/travelgroup-delete-modal.js}"></script>
 
 </body>
 </html>

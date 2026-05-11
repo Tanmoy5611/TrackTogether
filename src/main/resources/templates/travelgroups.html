@@ -11,7 +11,19 @@
 <div class="kdg-shell">
     <header th:replace="~{fragments/nav :: appNav}"></header>
 
-    <main class="kdg-main">
+    <main class="kdg-main"
+          th:with="groups=${page.groups},
+                   myTravelGroups=${page.myTravelGroups},
+                   exploreTravelGroups=${page.exploreTravelGroups},
+                   joinedGroupIds=${page.joinedGroupIds},
+                   ownedGroupIds=${page.ownedGroupIds},
+                   deletableOwnedGroupIds=${page.deletableOwnedGroupIds},
+                   memberCounts=${page.memberCounts},
+                   joinApprovalRequired=${page.joinApprovalRequired},
+                   ownerCannotLeaveMessage=${page.ownerCannotLeaveMessage},
+                   pendingJoinRequestGroupIds=${page.pendingJoinRequestGroupIds},
+                   rejectedJoinRequestGroupIds=${page.rejectedJoinRequestGroupIds},
+                   pendingJoinRequestCounts=${page.pendingJoinRequestCounts}">
         <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
             <a href="index.html"
                th:href="@{/}">
@@ -108,7 +120,7 @@
                                 <div class="travelgroup-owner-card__avatar"
                                      th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
                                 <div class="travelgroup-owner-card__body">
-                                    <span>Created by</span>
+                                    <span>Owner</span>
                                     <strong th:text="${group.owner.name}">Tanmoy Das</strong>
                                 </div>
                                 <span class="travelgroup-owner-card__badge"
@@ -126,7 +138,19 @@
                                 <span class="travelgroup-status travelgroup-status--owner"
                                       th:if="${ownedGroupIds.contains(group.groupId)}">
                                     <i class="bi bi-stars" aria-hidden="true"></i>
-                                    <span>You created this group</span>
+                                    <span>You own this group</span>
+                                </span>
+                                <span class="travelgroup-owner-note"
+                                      th:if="${ownedGroupIds.contains(group.groupId) and !deletableOwnedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                                    <span th:text="${ownerCannotLeaveMessage}">
+                                        Transfer ownership before leaving this travel group.
+                                    </span>
+                                </span>
+                                <span class="travelgroup-owner-note travelgroup-owner-note--danger"
+                                      th:if="${deletableOwnedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                                    <span>Only you are in this group. Leaving will delete it.</span>
                                 </span>
                                 <span class="travelgroup-status travelgroup-status--joined"
                                       th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
@@ -217,6 +241,17 @@
                                         <span>Leave</span>
                                     </button>
                                 </form>
+
+                                <button th:if="${deletableOwnedGroupIds.contains(group.groupId)}"
+                                        type="button"
+                                        class="kdg-button kdg-button--danger js-travelgroup-delete-button"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteTravelGroupModal"
+                                        th:data-delete-url="@{/travelgroups/{groupId}/delete(groupId=${group.groupId})}"
+                                        data-redirect-to="/travelgroups">
+                                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                                    <span>Delete &amp; Leave</span>
+                                </button>
                             </div>
                         </div>
                     </article>
@@ -268,7 +303,7 @@
                                 <div class="travelgroup-owner-card__avatar"
                                      th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
                                 <div class="travelgroup-owner-card__body">
-                                    <span>Created by</span>
+                                    <span>Owner</span>
                                     <strong th:text="${group.owner.name}">Tanmoy Das</strong>
                                 </div>
                                 <span class="travelgroup-owner-card__badge"
@@ -286,7 +321,14 @@
                                 <span class="travelgroup-status travelgroup-status--owner"
                                       th:if="${ownedGroupIds.contains(group.groupId)}">
                                     <i class="bi bi-stars" aria-hidden="true"></i>
-                                    <span>You created this group</span>
+                                    <span>You own this group</span>
+                                </span>
+                                <span class="travelgroup-owner-note"
+                                      th:if="${ownedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                                    <span th:text="${ownerCannotLeaveMessage}">
+                                        Transfer ownership before leaving this travel group.
+                                    </span>
                                 </span>
                                 <span class="travelgroup-status travelgroup-status--joined"
                                       th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
@@ -383,14 +425,44 @@
                 </div>
             </section>
         </div>
+
+        <div class="modal fade"
+             id="deleteTravelGroupModal"
+             tabindex="-1"
+             aria-labelledby="deleteTravelGroupModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteTravelGroupModalLabel">
+                            <i class="bi bi-exclamation-triangle text-danger" aria-hidden="true"></i>
+                            Delete Travel Group?
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>You are the owner and the only member of this travel group.</p>
+                        <p class="mb-0">Leaving will permanently delete this travel group and its chat.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form id="deleteTravelGroupForm" method="post">
+                            <input id="deleteTravelGroupRedirect" type="hidden" name="redirectTo" value="/travelgroups">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                                Delete Group
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer th:replace="~{fragments/footer :: appFooter}"></footer>
 </div>
 
+<script defer th:src="@{/js/travelgroup-delete-modal.js}"></script>
 
-<script type="module"
-        th:src="@{/js/main.js}">
-</script>
 </body>
 </html>
