@@ -762,6 +762,17 @@ body.kdg-page {
     color: #8e2525;
 }
 
+.travelgroup-card-status-block {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+}
+
+.travelgroup-card-status-block .travelgroup-status {
+    box-shadow: none;
+}
+
 .travelgroup-detail__summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));

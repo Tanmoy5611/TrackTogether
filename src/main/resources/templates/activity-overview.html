@@ -107,6 +107,39 @@
               </span>
             </div>
 
+            <div class="travelgroup-card-status-block" aria-label="Your membership status">
+              <span class="travelgroup-status travelgroup-status--owner"
+                    th:if="${ownedGroupIds.contains(group.groupId)}">
+                <i class="bi bi-stars" aria-hidden="true"></i>
+                <span>You created this group</span>
+              </span>
+              <span class="travelgroup-status travelgroup-status--joined"
+                    th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
+                <i class="bi bi-check-circle" aria-hidden="true"></i>
+                <span>You joined this group</span>
+              </span>
+              <span class="travelgroup-status travelgroup-status--pending"
+                    th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                <span>Request pending</span>
+              </span>
+              <span class="travelgroup-status travelgroup-status--rejected"
+                    th:if="${joinApprovalRequired and rejectedJoinRequestGroupIds.contains(group.groupId)}">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                <span>Request rejected</span>
+              </span>
+              <span class="travelgroup-status"
+                    th:if="${!joinedGroupIds.contains(group.groupId)
+                            and !ownedGroupIds.contains(group.groupId)
+                            and (!joinApprovalRequired or (!pendingJoinRequestGroupIds.contains(group.groupId)
+                                and !rejectedJoinRequestGroupIds.contains(group.groupId)))}">
+                <i class="bi bi-person-plus" aria-hidden="true"></i>
+                <span th:text="${joinApprovalRequired ? 'Not requested yet' : 'Not joined yet'}">
+                  Not joined yet
+                </span>
+              </span>
+            </div>
+
             <dl class="kdg-meta">
               <div class="kdg-meta__row">
                 <dt class="kdg-meta__label">
