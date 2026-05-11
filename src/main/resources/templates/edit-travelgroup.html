@@ -3,7 +3,7 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title th:text="#{travelgroup.create.title}">Create Travel Group</title>
+    <title>Edit Travel Group</title>
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,41 +16,41 @@
 
     <main class="kdg-main">
         <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
-            <a href="index.html"
-               th:href="@{/}">
+            <a th:href="@{/}">
                 <i class="bi bi-house-door" aria-hidden="true"></i>
                 Home
             </a>
             <span>&gt;</span>
-            <a href="travelgroups.html"
-               th:href="@{/travelgroups}">
+            <a th:href="@{/travelgroups}">
                 <i class="bi bi-people" aria-hidden="true"></i>
                 Travel Groups
             </a>
             <span>&gt;</span>
-            <span th:text="#{travelgroup.create.heading}">Create Travel Group</span>
+            <a th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}"
+               th:text="${group.activity.name}">
+                Group details
+            </a>
+            <span>&gt;</span>
+            <span>Edit</span>
         </nav>
 
         <section class="kdg-page-header">
             <div>
-                <p class="kdg-eyebrow">TrackTogether</p>
-                <h1 class="kdg-title"
-                    th:text="#{travelgroup.create.heading}">
-                    Create Travel Group
-                </h1>
-                <p class="kdg-subtitle"
-                   th:text="#{travelgroup.create.subtitle}">
-                    Fill in the details to create a new travel group.
+                <p class="kdg-eyebrow">Owner tools</p>
+                <h1 class="kdg-title">Edit travel group</h1>
+                <p class="kdg-subtitle">
+                    Update the group details students see before they join.
                 </p>
             </div>
         </section>
 
         <section class="kdg-panel kdg-panel--form">
-            <form action="#"
-                  th:action="@{/travelgroups/create}"
+            <form th:action="@{/travelgroups/{groupId}/edit(groupId=${group.groupId})}"
                   th:object="${travelGroupForm}"
                   method="post"
                   class="kdg-form">
+
+                <input type="hidden" th:field="*{activityId}">
 
                 <div class="kdg-empty kdg-empty--compact"
                      th:if="${#fields.hasGlobalErrors()}">
@@ -62,84 +62,63 @@
                 </div>
 
                 <div class="kdg-form-row">
-                    <label for="activityId" class="kdg-label">
+                    <label class="kdg-label">
                         <i class="bi bi-calendar-event" aria-hidden="true"></i>
-                        <span>Select Activity</span>
+                        <span>Activity</span>
                     </label>
                     <div class="kdg-input-shell">
-                        <i class="bi bi-list-ul" aria-hidden="true"></i>
-                        <select id="activityId"
-                                name="activityId"
-                                th:field="*{activityId}"
-                                class="kdg-control"
-                                th:errorclass="is-invalid"
-                                required>
-                            <option value="" disabled selected>Select an activity</option>
-                            <option th:each="activity : ${activities}"
-                                    th:value="${activity.id}"
-                                    th:data-location="${activity.location}"
-                                    th:data-latitude="${activity.latitude}"
-                                    th:data-longitude="${activity.longitude}"
-                                    th:data-departure-limit="${activityDepartureLimits[activity.id]}"
-                                    th:text="${activity.name + ' - ' + activity.date + ' - ' + activity.location}">
-                                Activity option
-                            </option>
-                        </select>
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <input type="text"
+                               class="kdg-control"
+                               th:value="${group.activity.name + ' - ' + group.activity.date}"
+                               disabled>
                     </div>
-                    <div class="kdg-help" th:if="${selectedActivity != null}">
-                        Creating a travel group for the selected activity.
-                    </div>
-                    <div class="kdg-help" th:if="${selectedActivity == null}">
-                        Choose the activity this travel group belongs to.
-                    </div>
-                    <div class="invalid-feedback"
-                         th:text="#{travelgroup.form.activityId.invalid}">
-                        Please enter a valid activity id.
-                    </div>
+                    <p class="kdg-help">
+                        Activity cannot be changed after the travel group has been created.
+                    </p>
                 </div>
 
                 <div class="kdg-form-row">
                     <label for="maxMembers" class="kdg-label">
                         <i class="bi bi-people" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.maxMembers}">Maximum Members</span>
+                        <span>Maximum Members</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-person-plus" aria-hidden="true"></i>
                         <input type="number"
                                id="maxMembers"
-                               name="maxMembers"
                                th:field="*{maxMembers}"
                                class="kdg-control"
                                th:errorclass="is-invalid"
-                               min="1"
-                               placeholder="Enter maximum number of members"
+                               th:min="${memberCount > 1 ? memberCount : 1}"
                                required>
                     </div>
-                    <div class="invalid-feedback"
-                         th:text="#{travelgroup.form.maxMembers.invalid}">
-                        Please enter a valid number greater than 0.
+                    <div class="kdg-help"
+                         th:text="${'This group already has ' + memberCount + ' member(s), so the maximum cannot be lower.'}">
+                        This group already has members.
+                    </div>
+                    <div class="invalid-feedback">
+                        Please enter a valid member limit.
                     </div>
                 </div>
 
                 <div class="kdg-form-row">
                     <label for="location" class="kdg-label">
                         <i class="bi bi-geo-alt" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.location}">Location</span>
+                        <span>Meeting location</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-pin-map" aria-hidden="true"></i>
                         <input type="text"
                                id="location"
-                               name="location"
                                th:field="*{location}"
                                class="kdg-control"
                                th:errorclass="is-invalid"
                                placeholder="Enter meeting location"
                                required>
                     </div>
-                    <div class="invalid-feedback"
-                         th:text="#{travelgroup.form.location.invalid}">
-                        Please enter a location.
+                    <div class="invalid-feedback">
+                        Please enter a meeting location.
                     </div>
                 </div>
 
@@ -160,8 +139,9 @@
                                th:max="${maxDepartureTime}"
                                required>
                     </div>
-                    <div class="kdg-help" id="departureTimeHelp">
-                        Choose a departure time from now until the selected activity starts.
+                    <div class="kdg-help"
+                         th:text="${'Choose a departure time from now until the activity starts: ' + maxDepartureTime}">
+                        Choose a departure time from now until the activity starts.
                     </div>
                     <div class="invalid-feedback"
                          th:if="${#fields.hasErrors('departureTime')}"
@@ -170,23 +150,16 @@
                     </div>
                     <div class="invalid-feedback"
                          th:unless="${#fields.hasErrors('departureTime')}">
-                        Please choose a planned departure time from now until the selected activity starts.
+                        Please choose a planned departure time from now until the activity starts.
                     </div>
                 </div>
-
 
                 <div class="kdg-map-picker">
                     <div class="kdg-map-picker__header">
                         <div>
                             <p class="kdg-map-picker__eyebrow">Meeting point</p>
-                            <h2>Pick a location on the map</h2>
+                            <h2>Update the map location</h2>
                         </div>
-                        <button type="button"
-                                class="kdg-button kdg-button--secondary kdg-map-picker__activity-button"
-                                id="useActivityLocation">
-                            <i class="bi bi-crosshair" aria-hidden="true"></i>
-                            <span>Use activity location</span>
-                        </button>
                     </div>
                     <div id="travelgroup-location-map" class="kdg-map-picker__map"></div>
                     <p class="kdg-help">
@@ -197,56 +170,24 @@
                 <div class="kdg-form-row">
                     <label for="mode" class="kdg-label">
                         <i class="bi bi-signpost-split" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.mode}">Transport Mode</span>
+                        <span>Transport Mode</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-car-front" id="transportModeIcon" aria-hidden="true"></i>
                         <select id="mode"
-                                name="mode"
                                 th:field="*{mode}"
                                 class="kdg-control"
                                 th:errorclass="is-invalid"
                                 required>
-                            <option value=""
-                                    disabled
-                                    selected
-                                    th:text="#{travelgroup.form.mode.placeholder}">
-                                Select a transport mode
-                            </option>
-                            <option value="CAR"
-                                    th:value="CAR"
-                                    data-icon="bi-car-front"
-                                    th:text="#{transportMode.car}">
-                                Car
-                            </option>
-                            <option value="CARPOOL"
-                                    th:value="CARPOOL"
-                                    data-icon="bi-people"
-                                    th:text="#{transportMode.carpool}">
-                                Carpool
-                            </option>
-                            <option value="BIKE"
-                                    th:value="BIKE"
-                                    data-icon="bi-bicycle"
-                                    th:text="#{transportMode.bike}">
-                                Bike
-                            </option>
-                            <option value="WALK"
-                                    th:value="WALK"
-                                    data-icon="bi-person-walking"
-                                    th:text="#{transportMode.walk}">
-                                Walk
-                            </option>
-                            <option value="PUBLIC_TRANSPORT"
-                                    th:value="PUBLIC_TRANSPORT"
-                                    data-icon="bi-bus-front"
-                                    th:text="#{transportMode.publicTransport}">
-                                Public Transport
-                            </option>
+                            <option value="" disabled>Select a transport mode</option>
+                            <option value="CAR" data-icon="bi-car-front">Car</option>
+                            <option value="CARPOOL" data-icon="bi-people">Carpool</option>
+                            <option value="BIKE" data-icon="bi-bicycle">Bike</option>
+                            <option value="WALK" data-icon="bi-person-walking">Walk</option>
+                            <option value="PUBLIC_TRANSPORT" data-icon="bi-bus-front">Public Transport</option>
                         </select>
                     </div>
-                    <div class="invalid-feedback"
-                         th:text="#{travelgroup.form.mode.invalid}">
+                    <div class="invalid-feedback">
                         Please select a transport mode.
                     </div>
                     <div class="transport-mode-options" aria-label="Transport mode quick choices">
@@ -274,17 +215,56 @@
                 </div>
 
                 <div class="kdg-form-actions">
-                    <a th:href="@{/travelgroups}"
-                       href="travelgroups.html"
+                    <a th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}"
                        class="kdg-button kdg-button--secondary">
                         <i class="bi bi-x-lg" aria-hidden="true"></i>
-                        <span th:text="#{common.cancel}">Cancel</span>
+                        <span>Cancel</span>
                     </a>
 
-                    <button type="submit"
-                            class="kdg-button">
-                        <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.create.submit}">Create Travel Group</span>
+                    <button type="submit" class="kdg-button">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                        <span>Save changes</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section class="kdg-panel kdg-panel--form"
+                 th:if="${!#lists.isEmpty(ownershipTransferCandidates)}">
+            <div class="travelgroup-section-heading">
+                <div>
+                    <p class="kdg-eyebrow">Owner tools</p>
+                    <h2>Transfer ownership</h2>
+                </div>
+            </div>
+
+            <p class="kdg-help">
+                Choose another joined member to become the owner before you leave this group.
+            </p>
+
+            <form class="travelgroup-transfer-form"
+                  th:action="@{/travelgroups/{groupId}/transfer-ownership(groupId=${group.groupId})}"
+                  method="post">
+                <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
+
+                <label for="newOwnerId" class="kdg-label">
+                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                    <span>New owner</span>
+                </label>
+
+                <div class="travelgroup-transfer-form__row">
+                    <select id="newOwnerId" name="newOwnerId" class="kdg-control" required>
+                        <option value="">Select a member</option>
+                        <option th:each="candidate : ${ownershipTransferCandidates}"
+                                th:value="${candidate.member.userId}"
+                                th:text="${candidate.member.name + ' - ' + candidate.member.email}">
+                            Member name - email
+                        </option>
+                    </select>
+
+                    <button type="submit" class="kdg-button kdg-button--secondary">
+                        <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+                        <span>Transfer ownership</span>
                     </button>
                 </div>
             </form>
