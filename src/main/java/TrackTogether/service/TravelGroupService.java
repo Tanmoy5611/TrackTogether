@@ -102,6 +102,26 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
+    public List<TravelGroup> getCurrentUserTravelGroups(List<TravelGroup> groups) {
+        Set<UUID> joinedGroupIds = getJoinedGroupIds(groups);
+        Set<UUID> ownedGroupIds = getOwnedGroupIds(groups);
+
+        // These are the groups that should appear in "My joined travel groups".
+        return groups.stream()
+                .filter(group -> joinedGroupIds.contains(group.getGroupId()) || ownedGroupIds.contains(group.getGroupId()))
+                .toList();
+    }
+
+    public List<TravelGroup> getExploreTravelGroups(List<TravelGroup> groups) {
+        Set<UUID> joinedGroupIds = getJoinedGroupIds(groups);
+        Set<UUID> ownedGroupIds = getOwnedGroupIds(groups);
+
+        // These are the groups the current user can still discover or join.
+        return groups.stream()
+                .filter(group -> !joinedGroupIds.contains(group.getGroupId()) && !ownedGroupIds.contains(group.getGroupId()))
+                .toList();
+    }
+
     public Set<UUID> getPendingJoinRequestGroupIds(List<TravelGroup> groups) {
         return getJoinRequestGroupIds(groups, JoinRequestStatus.PENDING);
     }

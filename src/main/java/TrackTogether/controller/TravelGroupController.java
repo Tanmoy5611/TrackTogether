@@ -42,6 +42,8 @@ public class TravelGroupController {
         boolean joinApprovalRequired = travelGroupService.isJoinApprovalRequired();
 
         model.addAttribute("groups", groups);
+        model.addAttribute("myTravelGroups", travelGroupService.getCurrentUserTravelGroups(groups));
+        model.addAttribute("exploreTravelGroups", travelGroupService.getExploreTravelGroups(groups));
         model.addAttribute("joinedGroupIds", joinedGroupIds);
         model.addAttribute("ownedGroupIds", ownedGroupIds);
         model.addAttribute("memberCounts", memberCounts);

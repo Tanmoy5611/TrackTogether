@@ -62,144 +62,327 @@
             </a>
         </section>
 
-        <section class="kdg-grid"
-                 th:if="${!#lists.isEmpty(groups)}">
-            <article class="kdg-group-card"
-                     th:each="group : ${groups}"
-                     th:id="'group-card-' + ${group.groupId}">
-                <div class="kdg-group-card__body">
-                    <h2 th:text="${group.location}">
-                        Antwerp Central
-                    </h2>
-
-                    <p class="kdg-help">
-                        For activity:
-                        <a th:href="@{/activities/{id}(id=${group.activity.id})}"
-                           th:text="${group.activity.name}">
-                            Activity Name
-                        </a>
-                    </p>
-
-                    <div class="travelgroup-owner-card">
-                        <div class="travelgroup-owner-card__avatar"
-                             th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
-                        <div class="travelgroup-owner-card__body">
-                            <span>Created by</span>
-                            <strong th:text="${group.owner.name}">Tanmoy Das</strong>
-                        </div>
-                        <span class="travelgroup-owner-card__badge"
-                              th:if="${ownedGroupIds.contains(group.groupId)}">
-                            You
-                        </span>
-                        <span class="travelgroup-owner-card__badge travelgroup-owner-card__badge--requests"
-                              th:if="${joinApprovalRequired and ownedGroupIds.contains(group.groupId) and pendingJoinRequestCounts[group.groupId] > 0}"
-                              th:text="${pendingJoinRequestCounts[group.groupId] + ' requests'}">
-                            2 requests
-                        </span>
+        <!-- First section: groups the current user already created or joined. -->
+        <div th:if="${!#lists.isEmpty(groups)}" class="travelgroup-list-sections">
+            <section class="travelgroup-list-section" aria-labelledby="my-travelgroups-title">
+                <div class="travelgroup-list-section__header">
+                    <div>
+                        <p class="kdg-eyebrow">Your groups</p>
+                        <h2 id="my-travelgroups-title">
+                            <i class="bi bi-bookmark-check" aria-hidden="true"></i>
+                            <span>My joined travel groups</span>
+                        </h2>
                     </div>
-
-                    <div class="travelgroup-card-status-block" aria-label="Your membership status">
-                        <span class="travelgroup-status travelgroup-status--owner"
-                              th:if="${ownedGroupIds.contains(group.groupId)}">
-                            <i class="bi bi-stars" aria-hidden="true"></i>
-                            <span>You created this group</span>
-                        </span>
-                        <span class="travelgroup-status travelgroup-status--joined"
-                              th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
-                            <i class="bi bi-check-circle" aria-hidden="true"></i>
-                            <span>You joined this group</span>
-                        </span>
-                        <span class="travelgroup-status travelgroup-status--pending"
-                              th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}">
-                            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                            <span>Request pending</span>
-                        </span>
-                        <span class="travelgroup-status travelgroup-status--rejected"
-                              th:if="${joinApprovalRequired and rejectedJoinRequestGroupIds.contains(group.groupId)}">
-                            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                            <span>Request rejected</span>
-                        </span>
-                        <span class="travelgroup-status"
-                              th:if="${!joinedGroupIds.contains(group.groupId)
-                                      and !ownedGroupIds.contains(group.groupId)
-                                      and (!joinApprovalRequired or (!pendingJoinRequestGroupIds.contains(group.groupId)
-                                          and !rejectedJoinRequestGroupIds.contains(group.groupId)))}">
-                            <i class="bi bi-person-plus" aria-hidden="true"></i>
-                            <span th:text="${joinApprovalRequired ? 'Not requested yet' : 'Not joined yet'}">
-                                Not joined yet
-                            </span>
-                        </span>
-                    </div>
-
-                    <dl class="kdg-meta">
-                        <div class="kdg-meta__row">
-                            <dt class="kdg-meta__label"
-                                >
-                                <i class="bi bi-signpost-split" aria-hidden="true"></i>
-                                <span th:text="#{travelgroup.list.transport}">Transport</span>
-                            </dt>
-                            <dd class="kdg-meta__value kdg-meta__value--transport"
-                                th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(group.transportMode.name(), '_', ' ')))}">
-                                CAR
-                            </dd>
-                        </div>
-
-                        <div class="kdg-meta__row">
-                            <dt class="kdg-meta__label"
-                                >
-                                <i class="bi bi-people" aria-hidden="true"></i>
-                                <span th:text="#{travelgroup.list.capacity}">Capacity</span>
-                            </dt>
-                            <dd class="kdg-meta__value"
-                                th:text="${memberCounts[group.groupId] + ' / ' + group.maxMembers}">
-                                5
-                            </dd>
-                        </div>
-                    </dl>
-
-                    
-                    <div class="kdg-actions kdg-card-actions">
-                        <a class="kdg-button kdg-button--secondary"
-                           th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
-                            <i class="bi bi-eye" aria-hidden="true"></i>
-                            <span>View details</span>
-                        </a>
-
-                        <form th:if="${!joinedGroupIds.contains(group.groupId)
-                                      and !ownedGroupIds.contains(group.groupId)
-                                      and (!joinApprovalRequired or !pendingJoinRequestGroupIds.contains(group.groupId))}"
-                              th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
-                              method="post">
-                            <button type="submit" class="kdg-button kdg-button--success">
-                                <i class="bi"
-                                   th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
-                                   aria-hidden="true"></i>
-                                <span th:text="${joinApprovalRequired ? (rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join') : 'Join'}">
-                                    Join
-                                </span>
-                            </button>
-                        </form>
-
-                        <button th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}"
-                                type="button"
-                                class="kdg-button kdg-button--subtle kdg-button--pending"
-                                disabled>
-                            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                            <span>Request pending</span>
-                        </button>
-
-                        <form th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}"
-                              th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
-                              method="post">
-                            <button type="submit" class="kdg-button kdg-button--danger">
-                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                                <span>Leave</span>
-                            </button>
-                        </form>
-                    </div>
+                    <span class="travelgroup-list-section__count">
+                        <i class="bi bi-collection" aria-hidden="true"></i>
+                        <span th:text="${#lists.size(myTravelGroups) + ' groups'}">0 groups</span>
+                    </span>
                 </div>
-            </article>
-        </section>
+
+                <div th:if="${#lists.isEmpty(myTravelGroups)}"
+                     class="kdg-empty travelgroup-list-section__empty">
+                    <i class="bi bi-people kdg-empty__icon" aria-hidden="true"></i>
+                    <h2>No joined groups</h2>
+                    <p>Groups you create or join will appear here.</p>
+                </div>
+
+                <div class="kdg-grid" th:if="${!#lists.isEmpty(myTravelGroups)}">
+                    <article class="kdg-group-card"
+                             th:each="group : ${myTravelGroups}"
+                             th:id="'group-card-' + ${group.groupId}">
+                        <div class="kdg-group-card__body">
+                            <h2 th:text="${group.location}">
+                                Antwerp Central
+                            </h2>
+
+                            <p class="kdg-help">
+                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                                <span>For activity:</span>
+                                <a th:href="@{/activities/{id}(id=${group.activity.id})}"
+                                   th:text="${group.activity.name}">
+                                    Activity Name
+                                </a>
+                            </p>
+
+                            <div class="travelgroup-owner-card">
+                                <div class="travelgroup-owner-card__avatar"
+                                     th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
+                                <div class="travelgroup-owner-card__body">
+                                    <span>Created by</span>
+                                    <strong th:text="${group.owner.name}">Tanmoy Das</strong>
+                                </div>
+                                <span class="travelgroup-owner-card__badge"
+                                      th:if="${ownedGroupIds.contains(group.groupId)}">
+                                    You
+                                </span>
+                                <span class="travelgroup-owner-card__badge travelgroup-owner-card__badge--requests"
+                                      th:if="${joinApprovalRequired and ownedGroupIds.contains(group.groupId) and pendingJoinRequestCounts[group.groupId] > 0}"
+                                      th:text="${pendingJoinRequestCounts[group.groupId] + ' requests'}">
+                                    2 requests
+                                </span>
+                            </div>
+
+                            <div class="travelgroup-card-status-block" aria-label="Your membership status">
+                                <span class="travelgroup-status travelgroup-status--owner"
+                                      th:if="${ownedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-stars" aria-hidden="true"></i>
+                                    <span>You created this group</span>
+                                </span>
+                                <span class="travelgroup-status travelgroup-status--joined"
+                                      th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-check-circle" aria-hidden="true"></i>
+                                    <span>You joined this group</span>
+                                </span>
+                                <span class="travelgroup-status travelgroup-status--pending"
+                                      th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                    <span>Request pending</span>
+                                </span>
+                                <span class="travelgroup-status travelgroup-status--rejected"
+                                      th:if="${joinApprovalRequired and rejectedJoinRequestGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                                    <span>Request rejected</span>
+                                </span>
+                                <span class="travelgroup-status"
+                                      th:if="${!joinedGroupIds.contains(group.groupId)
+                                              and !ownedGroupIds.contains(group.groupId)
+                                              and (!joinApprovalRequired or (!pendingJoinRequestGroupIds.contains(group.groupId)
+                                                  and !rejectedJoinRequestGroupIds.contains(group.groupId)))}">
+                                    <i class="bi bi-person-plus" aria-hidden="true"></i>
+                                    <span th:text="${joinApprovalRequired ? 'Not requested yet' : 'Not joined yet'}">
+                                        Not joined yet
+                                    </span>
+                                </span>
+                            </div>
+
+                            <dl class="kdg-meta">
+                                <div class="kdg-meta__row">
+                                    <dt class="kdg-meta__label">
+                                        <i class="bi bi-signpost-split" aria-hidden="true"></i>
+                                        <span th:text="#{travelgroup.list.transport}">Transport</span>
+                                    </dt>
+                                    <dd class="kdg-meta__value kdg-meta__value--transport"
+                                        th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(group.transportMode.name(), '_', ' ')))}">
+                                        CAR
+                                    </dd>
+                                </div>
+
+                                <div class="kdg-meta__row">
+                                    <dt class="kdg-meta__label">
+                                        <i class="bi bi-people" aria-hidden="true"></i>
+                                        <span th:text="#{travelgroup.list.capacity}">Capacity</span>
+                                    </dt>
+                                    <dd class="kdg-meta__value"
+                                        th:text="${memberCounts[group.groupId] + ' / ' + group.maxMembers}">
+                                        5
+                                    </dd>
+                                </div>
+                            </dl>
+
+                            <div class="kdg-actions kdg-card-actions">
+                                <a class="kdg-button kdg-button--secondary"
+                                   th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                    <span>View details</span>
+                                </a>
+
+                                <form th:if="${!joinedGroupIds.contains(group.groupId)
+                                              and !ownedGroupIds.contains(group.groupId)
+                                              and (!joinApprovalRequired or !pendingJoinRequestGroupIds.contains(group.groupId))}"
+                                      th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
+                                      method="post">
+                                    <button type="submit" class="kdg-button kdg-button--success">
+                                        <i class="bi"
+                                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                                           aria-hidden="true"></i>
+                                        <span th:text="${joinApprovalRequired ? (rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join') : 'Join'}">
+                                            Join
+                                        </span>
+                                    </button>
+                                </form>
+
+                                <button th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}"
+                                        type="button"
+                                        class="kdg-button kdg-button--subtle kdg-button--pending"
+                                        disabled>
+                                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                    <span>Request pending</span>
+                                </button>
+
+                                <form th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}"
+                                      th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
+                                      method="post">
+                                    <button type="submit" class="kdg-button kdg-button--danger">
+                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                                        <span>Leave</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Second section: groups the current user can still explore. -->
+            <section class="travelgroup-list-section" aria-labelledby="explore-travelgroups-title">
+                <div class="travelgroup-list-section__header">
+                    <div>
+                        <p class="kdg-eyebrow">Discover</p>
+                        <h2 id="explore-travelgroups-title">
+                            <i class="bi bi-compass" aria-hidden="true"></i>
+                            <span>Explore more groups to join</span>
+                        </h2>
+                    </div>
+                    <span class="travelgroup-list-section__count">
+                        <i class="bi bi-collection" aria-hidden="true"></i>
+                        <span th:text="${#lists.size(exploreTravelGroups) + ' groups'}">0 groups</span>
+                    </span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(exploreTravelGroups)}"
+                     class="kdg-empty travelgroup-list-section__empty">
+                    <i class="bi bi-check2-circle kdg-empty__icon" aria-hidden="true"></i>
+                    <h2>No more groups to explore</h2>
+                    <p>You already created or joined every available travel group.</p>
+                </div>
+
+                <div class="kdg-grid" th:if="${!#lists.isEmpty(exploreTravelGroups)}">
+                    <article class="kdg-group-card"
+                             th:each="group : ${exploreTravelGroups}"
+                             th:id="'group-card-' + ${group.groupId}">
+                        <div class="kdg-group-card__body">
+                            <h2 th:text="${group.location}">
+                                Antwerp Central
+                            </h2>
+
+                            <p class="kdg-help">
+                                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                                <span>For activity:</span>
+                                <a th:href="@{/activities/{id}(id=${group.activity.id})}"
+                                   th:text="${group.activity.name}">
+                                    Activity Name
+                                </a>
+                            </p>
+
+                            <div class="travelgroup-owner-card">
+                                <div class="travelgroup-owner-card__avatar"
+                                     th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
+                                <div class="travelgroup-owner-card__body">
+                                    <span>Created by</span>
+                                    <strong th:text="${group.owner.name}">Tanmoy Das</strong>
+                                </div>
+                                <span class="travelgroup-owner-card__badge"
+                                      th:if="${ownedGroupIds.contains(group.groupId)}">
+                                    You
+                                </span>
+                                <span class="travelgroup-owner-card__badge travelgroup-owner-card__badge--requests"
+                                      th:if="${joinApprovalRequired and ownedGroupIds.contains(group.groupId) and pendingJoinRequestCounts[group.groupId] > 0}"
+                                      th:text="${pendingJoinRequestCounts[group.groupId] + ' requests'}">
+                                    2 requests
+                                </span>
+                            </div>
+
+                            <div class="travelgroup-card-status-block" aria-label="Your membership status">
+                                <span class="travelgroup-status travelgroup-status--owner"
+                                      th:if="${ownedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-stars" aria-hidden="true"></i>
+                                    <span>You created this group</span>
+                                </span>
+                                <span class="travelgroup-status travelgroup-status--joined"
+                                      th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-check-circle" aria-hidden="true"></i>
+                                    <span>You joined this group</span>
+                                </span>
+                                <span class="travelgroup-status travelgroup-status--pending"
+                                      th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                    <span>Request pending</span>
+                                </span>
+                                <span class="travelgroup-status travelgroup-status--rejected"
+                                      th:if="${joinApprovalRequired and rejectedJoinRequestGroupIds.contains(group.groupId)}">
+                                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                                    <span>Request rejected</span>
+                                </span>
+                                <span class="travelgroup-status"
+                                      th:if="${!joinedGroupIds.contains(group.groupId)
+                                              and !ownedGroupIds.contains(group.groupId)
+                                              and (!joinApprovalRequired or (!pendingJoinRequestGroupIds.contains(group.groupId)
+                                                  and !rejectedJoinRequestGroupIds.contains(group.groupId)))}">
+                                    <i class="bi bi-person-plus" aria-hidden="true"></i>
+                                    <span th:text="${joinApprovalRequired ? 'Not requested yet' : 'Not joined yet'}">
+                                        Not joined yet
+                                    </span>
+                                </span>
+                            </div>
+
+                            <dl class="kdg-meta">
+                                <div class="kdg-meta__row">
+                                    <dt class="kdg-meta__label">
+                                        <i class="bi bi-signpost-split" aria-hidden="true"></i>
+                                        <span th:text="#{travelgroup.list.transport}">Transport</span>
+                                    </dt>
+                                    <dd class="kdg-meta__value kdg-meta__value--transport"
+                                        th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(group.transportMode.name(), '_', ' ')))}">
+                                        CAR
+                                    </dd>
+                                </div>
+
+                                <div class="kdg-meta__row">
+                                    <dt class="kdg-meta__label">
+                                        <i class="bi bi-people" aria-hidden="true"></i>
+                                        <span th:text="#{travelgroup.list.capacity}">Capacity</span>
+                                    </dt>
+                                    <dd class="kdg-meta__value"
+                                        th:text="${memberCounts[group.groupId] + ' / ' + group.maxMembers}">
+                                        5
+                                    </dd>
+                                </div>
+                            </dl>
+
+                            <div class="kdg-actions kdg-card-actions">
+                                <a class="kdg-button kdg-button--secondary"
+                                   th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                    <span>View details</span>
+                                </a>
+
+                                <form th:if="${!joinedGroupIds.contains(group.groupId)
+                                              and !ownedGroupIds.contains(group.groupId)
+                                              and (!joinApprovalRequired or !pendingJoinRequestGroupIds.contains(group.groupId))}"
+                                      th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
+                                      method="post">
+                                    <button type="submit" class="kdg-button kdg-button--success">
+                                        <i class="bi"
+                                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                                           aria-hidden="true"></i>
+                                        <span th:text="${joinApprovalRequired ? (rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join') : 'Join'}">
+                                            Join
+                                        </span>
+                                    </button>
+                                </form>
+
+                                <button th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}"
+                                        type="button"
+                                        class="kdg-button kdg-button--subtle kdg-button--pending"
+                                        disabled>
+                                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                    <span>Request pending</span>
+                                </button>
+
+                                <form th:if="${joinedGroupIds.contains(group.groupId) and !ownedGroupIds.contains(group.groupId)}"
+                                      th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
+                                      method="post">
+                                    <button type="submit" class="kdg-button kdg-button--danger">
+                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                                        <span>Leave</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
     </main>
 
     <footer th:replace="~{fragments/footer :: appFooter}"></footer>

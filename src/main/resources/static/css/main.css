@@ -773,6 +773,59 @@ body.kdg-page {
     box-shadow: none;
 }
 
+/* Styling for the two Travel Group page sections. */
+.travelgroup-list-sections {
+    display: grid;
+    gap: 2rem;
+}
+
+.travelgroup-list-section {
+    display: grid;
+    gap: 1rem;
+}
+
+.travelgroup-list-section__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.travelgroup-list-section__header h2 {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 900;
+}
+
+.travelgroup-list-section__header h2 .bi {
+    color: var(--kdg-blue-dark);
+}
+
+.travelgroup-list-section__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid #dbe6e2;
+    border-radius: 999px;
+    background: var(--kdg-white);
+    color: var(--kdg-muted);
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.travelgroup-list-section__count .bi {
+    color: var(--kdg-blue-dark);
+}
+
+.travelgroup-list-section__empty {
+    max-width: none;
+}
+
 .travelgroup-detail__summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
