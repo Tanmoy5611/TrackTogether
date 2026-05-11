@@ -4,6 +4,7 @@ class TravelGroupMap {
         this.locationInput = options.locationInput || null;
         this.activitySelect = options.activitySelect || null;
         this.activityLocationButton = options.activityLocationButton || null;
+        this.departureTimeInput = options.departureTimeInput || null;
         this.transportModeSelect = options.transportModeSelect || null;
         this.transportModeIcon = options.transportModeIcon || null;
         this.transportModeButtons = options.transportModeButtons || [];
@@ -15,7 +16,14 @@ class TravelGroupMap {
     }
 
     init() {
-        if (!window.L || !this.mapElement) {
+        if (!this.mapElement) {
+            return;
+        }
+
+        this.bindTransportModeIcon();
+        this.bindMapsLink();
+
+        if (!window.L) {
             return;
         }
 
@@ -29,8 +37,6 @@ class TravelGroupMap {
         }).addTo(this.map);
 
         this.bindCreateForm();
-        this.bindTransportModeIcon();
-        this.bindMapsLink();
         this.initReadOnlyMap();
 
         setTimeout(() => this.map.invalidateSize(), 100);
@@ -76,8 +82,15 @@ class TravelGroupMap {
         if (this.activitySelect) {
             this.activitySelect.addEventListener("change", () => {
                 this.focusSelectedActivity(false);
+                this.updateDepartureTimeLimit();
             });
             this.focusSelectedActivity(false);
+            this.updateDepartureTimeLimit();
+        } else if (this.locationInput.value.trim().length >= 3) {
+            // On the edit page there is no activity selector, so start from the saved meeting point.
+            this.searchLocation(this.locationInput.value.trim(), true).catch(() => {
+                // Manual editing should still work if the map search is unavailable.
+            });
         }
 
         if (this.activityLocationButton) {
@@ -105,6 +118,7 @@ class TravelGroupMap {
         this.transportModeButtons.forEach((button) => {
             button.addEventListener("click", () => {
                 this.transportModeSelect.value = button.dataset.mode;
+                updateIcon();
                 this.transportModeSelect.dispatchEvent(new Event("change", {bubbles: true}));
             });
         });
@@ -112,10 +126,12 @@ class TravelGroupMap {
     }
 
     syncTransportModeButtons() {
+        const selectedMode = this.transportModeSelect.value;
+
         this.transportModeButtons.forEach((button) => {
             button.classList.toggle(
                 "is-selected",
-                button.dataset.mode === this.transportModeSelect.value
+                button.dataset.mode === selectedMode
             );
         });
     }
@@ -170,6 +186,21 @@ class TravelGroupMap {
         return option
             && Number.isFinite(Number(option.dataset.latitude))
             && Number.isFinite(Number(option.dataset.longitude));
+    }
+
+    updateDepartureTimeLimit() {
+        if (!this.departureTimeInput || !this.activitySelect) {
+            return;
+        }
+
+        const option = this.selectedActivityOption();
+        const maxDepartureTime = option?.dataset.departureLimit || "";
+
+        this.departureTimeInput.max = maxDepartureTime;
+
+        if (this.departureTimeInput.value && maxDepartureTime && this.departureTimeInput.value > maxDepartureTime) {
+            this.departureTimeInput.value = "";
+        }
     }
 
     focusSelectedActivity(shouldUpdateInput) {
@@ -249,6 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
             locationInput: document.getElementById("location"),
             activitySelect: document.getElementById("activityId"),
             activityLocationButton: document.getElementById("useActivityLocation"),
+            departureTimeInput: document.getElementById("departureTime"),
             transportModeSelect: document.getElementById("mode"),
             transportModeIcon: document.getElementById("transportModeIcon"),
             transportModeButtons: document.querySelectorAll(".transport-mode-option")

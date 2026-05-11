@@ -27,14 +27,43 @@
                 <p class="kdg-subtitle travelgroup-hero__location">
                     <i class="bi bi-geo-alt" aria-hidden="true"></i>
                     <span th:text="${group.location}">Antwerp Central</span>
+                    <span class="travelgroup-hero__separator">•</span>
+                    <i class="bi bi-clock" aria-hidden="true"></i>
+                    <span th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'dd/MM/yyyy HH:mm') : 'Departure time not set'}">
+                        11/05/2026 08:30
+                    </span>
                 </p>
             </div>
 
             <div class="travelgroup-hero__actions">
                 <div class="travelgroup-status travelgroup-status--owner" th:if="${isOwner}">
                     <i class="bi bi-stars" aria-hidden="true"></i>
-                    <span>You created this group</span>
+                    <span>You own this group</span>
                 </div>
+                <p class="travelgroup-owner-note" th:if="${isOwner and !ownerCanDeleteGroup}">
+                    <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                    <span th:text="${ownerCannotLeaveMessage}">
+                        Transfer ownership before leaving this travel group.
+                    </span>
+                </p>
+                <p class="travelgroup-owner-note travelgroup-owner-note--danger" th:if="${ownerCanDeleteGroup}">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                    <span>You are the only member. Leaving will permanently delete this group and its chat.</span>
+                </p>
+                <a class="kdg-button travelgroup-detail__primary-action"
+                   th:if="${isOwner}"
+                   th:href="@{/travelgroups/{groupId}/edit(groupId=${group.groupId})}">
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    <span>Edit group</span>
+                </a>
+                <button th:if="${ownerCanDeleteGroup}"
+                        type="button"
+                        class="kdg-button kdg-button--danger travelgroup-detail__primary-action"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteTravelGroupModal">
+                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                    <span>Delete &amp; Leave</span>
+                </button>
                 <div class="travelgroup-status travelgroup-status--joined" th:if="${isJoined and !isOwner}">
                     <i class="bi bi-check-circle" aria-hidden="true"></i>
                     <span>You are part of this group</span>
@@ -80,13 +109,46 @@
             </div>
         </section>
 
+        <div class="modal fade"
+             id="deleteTravelGroupModal"
+             tabindex="-1"
+             aria-labelledby="deleteTravelGroupModalLabel"
+             aria-hidden="true"
+             th:if="${ownerCanDeleteGroup}">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteTravelGroupModalLabel">
+                            <i class="bi bi-exclamation-triangle text-danger" aria-hidden="true"></i>
+                            Delete Travel Group?
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>You are the owner and the only member of this travel group.</p>
+                        <p class="mb-0">Leaving will permanently delete this travel group and its chat.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form th:action="@{/travelgroups/{groupId}/delete(groupId=${group.groupId})}"
+                              method="post">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                                Delete Group
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <section class="kdg-detail-layout">
             <div class="travelgroup-detail__summary">
                 <div class="travelgroup-owner-panel">
                     <div class="travelgroup-owner-panel__avatar"
                          th:text="${#strings.substring(group.owner.name, 0, 1)}">T</div>
                     <div>
-                        <span class="travelgroup-stat__label">Created by</span>
+                        <span class="travelgroup-stat__label">Owner</span>
                         <strong th:text="${group.owner.name}">Tanmoy Das</strong>
                         <p th:text="${group.owner.email}">tanmoy.das@student.kdg.be</p>
                     </div>
@@ -143,6 +205,16 @@
                             Activity address
                         </span>
                         <span class="kdg-meta__value" th:text="${group.activity.location}">Groenplaats</span>
+                    </div>
+                    <div class="kdg-meta__row">
+                        <span class="kdg-meta__label">
+                            <i class="bi bi-signpost" aria-hidden="true"></i>
+                            Planned departure
+                        </span>
+                        <span class="kdg-meta__value"
+                              th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'dd/MM/yyyy HH:mm') : 'Not set'}">
+                            11/05/2026 08:30
+                        </span>
                     </div>
                 </div>
             </section>

@@ -56,14 +56,23 @@ public class TravelGroupApiController {
         service.joinTravelGroup(groupId);
     }
 
+    // Accept a join request
     @PostMapping("/requests/{requestId}/accept")
     public void acceptJoinRequest(@PathVariable Integer requestId) {
         service.acceptJoinRequest(requestId);
     }
 
+    // reject a join request
     @PostMapping("/requests/{requestId}/reject")
     public void rejectJoinRequest(@PathVariable Integer requestId) {
         service.rejectJoinRequest(requestId);
+    }
+
+    // Transfer ownership to another member already in the TravelGroup
+    @PostMapping("/{groupId}/ownership")
+    public TravelGroupDto transferOwnership(@PathVariable UUID groupId,
+                                            @RequestParam UUID newOwnerId) {
+        return mapper.toDto(service.transferOwnership(groupId, newOwnerId));
     }
 
     // Leave TravelGroup as the logged-in member
@@ -71,5 +80,11 @@ public class TravelGroupApiController {
     public void leaveTravelGroup(@PathVariable UUID groupId) {
 
         service.leaveTravelGroup(groupId);
+    }
+
+    // Delete an owner-only TravelGroup as the logged-in owner
+    @DeleteMapping("/{groupId}")
+    public void deleteOwnedTravelGroup(@PathVariable UUID groupId) {
+        service.deleteOwnedTravelGroup(groupId);
     }
 }
