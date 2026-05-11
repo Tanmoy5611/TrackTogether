@@ -2,6 +2,7 @@ package TrackTogether.domain;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,13 @@ public class TravelGroup {
 
     private String location;         // meeting location
     private Integer maxMembers;  // number of available spots
+    private String departureLocation;         // route starting point
+    private Double departureLatitude;         // start latitude
+    private Double departureLongitude;        // start longitude
+    private Double arrivalLatitude;           // destination latitude
+    private Double arrivalLongitude;          // destination longitude
+    private LocalDateTime departureTime;      // planned leave time
+    private LocalDateTime estimatedArrivalTime; // estimated arrival time
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "activity_id", nullable = false)
@@ -25,7 +33,7 @@ public class TravelGroup {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
-    private Member owner;            // member who created the group
+    private Member owner;            // member who currently manages this group
 
     @OneToOne(mappedBy = "travelGroup", optional = false)
     private Conversation conversation;  // conversation for the group
@@ -88,6 +96,61 @@ public class TravelGroup {
     }
     public void setMembers(List<TravelGroupMember> members) {
         this.members = members;
+    }
+    public String getDepartureLocation() {
+        return departureLocation;
+    }
+
+    public void setDepartureLocation(String departureLocation) {
+        this.departureLocation = departureLocation;
+    }
+
+    public Double getDepartureLatitude() {
+        return departureLatitude;
+    }
+
+    public void setDepartureLatitude(Double departureLatitude) {
+        this.departureLatitude = departureLatitude;
+    }
+
+    public Double getDepartureLongitude() {
+        return departureLongitude;
+    }
+
+    public void setDepartureLongitude(Double departureLongitude) {
+        this.departureLongitude = departureLongitude;
+    }
+
+    public Double getArrivalLatitude() {
+        return arrivalLatitude;
+    }
+
+    public void setArrivalLatitude(Double arrivalLatitude) {
+        this.arrivalLatitude = arrivalLatitude;
+    }
+
+    public Double getArrivalLongitude() {
+        return arrivalLongitude;
+    }
+
+    public void setArrivalLongitude(Double arrivalLongitude) {
+        this.arrivalLongitude = arrivalLongitude;
+    }
+
+    public LocalDateTime getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(LocalDateTime departureTime) {
+        this.departureTime = departureTime;
+    }
+
+    public LocalDateTime getEstimatedArrivalTime() {
+        return estimatedArrivalTime;
+    }
+
+    public void setEstimatedArrivalTime(LocalDateTime estimatedArrivalTime) {
+        this.estimatedArrivalTime = estimatedArrivalTime;
     }
 
     // Method to add a member
