@@ -773,6 +773,28 @@ body.kdg-page {
     box-shadow: none;
 }
 
+.travelgroup-owner-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    color: #6c5a19;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.travelgroup-owner-note .bi {
+    color: #8a6411;
+}
+
+.travelgroup-owner-note--danger {
+    color: #8e2525;
+}
+
+.travelgroup-owner-note--danger .bi {
+    color: #a83d3d;
+}
+
 /* Styling for the two Travel Group page sections. */
 .travelgroup-list-sections {
     display: grid;
@@ -940,6 +962,18 @@ body.kdg-page {
 
 .travelgroup-detail__meta {
     margin-bottom: 0;
+}
+
+.travelgroup-transfer-form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.travelgroup-transfer-form__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.85rem;
+    align-items: stretch;
 }
 
 .travelgroup-detail__highlight {
@@ -1599,6 +1633,10 @@ body.kdg-page {
     }
 
     .travelgroup-detail__summary {
+        grid-template-columns: 1fr;
+    }
+
+    .travelgroup-transfer-form__row {
         grid-template-columns: 1fr;
     }
 
