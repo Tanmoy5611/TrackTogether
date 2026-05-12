@@ -686,6 +686,7 @@ public class TravelGroupService {
         }
     }
 
+
     // Validates travel group fields for both create and edit
     private void validateTravelGroupDetails(Activity activity,
                                             Integer maxMembers,
