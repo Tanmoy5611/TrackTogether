@@ -299,15 +299,28 @@
                 </div>
                 <div class="travelgroup-member-list" th:if="${!#lists.isEmpty(groupMembers)}">
                     <div class="travelgroup-member-card" th:each="groupMember : ${groupMembers}">
-                        <div class="travelgroup-member-card__avatar"
-                             th:text="${#strings.substring(groupMember.member.name, 0, 1)}">J</div>
-                        <div class="travelgroup-member-card__body">
-                            <strong th:text="${groupMember.member.name}">John S</strong>
-                            <span>
-                                <i class="bi bi-envelope" aria-hidden="true"></i>
-                                <span th:text="${groupMember.member.email}">john@student.kdg.be</span>
-                            </span>
+                        <div class="travelgroup-member-card__identity">
+                            <div class="travelgroup-member-card__avatar"
+                                 th:text="${#strings.substring(groupMember.member.name, 0, 1)}">J</div>
+                            <div class="travelgroup-member-card__body">
+                                <strong th:text="${groupMember.member.name}">John S</strong>
+                                <span>
+                                    <i class="bi bi-envelope" aria-hidden="true"></i>
+                                    <span th:text="${groupMember.member.email}">john@student.kdg.be</span>
+                                </span>
+                            </div>
                         </div>
+                        <form class="travelgroup-member-card__chat"
+                              th:action="@{/chat/start}"
+                              method="post">
+                            <input type="hidden" name="memberId" th:value="${groupMember.member.userId}">
+                            <button type="submit"
+                                    class="kdg-button kdg-button--secondary kdg-button--subtle travelgroup-member-card__chat-button"
+                                    th:attr="aria-label=${'Send message to ' + groupMember.member.name}">
+                                <i class="bi bi-send" aria-hidden="true"></i>
+                                <span>Send message</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="kdg-empty" th:if="${#lists.isEmpty(groupMembers)}">
@@ -326,6 +339,17 @@
                         <i class="bi bi-calendar-event" aria-hidden="true"></i>
                         <span>Back to activity</span>
                     </a>
+                </div>
+                <a class="kdg-button travelgroup-detail__group-chat"
+                   th:if="${group.conversation != null and (isJoined or isOwner)}"
+                   th:href="@{/chat/{conversationId}(conversationId=${group.conversation.conversationId})}">
+                    <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                    <span>Open group chat</span>
+                </a>
+                <div class="travelgroup-detail__group-chat-note"
+                     th:if="${group.conversation != null and !isJoined and !isOwner}">
+                    <i class="bi bi-lock" aria-hidden="true"></i>
+                    <span>Join this group to chat in the group chat.</span>
                 </div>
             </section>
         </section>
