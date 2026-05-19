@@ -14,8 +14,8 @@ import java.util.UUID;
 public interface TravelGroupRepository extends JpaRepository<TravelGroup, UUID> {
     List<TravelGroup> findAllByActivity_Id(UUID activityId);
 
-    // Locks the selected travel group row during seat-sensitive operations.
-    // This prevents two concurrent requests from both taking the last available seat.
+    // Locks the selected travel group row during seat-sensitive operations
+    // This prevents two concurrent requests from both taking the last available seat
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select travelGroup from TravelGroup travelGroup where travelGroup.groupId = :groupId")
     Optional<TravelGroup> findByIdForUpdate(@Param("groupId") UUID groupId);
