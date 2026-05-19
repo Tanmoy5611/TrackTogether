@@ -277,6 +277,30 @@ public class TravelGroupService {
                                          String location,
                                          TransportMode mode,
                                          LocalDateTime departureTime) {
+        return createTravelGroup(
+                activityId,
+                maxMembers,
+                location,
+                location,
+                null,
+                null,
+                mode,
+                departureTime,
+                null
+        );
+    }
+
+    // Creates a new TravelGroup with route data for matching
+    @Transactional
+    public TravelGroup createTravelGroup(UUID activityId,
+                                         Integer maxMembers,
+                                         String location,
+                                         String departureLocation,
+                                         Double departureLatitude,
+                                         Double departureLongitude,
+                                         TransportMode mode,
+                                         LocalDateTime departureTime,
+                                         LocalDateTime estimatedArrivalTime) {
 
         // Retrieve the activity from the database
         Activity activity = activityRepository.findById(activityId)
@@ -286,12 +310,31 @@ public class TravelGroupService {
                 ));
 
         // Validate all form/API values before anything is saved
-        validateTravelGroupDetails(activity, maxMembers, location, mode, departureTime);
+        validateTravelGroupDetails(
+                activity,
+                maxMembers,
+                location,
+                departureLocation,
+                departureLatitude,
+                departureLongitude,
+                mode,
+                departureTime,
+                estimatedArrivalTime
+        );
 
         // Create a new TravelGroup with the provided information
-        TravelGroup group = new TravelGroup(maxMembers, location, mode);
-        group.setDepartureLocation(location);
+        String normalizedDepartureLocation = normalizeRequiredRouteLocation(location, departureLocation);
+        String displayLocation = normalizeOptionalText(location);
+        if (displayLocation == null) {
+            displayLocation = normalizedDepartureLocation;
+        }
+
+        TravelGroup group = new TravelGroup(maxMembers, displayLocation, mode);
+        group.setDepartureLocation(normalizedDepartureLocation);
+        group.setDepartureLatitude(departureLatitude);
+        group.setDepartureLongitude(departureLongitude);
         group.setDepartureTime(departureTime);
+        group.setEstimatedArrivalTime(estimatedArrivalTime);
         group.setArrivalLatitude(activity.getLatitude());
         group.setArrivalLongitude(activity.getLongitude());
 
@@ -329,11 +372,46 @@ public class TravelGroupService {
                                          String location,
                                          TransportMode mode,
                                          LocalDateTime departureTime) {
-        TravelGroup group = getTravelGroupById(groupId);
+        TravelGroup existingGroup = getTravelGroupById(groupId);
+        return updateTravelGroup(
+                groupId,
+                maxMembers,
+                location,
+                location != null ? location : existingGroup.getDepartureLocation(),
+                existingGroup.getDepartureLatitude(),
+                existingGroup.getDepartureLongitude(),
+                mode,
+                departureTime,
+                existingGroup.getEstimatedArrivalTime()
+        );
+    }
+
+    // Updates editable route and group details
+    @Transactional
+    public TravelGroup updateTravelGroup(UUID groupId,
+                                         Integer maxMembers,
+                                         String location,
+                                         String departureLocation,
+                                         Double departureLatitude,
+                                         Double departureLongitude,
+                                         TransportMode mode,
+                                         LocalDateTime departureTime,
+                                         LocalDateTime estimatedArrivalTime) {
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
         ensureCurrentUserOwns(group);
 
         // Keep the edit rules the same as create, so bad values cannot be saved later
-        validateTravelGroupDetails(group.getActivity(), maxMembers, location, mode, departureTime);
+        validateTravelGroupDetails(
+                group.getActivity(),
+                maxMembers,
+                location,
+                departureLocation,
+                departureLatitude,
+                departureLongitude,
+                mode,
+                departureTime,
+                estimatedArrivalTime
+        );
 
         long currentMembers = travelGroupMemberRepository.countByGroup(group);
         if (maxMembers < currentMembers) {
@@ -344,11 +422,22 @@ public class TravelGroupService {
         }
 
         // After all checks pass, update only the fields the owner is allowed to edit
+        String normalizedDepartureLocation = normalizeRequiredRouteLocation(location, departureLocation);
+        String displayLocation = normalizeOptionalText(location);
+        if (displayLocation == null) {
+            displayLocation = normalizedDepartureLocation;
+        }
+
         group.setMaxMembers(maxMembers);
-        group.setLocation(location);
-        group.setDepartureLocation(location);
+        group.setLocation(displayLocation);
+        group.setDepartureLocation(normalizedDepartureLocation);
+        group.setDepartureLatitude(departureLatitude);
+        group.setDepartureLongitude(departureLongitude);
         group.setTransportMode(mode);
         group.setDepartureTime(departureTime);
+        group.setEstimatedArrivalTime(estimatedArrivalTime);
+        group.setArrivalLatitude(group.getActivity().getLatitude());
+        group.setArrivalLongitude(group.getActivity().getLongitude());
 
         return travelGroupRepository.save(group);
     }
@@ -356,11 +445,7 @@ public class TravelGroupService {
     // Creates or reopens a join request when approval is enabled
     @Transactional
     public void requestToJoinTravelGroup(UUID groupId) {
-        TravelGroup group = travelGroupRepository.findById(groupId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Travel group not found"
-                ));
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
 
         Member member = currentUserService.getCurrentUser();
 
@@ -382,6 +467,8 @@ public class TravelGroupService {
             );
         }
 
+        // This count runs after the row lock, so two students joining at the same time
+        // cannot both see the same last free seat.
         long memberCount = travelGroupMemberRepository.countByGroup(group);
 
         if (!group.hasAvailableSpots(memberCount)) {
@@ -427,7 +514,7 @@ public class TravelGroupService {
     @Transactional
     public void acceptJoinRequest(Integer requestId) {
         JoinRequest joinRequest = getJoinRequestById(requestId);
-        TravelGroup group = joinRequest.getGroup();
+        TravelGroup group = getTravelGroupByIdForUpdate(joinRequest.getGroup().getGroupId());
 
         ensureCurrentUserOwns(group);
 
@@ -449,6 +536,8 @@ public class TravelGroupService {
             return;
         }
 
+        // Capacity is checked while the group row is locked. If another owner/member
+        // is accepting or joining at the same time, their transaction must wait.
         long memberCount = travelGroupMemberRepository.countByGroup(group);
         if (!group.hasAvailableSpots(memberCount)) {
             throw new ResponseStatusException(
@@ -491,11 +580,7 @@ public class TravelGroupService {
     @Transactional
     public void leaveTravelGroup(UUID groupId) {
 
-        TravelGroup group = travelGroupRepository.findById(groupId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Travel group not found"
-                ));
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
 
         Member member = currentUserService.getCurrentUser();
 
@@ -528,7 +613,7 @@ public class TravelGroupService {
     // Deletes an owner-only group after the Bootstrap confirmation popup
     @Transactional
     public void deleteOwnedTravelGroup(UUID groupId) {
-        TravelGroup group = getTravelGroupById(groupId);
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
         ensureCurrentUserOwns(group);
 
         // Owners with other members must transfer first, otherwise the group becomes unmanaged
@@ -551,7 +636,7 @@ public class TravelGroupService {
     // Moves ownership to another member who already joined the group
     @Transactional
     public TravelGroup transferOwnership(UUID groupId, UUID newOwnerId) {
-        TravelGroup group = getTravelGroupById(groupId);
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
         ensureCurrentUserOwns(group);
 
         if (newOwnerId == null) {
@@ -601,13 +686,20 @@ public class TravelGroupService {
                 ));
     }
 
-    // Adds the current member directly when approval mode is disabled
-    private void joinTravelGroupDirectly(UUID groupId) {
-        TravelGroup group = travelGroupRepository.findById(groupId)
+    // Real-life seat protection:
+    // lock the group row before checking capacity and inserting a member.
+    // In PostgreSQL this becomes SELECT ... FOR UPDATE, so simultaneous joins wait their turn.
+    private TravelGroup getTravelGroupByIdForUpdate(UUID groupId) {
+        return travelGroupRepository.findByIdForUpdate(groupId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Travel group not found"
                 ));
+    }
+
+    // Adds the current member directly when approval mode is disabled
+    private void joinTravelGroupDirectly(UUID groupId) {
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
 
         Member member = currentUserService.getCurrentUser();
 
@@ -627,6 +719,8 @@ public class TravelGroupService {
             );
         }
 
+        // The group was loaded with a database lock, so this capacity check is based
+        // on the latest committed member count before we insert the new membership.
         long memberCount = travelGroupMemberRepository.countByGroup(group);
         if (!group.hasAvailableSpots(memberCount)) {
             throw new ResponseStatusException(
@@ -686,22 +780,27 @@ public class TravelGroupService {
         }
     }
 
-
     // Validates travel group fields for both create and edit
     private void validateTravelGroupDetails(Activity activity,
                                             Integer maxMembers,
                                             String location,
+                                            String departureLocation,
+                                            Double departureLatitude,
+                                            Double departureLongitude,
                                             TransportMode mode,
-                                            LocalDateTime departureTime) {
+                                            LocalDateTime departureTime,
+                                            LocalDateTime estimatedArrivalTime) {
         // A group must always have at least one seat
         if (maxMembers == null || maxMembers <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max members must be positive");
         }
 
-        // The meeting point is required because members need to know where to start
-        if (location == null || location.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
+        // The route starting point is required because matching needs to know where members leave from
+        if (normalizeRequiredRouteLocation(location, departureLocation) == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Departure location is required");
         }
+
+        validateCoordinates(departureLatitude, departureLongitude, "Departure");
 
         // Transport mode is required for matching and for the UI cards
         if (mode == null) {
@@ -730,8 +829,61 @@ public class TravelGroupService {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Departure time must be before the activity starts"
+                    );
+            }
+        }
+
+        if (estimatedArrivalTime != null) {
+            if (estimatedArrivalTime.isBefore(departureTime)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Estimated arrival time cannot be before departure time"
                 );
             }
+
+            if (activity.getDate() != null && activity.getTime() != null) {
+                LocalDateTime activityDateTime = LocalDateTime.of(activity.getDate(), activity.getTime());
+                if (estimatedArrivalTime.isAfter(activityDateTime)) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Estimated arrival time must be before the activity starts"
+                    );
+                }
+            }
+        }
+    }
+
+    private static String normalizeRequiredRouteLocation(String location, String departureLocation) {
+        String normalizedDepartureLocation = normalizeOptionalText(departureLocation);
+        if (normalizedDepartureLocation != null) {
+            return normalizedDepartureLocation;
+        }
+
+        return normalizeOptionalText(location);
+    }
+
+    private static String normalizeOptionalText(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    private static void validateCoordinates(Double latitude, Double longitude, String label) {
+        if ((latitude == null) != (longitude == null)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    label + " latitude and longitude must be provided together"
+            );
+        }
+
+        if (latitude != null && (latitude < -90 || latitude > 90)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " latitude must be between -90 and 90");
+        }
+
+        if (longitude != null && (longitude < -180 || longitude > 180)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " longitude must be between -180 and 180");
         }
     }
 }

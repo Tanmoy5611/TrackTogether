@@ -266,8 +266,16 @@ public class TravelGroupController {
     // Accepts a pending join request from the detail page
     @PostMapping("/requests/{requestId}/accept")
     public String acceptJoinRequest(@PathVariable Integer requestId,
-                                    @RequestParam(required = false) String redirectTo) {
-        travelGroupService.acceptJoinRequest(requestId);
+                                    @RequestParam(required = false) String redirectTo,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            travelGroupService.acceptJoinRequest(requestId);
+            redirectAttributes.addFlashAttribute("toastType", "success");
+            redirectAttributes.addFlashAttribute("toastMessage", "Join request accepted.");
+        } catch (ResponseStatusException exception) {
+            redirectAttributes.addFlashAttribute("toastType", "info");
+            redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
+        }
 
         if (redirectTo != null && !redirectTo.isBlank()) {
             return "redirect:" + redirectTo;
@@ -279,8 +287,16 @@ public class TravelGroupController {
     // Rejects a pending join request from the detail page
     @PostMapping("/requests/{requestId}/reject")
     public String rejectJoinRequest(@PathVariable Integer requestId,
-                                    @RequestParam(required = false) String redirectTo) {
-        travelGroupService.rejectJoinRequest(requestId);
+                                    @RequestParam(required = false) String redirectTo,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            travelGroupService.rejectJoinRequest(requestId);
+            redirectAttributes.addFlashAttribute("toastType", "success");
+            redirectAttributes.addFlashAttribute("toastMessage", "Join request rejected.");
+        } catch (ResponseStatusException exception) {
+            redirectAttributes.addFlashAttribute("toastType", "info");
+            redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
+        }
 
         if (redirectTo != null && !redirectTo.isBlank()) {
             return "redirect:" + redirectTo;
