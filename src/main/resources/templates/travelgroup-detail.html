@@ -4,8 +4,8 @@
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
     <title>Travel Group Details</title>
     <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
+    <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
 </head>
 <body class="kdg-page">
 <div class="kdg-shell">
@@ -84,19 +84,29 @@
                     </span>
                 </div>
 
-                <form th:if="${!isJoined and !isOwner and !hasPendingJoinRequest}"
+                <form th:if="${!isJoined and !isOwner and !hasPendingJoinRequest and remainingSpots > 0}"
                       th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                       method="post">
                     <input type="hidden" name="redirectTo" th:value="${'/travelgroups/' + group.groupId}">
                     <button type="submit" class="kdg-button kdg-button--success travelgroup-detail__primary-action">
                         <i class="bi"
-                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-check'"
                            aria-hidden="true"></i>
-                        <span th:text="${joinApprovalRequired ? (hasRejectedJoinRequest ? 'Request again' : 'Request to join') : 'Join'}">
-                            Join
+                        <span th:if="${joinApprovalRequired}"
+                              th:text="${hasRejectedJoinRequest ? 'Request again' : 'Request to join'}">
+                            Request to join
                         </span>
+                        <span th:unless="${joinApprovalRequired}">I'm going too</span>
                     </button>
                 </form>
+
+                <button th:if="${!isJoined and !isOwner and !hasPendingJoinRequest and remainingSpots == 0}"
+                        type="button"
+                        class="kdg-button kdg-button--full travelgroup-detail__primary-action"
+                        disabled>
+                    <i class="bi bi-lock" aria-hidden="true"></i>
+                    <span>Group full</span>
+                </button>
 
                 <form th:if="${isJoined and !isOwner}"
                       th:action="@{/travelgroups/{groupId}/leave(groupId=${group.groupId})}"
@@ -284,9 +294,9 @@
                 </div>
                 <div id="travelgroup-detail-map"
                      class="kdg-map-picker__map travelgroup-detail__map"
-                     th:data-location="${group.location}"
-                     th:data-latitude="${group.activity.latitude}"
-                     th:data-longitude="${group.activity.longitude}">
+                     th:data-location="${group.departureLocation ?: group.location}"
+                     th:data-latitude="${group.departureLatitude ?: group.activity.latitude}"
+                     th:data-longitude="${group.departureLongitude ?: group.activity.longitude}">
                 </div>
             </section>
 

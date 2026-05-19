@@ -4,12 +4,23 @@
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
     <title th:text="#{travelgroup.list.title}">Travel Groups</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 
 <body class="kdg-page">
 
 <div class="kdg-shell">
     <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">
+        <div id="actionToast" class="toast kdg-toast" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="3200">
+            <div class="toast-body">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                <span id="toastMessage"></span>
+            </div>
+        </div>
+    </div>
 
     <main class="kdg-main"
           th:with="groups=${page.groups},
@@ -55,6 +66,27 @@
                 <i class="bi bi-plus-circle" aria-hidden="true"></i>
                 <span th:text="#{travelgroup.list.create}">Create Group</span>
             </a>
+        </section>
+
+        <!-- Suggestions section — populated by travelgroups.js via /api/travelgroups/suggestions -->
+        <section id="suggestions-section"
+                 class="travelgroup-list-section travelgroup-list-section--suggestions"
+                 aria-labelledby="suggestions-title"
+                 hidden>
+            <div class="travelgroup-list-section__header">
+                <div>
+                    <p class="kdg-eyebrow">Recommended for you</p>
+                    <h2 id="suggestions-title">
+                        <i class="bi bi-stars" aria-hidden="true"></i>
+                        <span>Suggested travel groups</span>
+                    </h2>
+                </div>
+                <span class="travelgroup-list-section__count">
+                    <i class="bi bi-collection" aria-hidden="true"></i>
+                    <span id="suggestions-count">0 groups</span>
+                </span>
+            </div>
+            <div id="suggestions-grid" class="kdg-grid"></div>
         </section>
 
         <section th:if="${#lists.isEmpty(groups)}"
@@ -212,18 +244,31 @@
 
                                 <form th:if="${!joinedGroupIds.contains(group.groupId)
                                               and !ownedGroupIds.contains(group.groupId)
+                                              and memberCounts[group.groupId] < group.maxMembers
                                               and (!joinApprovalRequired or !pendingJoinRequestGroupIds.contains(group.groupId))}"
                                       th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                                       method="post">
                                     <button type="submit" class="kdg-button kdg-button--success">
                                         <i class="bi"
-                                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-check'"
                                            aria-hidden="true"></i>
-                                        <span th:text="${joinApprovalRequired ? (rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join') : 'Join'}">
-                                            Join
+                                        <span th:if="${joinApprovalRequired}"
+                                              th:text="${rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join'}">
+                                            Request to join
                                         </span>
+                                        <span th:unless="${joinApprovalRequired}">I'm going too</span>
                                     </button>
                                 </form>
+
+                                <button th:if="${!joinedGroupIds.contains(group.groupId)
+                                                and !ownedGroupIds.contains(group.groupId)
+                                                and memberCounts[group.groupId] >= group.maxMembers}"
+                                        type="button"
+                                        class="kdg-button kdg-button--full"
+                                        disabled>
+                                    <i class="bi bi-lock" aria-hidden="true"></i>
+                                    <span>Group full</span>
+                                </button>
 
                                 <button th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}"
                                         type="button"
@@ -390,18 +435,31 @@
 
                                 <form th:if="${!joinedGroupIds.contains(group.groupId)
                                               and !ownedGroupIds.contains(group.groupId)
+                                              and memberCounts[group.groupId] < group.maxMembers
                                               and (!joinApprovalRequired or !pendingJoinRequestGroupIds.contains(group.groupId))}"
                                       th:action="@{/travelgroups/{groupId}/join(groupId=${group.groupId})}"
                                       method="post">
                                     <button type="submit" class="kdg-button kdg-button--success">
                                         <i class="bi"
-                                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-plus'"
+                                           th:classappend="${joinApprovalRequired} ? ' bi-send' : ' bi-person-check'"
                                            aria-hidden="true"></i>
-                                        <span th:text="${joinApprovalRequired ? (rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join') : 'Join'}">
-                                            Join
+                                        <span th:if="${joinApprovalRequired}"
+                                              th:text="${rejectedJoinRequestGroupIds.contains(group.groupId) ? 'Request again' : 'Request to join'}">
+                                            Request to join
                                         </span>
+                                        <span th:unless="${joinApprovalRequired}">I'm going too</span>
                                     </button>
                                 </form>
+
+                                <button th:if="${!joinedGroupIds.contains(group.groupId)
+                                                and !ownedGroupIds.contains(group.groupId)
+                                                and memberCounts[group.groupId] >= group.maxMembers}"
+                                        type="button"
+                                        class="kdg-button kdg-button--full"
+                                        disabled>
+                                    <i class="bi bi-lock" aria-hidden="true"></i>
+                                    <span>Group full</span>
+                                </button>
 
                                 <button th:if="${joinApprovalRequired and pendingJoinRequestGroupIds.contains(group.groupId)}"
                                         type="button"
@@ -463,6 +521,6 @@
 </div>
 
 <script defer th:src="@{/js/travelgroup-delete-modal.js}"></script>
-
+<script th:src="@{/js/travelgroups.js}"></script>
 </body>
 </html>

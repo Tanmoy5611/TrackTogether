@@ -335,6 +335,29 @@ body.kdg-page {
     color: var(--kdg-white);
 }
 
+.kdg-button--full {
+    border-color: #b51f1f;
+    background: #f04444;
+    color: var(--kdg-ink);
+    opacity: 1;
+}
+
+.kdg-button--full:hover,
+.kdg-button.kdg-button--full:disabled,
+.kdg-button.kdg-button--full[disabled],
+.kdg-button.kdg-button--full:disabled:hover,
+.kdg-button.kdg-button--full[disabled]:hover {
+    border-color: #b51f1f;
+    background: #f04444;
+    color: var(--kdg-ink);
+    opacity: 1;
+    transform: none;
+}
+
+.kdg-button--full .bi {
+    color: var(--kdg-ink);
+}
+
 .kdg-button--subtle {
     min-height: 2.45rem;
     padding: 0.55rem 0.85rem;
@@ -821,6 +844,10 @@ body.kdg-page {
 .travelgroup-list-section {
     display: grid;
     gap: 1rem;
+}
+
+.travelgroup-list-section--suggestions {
+    margin-bottom: 3rem;
 }
 
 .travelgroup-list-section__header {
