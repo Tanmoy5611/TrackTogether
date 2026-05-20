@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,57 +28,77 @@ public class TravelGroupService {
     private final ConversationRepository conversationRepository;
     private final TravelGroupMemberRepository travelGroupMemberRepository;
     private final JoinRequestRepository joinRequestRepository;
+    private final MemberRepository memberRepository;
     private final CurrentUserService currentUserService;
     private final SystemSettingsService systemSettingsService;
+    private final NotificationService notificationService;
+    private final ActivityPolicyService activityPolicyService;
 
+    // Wires repositories and helper services used by travel group workflows
     public TravelGroupService(TravelGroupRepository travelGroupRepository,
                               ActivityRepository activityRepository,
                               ConversationRepository conversationRepository,
                               TravelGroupMemberRepository travelGroupMemberRepository,
                               JoinRequestRepository joinRequestRepository,
+                              MemberRepository memberRepository,
                               CurrentUserService currentUserService,
-                              SystemSettingsService systemSettingsService) {
-        // All database access stays behind repositories and this service
+                              SystemSettingsService systemSettingsService,
+                              NotificationService notificationService,
+                              ActivityPolicyService activityPolicyService) {
         this.travelGroupRepository = travelGroupRepository;
         this.activityRepository = activityRepository;
         this.conversationRepository = conversationRepository;
         this.travelGroupMemberRepository = travelGroupMemberRepository;
         this.joinRequestRepository = joinRequestRepository;
+        this.memberRepository = memberRepository;
         this.currentUserService = currentUserService;
         this.systemSettingsService = systemSettingsService;
+        this.notificationService = notificationService;
+        this.activityPolicyService = activityPolicyService;
     }
 
-    // Returns every travel group from the database
+    // Returns all travel groups whose activities are visible to the current user
     public List<TravelGroup> getAllTravelGroups() {
-        return travelGroupRepository.findAll();
+        Member currentUser = currentUserService.getCurrentUser();
+        return travelGroupRepository.findAll()
+                .stream()
+                .filter(group -> activityPolicyService.isVisibleTo(group.getActivity(), currentUser))
+                .toList();
     }
 
-    // Finds one travel group or returns a 404 when the id is unknown
+    // Loads one travel group and checks that the current user may view its activity
     public TravelGroup getTravelGroupById(UUID groupId) {
-        return travelGroupRepository.findById(groupId)
+        TravelGroup group = travelGroupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Travel group not found"
                 ));
+
+        ensureActivityVisible(group);
+        return group;
     }
 
-    // Returns all travel groups that belong to one activity
+    // Returns visible travel groups linked to one activity
     public List<TravelGroup> getTravelGroupsForActivity(UUID activityId) {
-        return travelGroupRepository.findAllByActivity_Id(activityId);
+        Member currentUser = currentUserService.getCurrentUser();
+        return travelGroupRepository.findAllByActivity_Id(activityId)
+                .stream()
+                .filter(group -> activityPolicyService.isVisibleTo(group.getActivity(), currentUser))
+                .toList();
     }
 
-    // Checks if the logged-in member is already in the given group
+    // Checks whether the current user has a membership in the group
     public boolean isCurrentUserMember(TravelGroup group) {
         Member member = currentUserService.getCurrentUser();
         return travelGroupMemberRepository.existsByGroupAndMember(group, member);
     }
 
-    // Counts how many members are currently in one group
+    // Counts the current number of members in a group
     public long getMemberCount(TravelGroup group) {
         return travelGroupMemberRepository.countByGroup(group);
     }
 
-    // Builds a lookup map so templates can show capacity without recalculating it
+    // Builds a group id to member count map for list rendering
     public Map<UUID, Long> getMemberCounts(List<TravelGroup> groups) {
         return groups.stream()
                 .collect(Collectors.toMap(
@@ -86,13 +107,12 @@ public class TravelGroupService {
                 ));
     }
 
-    // Builds all data needed by the travel groups list page
+    // Builds the grouped travel group overview model for the list page
     public TravelGroupPageView buildTravelGroupsPage() {
         List<TravelGroup> groups = getAllTravelGroups();
         Set<UUID> joinedGroupIds = getJoinedGroupIds(groups);
         Set<UUID> ownedGroupIds = getOwnedGroupIds(groups);
 
-        // The page view keeps list-page display data together instead of spreading it in the controller
         return new TravelGroupPageView(
                 groups,
                 getCurrentUserTravelGroups(groups, joinedGroupIds, ownedGroupIds),
@@ -109,7 +129,7 @@ public class TravelGroupService {
         );
     }
 
-    // Returns ids of groups where the current user has a membership row
+    // Finds ids of groups joined by the current user
     public Set<UUID> getJoinedGroupIds(List<TravelGroup> groups) {
         Member member = currentUserService.getCurrentUser();
 
@@ -119,19 +139,19 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
-    // Checks if the logged-in member is the current owner of the group
+    // Checks whether the current user owns the given group
     public boolean isCurrentUserOwner(TravelGroup group) {
         Member member = currentUserService.getCurrentUser();
         return group.getOwner() != null
                 && group.getOwner().getUserId().equals(member.getUserId());
     }
 
-    // Returns the shared message used when an owner must transfer first
+    // Returns the standard message shown when an owner cannot leave
     public String getOwnerCannotLeaveMessage() {
         return OWNER_CANNOT_LEAVE_MESSAGE;
     }
 
-    // Returns ids of groups owned by the current user
+    // Finds ids of groups owned by the current user
     public Set<UUID> getOwnedGroupIds(List<TravelGroup> groups) {
         Member member = currentUserService.getCurrentUser();
 
@@ -142,7 +162,7 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
-    // Returns ids of owned groups that can be deleted because the owner is alone
+    // Finds owned groups that the current user may delete
     public Set<UUID> getDeletableOwnedGroupIds(List<TravelGroup> groups) {
         return groups.stream()
                 .filter(this::canCurrentUserDeleteTravelGroup)
@@ -150,53 +170,35 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
-    // Public helper for controllers that still need the current user's groups
-    public List<TravelGroup> getCurrentUserTravelGroups(List<TravelGroup> groups) {
-        Set<UUID> joinedGroupIds = getJoinedGroupIds(groups);
-        Set<UUID> ownedGroupIds = getOwnedGroupIds(groups);
-
-        return getCurrentUserTravelGroups(groups, joinedGroupIds, ownedGroupIds);
-    }
-
-    // Uses precomputed ids so the list page builder does not repeat the same checks
+    // Filters groups that belong in the current user's joined or owned section
     private List<TravelGroup> getCurrentUserTravelGroups(List<TravelGroup> groups,
                                                          Set<UUID> joinedGroupIds,
                                                          Set<UUID> ownedGroupIds) {
-        // These are the groups that should appear in "My joined travel groups"
         return groups.stream()
                 .filter(group -> joinedGroupIds.contains(group.getGroupId()) || ownedGroupIds.contains(group.getGroupId()))
                 .toList();
     }
 
-    // Public helper for controllers that still need discoverable groups
-    public List<TravelGroup> getExploreTravelGroups(List<TravelGroup> groups) {
-        Set<UUID> joinedGroupIds = getJoinedGroupIds(groups);
-        Set<UUID> ownedGroupIds = getOwnedGroupIds(groups);
-
-        return getExploreTravelGroups(groups, joinedGroupIds, ownedGroupIds);
-    }
-
-    // Uses precomputed ids to decide which groups are still joinable/discoverable
+    // Filters groups that belong in the explore section
     private List<TravelGroup> getExploreTravelGroups(List<TravelGroup> groups,
                                                      Set<UUID> joinedGroupIds,
                                                      Set<UUID> ownedGroupIds) {
-        // These are the groups the current user can still discover or join
         return groups.stream()
                 .filter(group -> !joinedGroupIds.contains(group.getGroupId()) && !ownedGroupIds.contains(group.getGroupId()))
                 .toList();
     }
 
-    // Returns group ids where the current user has a pending join request
+    // Finds group ids where the current user has a pending join request
     public Set<UUID> getPendingJoinRequestGroupIds(List<TravelGroup> groups) {
         return getJoinRequestGroupIds(groups, JoinRequestStatus.PENDING);
     }
 
-    // Returns group ids where the current user's join request was rejected
+    // Finds group ids where the current user has a rejected join request
     public Set<UUID> getRejectedJoinRequestGroupIds(List<TravelGroup> groups) {
         return getJoinRequestGroupIds(groups, JoinRequestStatus.REJECTED);
     }
 
-    // Counts pending requests per group for the owner request badge
+    // Counts pending join requests for each group
     public Map<UUID, Long> getPendingJoinRequestCounts(List<TravelGroup> groups) {
         return groups.stream()
                 .collect(Collectors.toMap(
@@ -205,7 +207,7 @@ public class TravelGroupService {
                 ));
     }
 
-    // Returns the current user's request status for one group, if a request exists
+    // Returns the current user's join request status for one group
     public JoinRequestStatus getCurrentUserJoinRequestStatus(TravelGroup group) {
         Member member = currentUserService.getCurrentUser();
         return joinRequestRepository.findByGroupAndMember(group, member)
@@ -213,24 +215,30 @@ public class TravelGroupService {
                 .orElse(null);
     }
 
-    // Shows pending requests only when the current user may manage them
+    // Shows pending requests and invitations only to the owner who can accept or reject them
     public List<JoinRequest> getVisiblePendingRequests(TravelGroup group) {
-        if (!isCurrentUserOwner(group) || !isJoinApprovalRequired()) {
+        if (!isCurrentUserOwner(group)) {
             return List.of();
         }
 
         return joinRequestRepository.findAllByGroupAndStatusOrderByRequestedAtAsc(group, JoinRequestStatus.PENDING);
     }
 
-    // Reads the system setting that decides whether joining needs owner approval
+    // Reads the system setting that controls whether joins require owner approval
     public boolean isJoinApprovalRequired() {
-        // Central helper so controllers and templates all use the same setting
         return systemSettingsService.isTravelGroupJoinApprovalEnabled();
     }
 
-    // Returns all membership rows for a group
+    // Loads memberships for a group including member and shared location data
     public List<TravelGroupMember> getMembersForGroup(TravelGroup group) {
         return travelGroupMemberRepository.findAllByGroup(group);
+    }
+
+    // Returns the logged-in member's row for prefilling the location sharing form
+    public TravelGroupMember getCurrentUserMembership(TravelGroup group) {
+        Member member = currentUserService.getCurrentUser();
+        return travelGroupMemberRepository.findByGroupAndMember(group, member)
+                .orElse(null);
     }
 
     // Only the current owner can edit a travel group
@@ -238,21 +246,19 @@ public class TravelGroupService {
         return isCurrentUserOwner(group);
     }
 
-    // Checks if the owner is allowed to delete the group through Delete & Leave
+    // Allows deletion only when the current owner is the sole member
     public boolean canCurrentUserDeleteTravelGroup(TravelGroup group) {
-        // An owner may delete only when they are the last member
         return isCurrentUserOwner(group)
                 && isCurrentUserMember(group)
                 && travelGroupMemberRepository.countByGroup(group) == 1;
     }
 
-    // Returns joined members who can receive ownership from the current owner
+    // Lists members who can receive ownership from the current owner
     public List<TravelGroupMember> getOwnershipTransferCandidates(TravelGroup group) {
         if (group.getOwner() == null) {
             return List.of();
         }
 
-        // The current owner is removed, because transferring to yourself changes nothing
         return travelGroupMemberRepository.findAllByGroup(group)
                 .stream()
                 .filter(membership -> membership.getMember() != null)
@@ -260,7 +266,7 @@ public class TravelGroupService {
                 .toList();
     }
 
-    // Deletes every travel group for an activity, including related memberships and requests
+    // Deletes all travel groups and related records for an activity being removed
     @Transactional
     public void deleteTravelGroupsForActivity(UUID activityId) {
         List<TravelGroup> groups = travelGroupRepository.findAllByActivity_Id(activityId);
@@ -270,27 +276,7 @@ public class TravelGroupService {
         }
     }
 
-    // Creates a new TravelGroup for a given activity
-    @Transactional
-    public TravelGroup createTravelGroup(UUID activityId,
-                                         Integer maxMembers,
-                                         String location,
-                                         TransportMode mode,
-                                         LocalDateTime departureTime) {
-        return createTravelGroup(
-                activityId,
-                maxMembers,
-                location,
-                location,
-                null,
-                null,
-                mode,
-                departureTime,
-                null
-        );
-    }
-
-    // Creates a new TravelGroup with route data for matching
+    // Creates a travel group with its chat conversation and owner membership
     @Transactional
     public TravelGroup createTravelGroup(UUID activityId,
                                          Integer maxMembers,
@@ -302,14 +288,14 @@ public class TravelGroupService {
                                          LocalDateTime departureTime,
                                          LocalDateTime estimatedArrivalTime) {
 
-        // Retrieve the activity from the database
         Activity activity = activityRepository.findById(activityId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Activity not found"
                 ));
 
-        // Validate all form/API values before anything is saved
+        ensureActivityVisible(activity);
+
         validateTravelGroupDetails(
                 activity,
                 maxMembers,
@@ -322,7 +308,6 @@ public class TravelGroupService {
                 estimatedArrivalTime
         );
 
-        // Create a new TravelGroup with the provided information
         String normalizedDepartureLocation = normalizeRequiredRouteLocation(location, departureLocation);
         String displayLocation = normalizeOptionalText(location);
         if (displayLocation == null) {
@@ -340,14 +325,11 @@ public class TravelGroupService {
 
         Member owner = currentUserService.getCurrentUser();
 
-        // Link the group to the activity and set the current user as owner
         group.setActivity(activity);
         group.setOwner(owner);
 
-        // Save the group first so the conversation and membership can reference it
         TravelGroup savedGroup = travelGroupRepository.save(group);
 
-        // Every travel group gets its own conversation
         Conversation conversation = new Conversation();
         conversation.setTravelGroup(savedGroup);
         conversation.setCreatedAt(LocalDateTime.now());
@@ -356,7 +338,6 @@ public class TravelGroupService {
 
         conversationRepository.save(conversation);
 
-        // The owner is also stored as a normal member of the group
         TravelGroupMember ownerMembership = new TravelGroupMember();
         ownerMembership.setGroup(savedGroup);
         ownerMembership.setMember(owner);
@@ -365,28 +346,7 @@ public class TravelGroupService {
         return savedGroup;
     }
 
-    // Updates editable group details and keeps the same validation rules as create
-    @Transactional
-    public TravelGroup updateTravelGroup(UUID groupId,
-                                         Integer maxMembers,
-                                         String location,
-                                         TransportMode mode,
-                                         LocalDateTime departureTime) {
-        TravelGroup existingGroup = getTravelGroupById(groupId);
-        return updateTravelGroup(
-                groupId,
-                maxMembers,
-                location,
-                location != null ? location : existingGroup.getDepartureLocation(),
-                existingGroup.getDepartureLatitude(),
-                existingGroup.getDepartureLongitude(),
-                mode,
-                departureTime,
-                existingGroup.getEstimatedArrivalTime()
-        );
-    }
-
-    // Updates editable route and group details
+    // Updates travel group route capacity and timing details for the owner
     @Transactional
     public TravelGroup updateTravelGroup(UUID groupId,
                                          Integer maxMembers,
@@ -400,7 +360,6 @@ public class TravelGroupService {
         TravelGroup group = getTravelGroupByIdForUpdate(groupId);
         ensureCurrentUserOwns(group);
 
-        // Keep the edit rules the same as create, so bad values cannot be saved later
         validateTravelGroupDetails(
                 group.getActivity(),
                 maxMembers,
@@ -421,7 +380,6 @@ public class TravelGroupService {
             );
         }
 
-        // After all checks pass, update only the fields the owner is allowed to edit
         String normalizedDepartureLocation = normalizeRequiredRouteLocation(location, departureLocation);
         String displayLocation = normalizeOptionalText(location);
         if (displayLocation == null) {
@@ -442,14 +400,13 @@ public class TravelGroupService {
         return travelGroupRepository.save(group);
     }
 
-    // Creates or reopens a join request when approval is enabled
+    // Creates a pending join request for the current user
     @Transactional
     public void requestToJoinTravelGroup(UUID groupId) {
         TravelGroup group = getTravelGroupByIdForUpdate(groupId);
 
         Member member = currentUserService.getCurrentUser();
 
-        // Owners already belong to their group, so they cannot request to join
         if (isCurrentUserOwner(group)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -467,8 +424,8 @@ public class TravelGroupService {
             );
         }
 
-        // This count runs after the row lock, so two students joining at the same time
-        // cannot both see the same last free seat.
+        // This count runs after the row lock so two students joining at the same time
+        // cannot both see the same last free seat
         long memberCount = travelGroupMemberRepository.countByGroup(group);
 
         if (!group.hasAvailableSpots(memberCount)) {
@@ -478,7 +435,6 @@ public class TravelGroupService {
             );
         }
 
-        // Reuse an old request row when it exists, for example after rejection
         JoinRequest joinRequest = joinRequestRepository.findByGroupAndMember(group, member)
                 .orElseGet(JoinRequest::new);
 
@@ -496,12 +452,12 @@ public class TravelGroupService {
         joinRequest.setRespondedAt(null);
 
         joinRequestRepository.save(joinRequest);
+        notificationService.notifyJoinRequestReceived(group.getOwner(), member, group);
     }
 
-    // Main join entry point used by both MVC and API
+    // Joins directly or routes to the approval flow based on system settings
     @Transactional
     public void joinTravelGroup(UUID groupId) {
-        // The same join button can either create a request or join directly.
         if (isJoinApprovalRequired()) {
             requestToJoinTravelGroup(groupId);
             return;
@@ -510,7 +466,7 @@ public class TravelGroupService {
         joinTravelGroupDirectly(groupId);
     }
 
-    // Accepts a pending join request and adds that member to the group
+    // Accepts a pending request and adds the requester as a group member
     @Transactional
     public void acceptJoinRequest(Integer requestId) {
         JoinRequest joinRequest = getJoinRequestById(requestId);
@@ -528,7 +484,6 @@ public class TravelGroupService {
         boolean alreadyJoined =
                 travelGroupMemberRepository.existsByGroupAndMember(group, joinRequest.getMember());
 
-        // If the member joined another way, just mark the request as accepted
         if (alreadyJoined) {
             joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
             joinRequest.setRespondedAt(LocalDateTime.now());
@@ -536,8 +491,7 @@ public class TravelGroupService {
             return;
         }
 
-        // Capacity is checked while the group row is locked. If another owner/member
-        // is accepting or joining at the same time, their transaction must wait.
+        // Capacity is checked while the group row is locked so concurrent joins must wait
         long memberCount = travelGroupMemberRepository.countByGroup(group);
         if (!group.hasAvailableSpots(memberCount)) {
             throw new ResponseStatusException(
@@ -552,12 +506,22 @@ public class TravelGroupService {
 
         travelGroupMemberRepository.save(groupMember);
 
+        long newCount = travelGroupMemberRepository.countByGroup(group);
+        if (!group.hasAvailableSpots(newCount)) {
+            List<Member> allMembers = travelGroupMemberRepository.findAllByGroup(group)
+                    .stream()
+                    .map(TravelGroupMember::getMember)
+                    .toList();
+            notificationService.notifyGroupFull(allMembers, group);
+        }
+
         joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
         joinRequest.setRespondedAt(LocalDateTime.now());
         joinRequestRepository.save(joinRequest);
+        notificationService.notifyJoinRequestAccepted(joinRequest.getMember(), group);
     }
 
-    // Rejects a pending join request without adding the member
+    // Rejects a pending join request for a group owned by the current user
     @Transactional
     public void rejectJoinRequest(Integer requestId) {
         JoinRequest joinRequest = getJoinRequestById(requestId);
@@ -574,9 +538,10 @@ public class TravelGroupService {
         joinRequest.setStatus(JoinRequestStatus.REJECTED);
         joinRequest.setRespondedAt(LocalDateTime.now());
         joinRequestRepository.save(joinRequest);
+        notificationService.notifyJoinRequestRejected(joinRequest.getMember(), joinRequest.getGroup());
     }
 
-    // Lets a normal member leave a group. Owners must transfer first
+    // Removes the current member from a group and deletes empty groups
     @Transactional
     public void leaveTravelGroup(UUID groupId) {
 
@@ -585,7 +550,6 @@ public class TravelGroupService {
         Member member = currentUserService.getCurrentUser();
 
         if (isCurrentUserOwner(group)) {
-            // Owners must transfer the group first, otherwise the group would have no responsible person
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     OWNER_CANNOT_LEAVE_MESSAGE
@@ -599,10 +563,12 @@ public class TravelGroupService {
                         "Member is not part of this travel group"
                 ));
 
-        // Remove the user's membership row
         travelGroupMemberRepository.delete(membership);
 
-        // If the last member leaves, remove the travel group to prevent empty inactive groups
+        if (group.getOwner() != null) {
+            notificationService.notifyMemberLeft(group.getOwner(), member, group);
+        }
+
         long remainingMembers = travelGroupMemberRepository.countByGroup(group);
 
         if (remainingMembers == 0) {
@@ -610,13 +576,12 @@ public class TravelGroupService {
         }
     }
 
-    // Deletes an owner-only group after the Bootstrap confirmation popup
+    // Deletes a group when the current owner is the only member
     @Transactional
     public void deleteOwnedTravelGroup(UUID groupId) {
         TravelGroup group = getTravelGroupByIdForUpdate(groupId);
         ensureCurrentUserOwns(group);
 
-        // Owners with other members must transfer first, otherwise the group becomes unmanaged
         long memberCount = travelGroupMemberRepository.countByGroup(group);
         if (memberCount > 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, OWNER_CANNOT_LEAVE_MESSAGE);
@@ -633,7 +598,7 @@ public class TravelGroupService {
         deleteTravelGroupWithRelations(group);
     }
 
-    // Moves ownership to another member who already joined the group
+    // Moves ownership from the current owner to another existing group member
     @Transactional
     public TravelGroup transferOwnership(UUID groupId, UUID newOwnerId) {
         TravelGroup group = getTravelGroupByIdForUpdate(groupId);
@@ -657,9 +622,101 @@ public class TravelGroupService {
                         "New owner must already be a member of this travel group"
                 ));
 
-        // Only the owner field changes; the existing membership stays in place
         group.setOwner(newOwner);
         return travelGroupRepository.save(group);
+    }
+
+    // Lets a joined member share or update the location shown on the group detail page
+    @Transactional
+    public void updateCurrentMemberLocation(UUID groupId, String address, Double latitude, Double longitude) {
+        TravelGroup group = getTravelGroupById(groupId);
+        TravelGroupMember membership = getRequiredCurrentUserMembership(group);
+        String normalizedAddress = normalizeOptionalText(address);
+
+        if (normalizedAddress == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shared location address is required");
+        }
+
+        validateCoordinates(latitude, longitude, "Shared location");
+
+        Location location = membership.getLocation();
+        if (location == null) {
+            // First share creates a Location row and later shares update the same row
+            location = new Location();
+            membership.setLocation(location);
+        }
+
+        location.setAddress(normalizedAddress);
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+        location.setTimestamp(LocalDateTime.now());
+
+        travelGroupMemberRepository.save(membership);
+    }
+
+    // Removes only the current user's shared location and keeps their membership
+    @Transactional
+    public void clearCurrentMemberLocation(UUID groupId) {
+        TravelGroup group = getTravelGroupById(groupId);
+        TravelGroupMember membership = getRequiredCurrentUserMembership(group);
+
+        if (membership.getLocation() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No shared location to remove");
+        }
+
+        membership.setLocation(null);
+        travelGroupMemberRepository.save(membership);
+    }
+
+    // Creates a pending invite for an existing student by reusing the join request flow
+    @Transactional
+    public void inviteMemberToTravelGroup(UUID groupId, String inviteeEmail) {
+        TravelGroup group = getTravelGroupByIdForUpdate(groupId);
+        Member inviter = currentUserService.getCurrentUser();
+
+        if (!travelGroupMemberRepository.existsByGroupAndMember(group, inviter)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only joined members can invite someone");
+        }
+
+        String normalizedEmail = normalizeOptionalText(inviteeEmail);
+        if (normalizedEmail == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invite email is required");
+        }
+
+        Member invitee = memberRepository.findByEmailIgnoreCase(normalizedEmail)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No student found with that email"
+                ));
+
+        if (invitee.getUserId().equals(inviter.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot invite yourself");
+        }
+
+        if (travelGroupMemberRepository.existsByGroupAndMember(group, invitee)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This student already joined the group");
+        }
+
+        // The group is locked here too so an invite cannot be created for a group that became full meanwhile
+        long memberCount = travelGroupMemberRepository.countByGroup(group);
+        if (!group.hasAvailableSpots(memberCount)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Travel group is full");
+        }
+
+        Optional<JoinRequest> existingJoinRequest = joinRequestRepository.findByGroupAndMember(group, invitee);
+        if (existingJoinRequest.isPresent() && existingJoinRequest.get().getStatus() == JoinRequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This student already has a pending invite");
+        }
+
+        // Reuse rejected or old requests so the unique group member constraint stays happy
+        JoinRequest joinRequest = existingJoinRequest.orElseGet(JoinRequest::new);
+        joinRequest.setGroup(group);
+        joinRequest.setMember(invitee);
+        joinRequest.setStatus(JoinRequestStatus.PENDING);
+        joinRequest.setRequestedAt(LocalDateTime.now());
+        joinRequest.setRespondedAt(null);
+
+        joinRequestRepository.save(joinRequest);
     }
 
     // Finds current-user request group ids by status for list-page badges
@@ -677,7 +734,7 @@ public class TravelGroupService {
                 .collect(Collectors.toSet());
     }
 
-    // Loads a join request or returns 404 if it does not exist
+    // Loads a join request or returns a not found error
     private JoinRequest getJoinRequestById(Integer requestId) {
         return joinRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -686,14 +743,25 @@ public class TravelGroupService {
                 ));
     }
 
-    // Real-life seat protection:
-    // lock the group row before checking capacity and inserting a member.
-    // In PostgreSQL this becomes SELECT ... FOR UPDATE, so simultaneous joins wait their turn.
+    // Protects seats by locking the group row before capacity checks and inserts
+    // In PostgreSQL this becomes SELECT FOR UPDATE so simultaneous joins wait their turn
     private TravelGroup getTravelGroupByIdForUpdate(UUID groupId) {
-        return travelGroupRepository.findByIdForUpdate(groupId)
+        TravelGroup group = travelGroupRepository.findByIdForUpdate(groupId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Travel group not found"
+                ));
+        ensureActivityVisible(group);
+        return group;
+    }
+
+    // Shared guard for actions that require the current user to already be in the group
+    private TravelGroupMember getRequiredCurrentUserMembership(TravelGroup group) {
+        Member member = currentUserService.getCurrentUser();
+        return travelGroupMemberRepository.findByGroupAndMember(group, member)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Only joined members can do this"
                 ));
     }
 
@@ -704,7 +772,6 @@ public class TravelGroupService {
         Member member = currentUserService.getCurrentUser();
 
         if (isCurrentUserOwner(group)) {
-            // Owners already have a membership row from group creation
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Group owners are already part of their own travel group"
@@ -719,8 +786,7 @@ public class TravelGroupService {
             );
         }
 
-        // The group was loaded with a database lock, so this capacity check is based
-        // on the latest committed member count before we insert the new membership.
+        // The group was loaded with a database lock so this capacity check uses the latest committed count
         long memberCount = travelGroupMemberRepository.countByGroup(group);
         if (!group.hasAvailableSpots(memberCount)) {
             throw new ResponseStatusException(
@@ -735,31 +801,39 @@ public class TravelGroupService {
 
         travelGroupMemberRepository.save(groupMember);
 
-        // If approval was turned off later, old requests should not stay pending
+        if (group.getOwner() != null) {
+            notificationService.notifyMemberJoined(group.getOwner(), member, group);
+        }
+
+        long newCount = travelGroupMemberRepository.countByGroup(group);
+        if (!group.hasAvailableSpots(newCount)) {
+            List<Member> allMembers = travelGroupMemberRepository.findAllByGroup(group)
+                    .stream()
+                    .map(TravelGroupMember::getMember)
+                    .toList();
+            notificationService.notifyGroupFull(allMembers, group);
+        }
+
         joinRequestRepository.findByGroupAndMember(group, member)
                 .ifPresent(joinRequest -> {
-                    // Keep request history consistent with the direct membership
                     joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
                     joinRequest.setRespondedAt(LocalDateTime.now());
                     joinRequestRepository.save(joinRequest);
                 });
     }
 
-    // Deletes a travel group and all records that depend on it
+    // Removes join requests memberships conversation and the group record
     private void deleteTravelGroupWithRelations(TravelGroup group) {
-        // Remove join requests first so no request points to a deleted group.
         List<JoinRequest> joinRequests = joinRequestRepository.findAllByGroup(group);
         if (!joinRequests.isEmpty()) {
             joinRequestRepository.deleteAll(joinRequests);
         }
 
-        // Remove memberships before deleting the group itself
         List<TravelGroupMember> memberships = travelGroupMemberRepository.findAllByGroup(group);
         if (!memberships.isEmpty()) {
             travelGroupMemberRepository.deleteAll(memberships);
         }
 
-        // Detach and delete the group conversation to avoid an orphan chat
         Conversation conversation = group.getConversation();
         if (conversation != null) {
             group.setConversation(null);
@@ -770,13 +844,25 @@ public class TravelGroupService {
         travelGroupRepository.delete(group);
     }
 
-    // Shared owner guard for all owner-only actions
+    // Ensures the current user owns the given group before owner-only actions
     private void ensureCurrentUserOwns(TravelGroup group) {
         if (!isCurrentUserOwner(group)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Only the group owner can manage this travel group"
             );
+        }
+    }
+
+    // Ensures the activity behind a travel group is visible to the current user
+    private void ensureActivityVisible(TravelGroup group) {
+        ensureActivityVisible(group.getActivity());
+    }
+
+    // Ensures an activity is visible to the current user
+    private void ensureActivityVisible(Activity activity) {
+        if (!activityPolicyService.isVisibleTo(activity, currentUserService.getCurrentUser())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Activity is not public yet");
         }
     }
 
@@ -790,29 +876,24 @@ public class TravelGroupService {
                                             TransportMode mode,
                                             LocalDateTime departureTime,
                                             LocalDateTime estimatedArrivalTime) {
-        // A group must always have at least one seat
         if (maxMembers == null || maxMembers <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max members must be positive");
         }
 
-        // The route starting point is required because matching needs to know where members leave from
         if (normalizeRequiredRouteLocation(location, departureLocation) == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Departure location is required");
         }
 
-        validateCoordinates(departureLatitude, departureLongitude, "Departure");
+        validateCoordinates(departureLatitude, departureLongitude);
 
-        // Transport mode is required for matching and for the UI cards
         if (mode == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transport mode is required");
         }
 
-        // Departure time is required so old or late travel groups cannot be created
         if (departureTime == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Departure time is required");
         }
 
-        // Compare at minute precision because the HTML input does not send seconds
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         if (departureTime.isBefore(now)) {
             throw new ResponseStatusException(
@@ -824,7 +905,6 @@ public class TravelGroupService {
         if (activity.getDate() != null && activity.getTime() != null) {
             LocalDateTime activityDateTime = LocalDateTime.of(activity.getDate(), activity.getTime());
 
-            // Travel should start before or at the activity time, never after the event has started
             if (departureTime.isAfter(activityDateTime)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
@@ -853,6 +933,7 @@ public class TravelGroupService {
         }
     }
 
+    // Chooses the departure location text that is required for route planning
     private static String normalizeRequiredRouteLocation(String location, String departureLocation) {
         String normalizedDepartureLocation = normalizeOptionalText(departureLocation);
         if (normalizedDepartureLocation != null) {
@@ -862,6 +943,7 @@ public class TravelGroupService {
         return normalizeOptionalText(location);
     }
 
+    // Trims optional text and converts blank values to null
     private static String normalizeOptionalText(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -870,6 +952,12 @@ public class TravelGroupService {
         return value.trim();
     }
 
+    // Validates departure coordinates
+    private static void validateCoordinates(Double latitude, Double longitude) {
+        validateCoordinates(latitude, longitude, "Departure");
+    }
+
+    // Validates a latitude and longitude pair with a custom error label
     private static void validateCoordinates(Double latitude, Double longitude, String label) {
         if ((latitude == null) != (longitude == null)) {
             throw new ResponseStatusException(
