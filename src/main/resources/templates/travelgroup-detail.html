@@ -2,6 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Travel Group Details</title>
     <link rel="stylesheet"
           th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
@@ -229,11 +231,11 @@
                 </div>
             </section>
 
-            <section class="kdg-panel travelgroup-detail__section" th:if="${isOwner and joinApprovalRequired}">
+            <section class="kdg-panel travelgroup-detail__section" th:if="${isOwner}">
                 <div class="travelgroup-section-heading">
                     <div>
                         <p class="kdg-eyebrow">Requests</p>
-                        <h2>Join requests</h2>
+                        <h2>Join requests and invitations</h2>
                     </div>
                     <span class="travelgroup-request-count"
                           th:text="${#lists.size(pendingJoinRequests) + ' pending'}">2 pending</span>
@@ -300,11 +302,101 @@
                 </div>
             </section>
 
+            <section class="kdg-panel travelgroup-detail__section" th:if="${isJoined or isOwner}">
+                <div class="travelgroup-section-heading">
+                    <div>
+                        <p class="kdg-eyebrow">Location sharing</p>
+                        <h2>Share your pickup point</h2>
+                    </div>
+                </div>
+
+                <div class="travelgroup-location-share">
+                    <form class="travelgroup-location-share__form"
+                          id="travelgroup-location-share-form"
+                          th:action="@{/travelgroups/{groupId}/location(groupId=${group.groupId})}"
+                          th:attr="data-live-action=@{/travelgroups/{groupId}/location/live(groupId=${group.groupId})}"
+                          method="post">
+                        <input type="hidden"
+                               id="sharedLatitude"
+                               name="latitude"
+                               th:value="${currentUserMembership != null and currentUserMembership.location != null ? currentUserMembership.location.latitude : ''}">
+                        <input type="hidden"
+                               id="sharedLongitude"
+                               name="longitude"
+                               th:value="${currentUserMembership != null and currentUserMembership.location != null ? currentUserMembership.location.longitude : ''}">
+
+                        <div class="travelgroup-location-share__row">
+                            <div class="travelgroup-location-share__field">
+                                <label class="kdg-label" for="sharedLocationAddress">
+                                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                    Your shared address
+                                </label>
+                                <input class="kdg-input"
+                                       id="sharedLocationAddress"
+                                       name="address"
+                                       type="text"
+                                       maxlength="255"
+                                       required
+                                       placeholder="Example: KDG Campus Zuid entrance"
+                                       th:value="${currentUserMembership != null and currentUserMembership.location != null ? currentUserMembership.location.address : ''}">
+                            </div>
+                            <div class="travelgroup-location-share__actions">
+                                <button type="button"
+                                        class="kdg-button kdg-button--secondary kdg-button--subtle"
+                                        id="travelgroup-use-current-location">
+                                    <i class="bi bi-broadcast-pin" aria-hidden="true"></i>
+                                    <span>Live location</span>
+                                </button>
+                                <button type="submit" class="kdg-button">
+                                    <i class="bi bi-pin-map" aria-hidden="true"></i>
+                                    <span>Share location</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="travelgroup-location-share__hint" id="travelgroup-location-share-status">
+                            Your address will appear under your email in the joined members list.
+                        </p>
+                    </form>
+
+                    <form th:if="${currentUserMembership != null and currentUserMembership.location != null}"
+                          th:action="@{/travelgroups/{groupId}/location/clear(groupId=${group.groupId})}"
+                          class="travelgroup-location-share__remove"
+                          method="post">
+                        <button type="submit" class="kdg-button kdg-button--danger kdg-button--subtle-danger">
+                            <i class="bi bi-x-circle" aria-hidden="true"></i>
+                            <span>Remove shared location</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
             <section class="kdg-panel travelgroup-detail__section">
                 <div class="travelgroup-section-heading">
                     <div>
                         <p class="kdg-eyebrow">People</p>
                         <h2>Joined members</h2>
+                    </div>
+                    <div class="travelgroup-people-tools" th:if="${isJoined or isOwner}">
+                        <form class="travelgroup-invite-form"
+                              th:action="@{/travelgroups/{groupId}/invite(groupId=${group.groupId})}"
+                              method="post">
+                            <label class="kdg-label" for="travelgroupInviteEmail">
+                                <i class="bi bi-person-plus" aria-hidden="true"></i>
+                                Invite student
+                            </label>
+                            <div class="travelgroup-invite-form__row">
+                                <input class="kdg-input travelgroup-invite-form__input"
+                                       id="travelgroupInviteEmail"
+                                       type="email"
+                                       name="inviteeEmail"
+                                       placeholder="student@kdg.be"
+                                       required>
+                                <button type="submit" class="kdg-button kdg-button--secondary kdg-button--subtle">
+                                    <i class="bi bi-send-plus" aria-hidden="true"></i>
+                                    <span>Send invite</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <div class="travelgroup-member-list" th:if="${!#lists.isEmpty(groupMembers)}">
@@ -317,6 +409,52 @@
                                 <span>
                                     <i class="bi bi-envelope" aria-hidden="true"></i>
                                     <span th:text="${groupMember.member.email}">john@student.kdg.be</span>
+                                </span>
+                                <div class="travelgroup-member-card__location"
+                                     th:if="${groupMember.location != null}">
+                                    <a class="travelgroup-member-card__location-main"
+                                       target="_blank"
+                                       rel="noopener"
+                                       th:href="${groupMember.location.latitude != null and groupMember.location.longitude != null
+                                           ? 'https://www.google.com/maps/search/?api=1&query=' + groupMember.location.latitude + ',' + groupMember.location.longitude
+                                           : 'https://www.google.com/maps/search/?api=1&query=' + groupMember.location.address}">
+                                        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                        <span th:text="${groupMember.location.address}">KDG Campus Zuid entrance</span>
+                                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                                    </a>
+                                    <span class="travelgroup-member-card__map-links" aria-label="Open member location in maps">
+                                        <a class="travelgroup-map-link"
+                                           target="_blank"
+                                           rel="noopener"
+                                           title="Open in Google Maps"
+                                           aria-label="Open in Google Maps"
+                                           th:href="${groupMember.location.latitude != null and groupMember.location.longitude != null
+                                               ? 'https://www.google.com/maps/search/?api=1&query=' + groupMember.location.latitude + ',' + groupMember.location.longitude
+                                               : 'https://www.google.com/maps/search/?api=1&query=' + groupMember.location.address}">
+                                            <img class="travelgroup-map-link__icon"
+                                                 src="https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico"
+                                                 alt=""
+                                                 loading="lazy">
+                                        </a>
+                                        <a class="travelgroup-map-link"
+                                           target="_blank"
+                                           rel="noopener"
+                                           title="Open in Apple Maps"
+                                           aria-label="Open in Apple Maps"
+                                           th:href="${groupMember.location.latitude != null and groupMember.location.longitude != null
+                                               ? 'https://maps.apple.com/?ll=' + groupMember.location.latitude + ',' + groupMember.location.longitude + '&q=' + groupMember.location.address
+                                               : 'https://maps.apple.com/?q=' + groupMember.location.address}">
+                                            <img class="travelgroup-map-link__icon"
+                                                 src="https://www.apple.com/v/maps/d/images/overview/intro_icon__dfyvjc1ohbcm_large.png"
+                                                 alt=""
+                                                 loading="lazy">
+                                        </a>
+                                    </span>
+                                </div>
+                                <span class="travelgroup-member-card__location-empty"
+                                      th:if="${groupMember.location == null}">
+                                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                    <span>Location not shared yet</span>
                                 </span>
                             </div>
                         </div>
@@ -370,5 +508,8 @@
 <script defer
         src="../static/js/travelgroup-map.js"
         th:src="@{/js/travelgroup-map.js}"></script>
+<script defer
+        src="../static/js/travelgroup-location-share.js"
+        th:src="@{/js/travelgroup-location-share.js}"></script>
 </body>
 </html>
