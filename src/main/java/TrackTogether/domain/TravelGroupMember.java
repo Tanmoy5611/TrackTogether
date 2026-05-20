@@ -1,15 +1,17 @@
 package TrackTogether.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-
-// guarantees duplicates cannot exist
+@Getter
+@Setter
 @Table(
+        name = "travel_group_member",
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"group_id", "member_id"}
         )
 )
-
 @Entity
 public class TravelGroupMember {
     @Id
@@ -24,12 +26,12 @@ public class TravelGroupMember {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    // A shared location belongs to exactly one membership and is removed with that membership.
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "location_id")
     private Location location;
 
-    public TravelGroupMember(){
-
+    public TravelGroupMember() {
     }
 
     public TravelGroupMember(TravelGroup group, Member member, Location location) {
@@ -37,29 +39,4 @@ public class TravelGroupMember {
         this.member = member;
         this.location = location;
     }
-
-    public TravelGroup getGroup() {
-        return group;
-    }
-
-    public void setGroup(TravelGroup group) {
-        this.group = group;
-    }
-
-    public Member getMember() {
-        return member;
-    }
-
-    public void setMember(Member member) {
-        this.member = member;
-    }
-
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        this.location = location;
-    }
-
 }
