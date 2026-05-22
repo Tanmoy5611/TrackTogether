@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>De Lijn Route Suggestions</title>
+    <link rel="stylesheet"
+          th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
+    <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
+</head>
+<body class="kdg-page">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main route-planner-page"
+          th:attr="data-route-suggestions-url=${routeSuggestionsUrl},
+                   data-default-origin-label=${group.departureLocation ?: group.location},
+                   data-default-origin-latitude=${group.departureLatitude},
+                   data-default-origin-longitude=${group.departureLongitude},
+                   data-default-destination-label=${group.activity.location},
+                   data-default-destination-latitude=${group.arrivalLatitude ?: group.activity.latitude},
+                   data-default-destination-longitude=${group.arrivalLongitude ?: group.activity.longitude},
+                   data-default-departure-time=${group.departureTime != null ? #temporals.format(group.departureTime, 'yyyy-MM-dd''T''HH:mm') : ''}">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+            <a th:href="@{/}"><i class="bi bi-house-door" aria-hidden="true"></i> Home</a>
+            <span>&gt;</span>
+            <a th:href="@{/travelgroups}">Travel Groups</a>
+            <span>&gt;</span>
+            <a th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}"
+               th:text="${group.activity.name}">Travel group</a>
+            <span>&gt;</span>
+            <span>Route suggestions</span>
+        </nav>
+
+        <section class="route-planner-hero">
+            <div>
+                <p class="kdg-eyebrow">De Lijn</p>
+                <h1>Route suggestions</h1>
+                <p>
+                    <span th:text="${group.departureLocation ?: group.location}">Berchem Station</span>
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    <span th:text="${group.activity.location}">KDG Groenplaats</span>
+                </p>
+            </div>
+            <a class="kdg-button kdg-button--secondary kdg-button--subtle"
+               th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                <span>Back to group</span>
+            </a>
+        </section>
+
+        <section class="route-planner-layout">
+            <aside class="route-planner-panel">
+                <section class="route-planner-card">
+                    <h2>Plan your route</h2>
+                    <form class="route-planner-form" data-route-form>
+                        <label class="route-planner-place" for="route-origin">
+                            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                            <input id="route-origin"
+                                   name="origin"
+                                   type="text"
+                                   list="route-origin-suggestions"
+                                   autocomplete="off"
+                                   th:value="${group.departureLocation ?: group.location}">
+                            <datalist id="route-origin-suggestions"></datalist>
+                        </label>
+                        <button class="route-planner-swap"
+                                type="button"
+                                title="Swap route"
+                                aria-label="Swap route"
+                                data-route-swap>
+                            <i class="bi bi-arrow-down-up" aria-hidden="true"></i>
+                        </button>
+                        <label class="route-planner-place" for="route-destination">
+                            <i class="bi bi-flag-fill" aria-hidden="true"></i>
+                            <input id="route-destination"
+                                   name="destination"
+                                   type="text"
+                                   list="route-destination-suggestions"
+                                   autocomplete="off"
+                                   th:value="${group.activity.location}">
+                            <datalist id="route-destination-suggestions"></datalist>
+                        </label>
+                        <div class="route-planner-form__actions">
+                            <button class="kdg-button" type="submit">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                                <span>Find options</span>
+                            </button>
+                            <button class="kdg-button kdg-button--secondary kdg-button--subtle"
+                                    type="button"
+                                    data-route-reset>
+                                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <label class="route-planner-time" for="route-departure-time">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        <span>Departure</span>
+                        <input id="route-departure-time"
+                               name="departureTime"
+                               type="datetime-local"
+                               th:value="${group.departureTime != null ? #temporals.format(group.departureTime, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                    </label>
+                    <button class="route-planner-now"
+                            type="button"
+                            data-route-use-now>
+                        <i class="bi bi-clock" aria-hidden="true"></i>
+                        <span>Use now</span>
+                    </button>
+
+                    <div class="route-planner-summary" data-route-summary>
+                        <strong>Checking De Lijn coverage...</strong>
+                    </div>
+                </section>
+
+            </aside>
+
+            <section class="route-planner-results" aria-label="Route options and map">
+                <section class="route-planner-map-card" aria-label="Route map panel">
+                    <div class="route-planner-map-toolbar">
+                        <button type="button" class="kdg-button kdg-button--secondary kdg-button--subtle" data-route-map-recenter>
+                            <i class="bi bi-crosshair" aria-hidden="true"></i>
+                            <span>Re-center</span>
+                        </button>
+                    </div>
+                    <div class="route-planner-map"
+                         id="travelgroup-route-map"
+                         aria-label="Route map"></div>
+                </section>
+            </section>
+
+            <section class="route-planner-options-panel" aria-label="Transport options">
+                <div class="route-planner-status" data-route-suggestions-status>
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>Checking De Lijn options...</span>
+                </div>
+
+                <div class="route-planner-options-shell">
+                    <div class="route-planner-options" data-route-suggestions-list></div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+<script defer
+        src="../static/js/travelgroup-route-suggestions.js"
+        th:src="@{/js/travelgroup-route-suggestions.js}"></script>
+<script defer
+        src="../static/js/travelgroup-route-footer.js"
+        th:src="@{/js/travelgroup-route-footer.js}"></script>
+</body>
+</html>

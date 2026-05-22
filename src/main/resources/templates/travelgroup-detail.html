@@ -185,6 +185,12 @@
                     </span>
                     <span class="travelgroup-stat__label">Transport</span>
                     <strong th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(group.transportMode.name(), '_', ' ')))}">Bike</strong>
+                    <a class="travelgroup-stat__action travelgroup-stat__action--delijn"
+                       th:if="${group.transportMode.name() == 'PUBLIC_TRANSPORT'}"
+                       th:href="@{/travelgroups/{groupId}/route-suggestions(groupId=${group.groupId})}">
+                        <i class="bi bi-route" aria-hidden="true"></i>
+                        <span>Check De Lijn routes</span>
+                    </a>
                 </div>
             </div>
 
