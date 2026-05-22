@@ -405,6 +405,17 @@ public class TravelGroupController {
         return "travelgroup-detail";
     }
 
+    // Shows the De Lijn route suggestion page for a public transport travel group.
+    @GetMapping("/{groupId}/route-suggestions")
+    public String showRouteSuggestions(@PathVariable UUID groupId, Model model) {
+        TravelGroup group = travelGroupService.getTravelGroupById(groupId);
+
+        model.addAttribute("group", group);
+        model.addAttribute("routeSuggestionsUrl", "/api/travelgroups/" + group.getGroupId() + "/route-suggestions?maxResults=20");
+
+        return "travelgroup-route-suggestions";
+    }
+
     // Adds shared model data needed by the create travel group form
     private void populateCreateTravelGroupModel(Model model, TravelGroupForm form) {
         List<Activity> activities = activityService.getAllActivities();
