@@ -4,10 +4,12 @@ import TrackTogether.domain.TravelGroup;
 import TrackTogether.domain.TravelGroupMember;
 import TrackTogether.domain.JoinRequestStatus;
 import TrackTogether.domain.Activity;
+import TrackTogether.dto.TravelGroupActivityLogView;
 import TrackTogether.service.ActivityService;
 import TrackTogether.service.TravelGroupService;
 import TrackTogether.view.TravelGroupForm;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -390,7 +392,8 @@ public class TravelGroupController {
         model.addAttribute("group", group);
         model.addAttribute("groupMembers", groupMembers);
         model.addAttribute("currentUserMembership", travelGroupService.getCurrentUserMembership(group));
-        model.addAttribute("pendingJoinRequests", travelGroupService.getVisiblePendingRequests(group));
+        model.addAttribute("activityLogCount", travelGroupService.countActivityLogEntries(group));
+        model.addAttribute("pendingJoinRequestCount", travelGroupService.getVisiblePendingRequests(group).size());
         model.addAttribute("memberCount", memberCount);
         model.addAttribute("remainingSpots", Math.max(group.getMaxMembers() - memberCount, 0));
         model.addAttribute("isJoined", joined);
@@ -403,6 +406,24 @@ public class TravelGroupController {
         model.addAttribute("hasRejectedJoinRequest", joinApprovalRequired && joinRequestStatus == JoinRequestStatus.REJECTED);
 
         return "travelgroup-detail";
+    }
+
+    // Shows travel group activity log
+    @GetMapping("/{groupId}/activity-log")
+    public String showTravelGroupActivityLog(@PathVariable UUID groupId,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             Model model) {
+        TravelGroup group = travelGroupService.getTravelGroupById(groupId);
+        Page<TravelGroupActivityLogView> activityLogPage = travelGroupService.getActivityLogPage(group, page, 10);
+
+        model.addAttribute("group", group);
+        model.addAttribute("activityLogPage", activityLogPage);
+        model.addAttribute("activityLogEntries", activityLogPage.getContent());
+        model.addAttribute("isOwner", travelGroupService.isCurrentUserOwner(group));
+        model.addAttribute("joinApprovalRequired", travelGroupService.isJoinApprovalRequired());
+        model.addAttribute("pendingJoinRequestCount", travelGroupService.getVisiblePendingRequests(group).size());
+
+        return "travelgroup-activity-log";
     }
 
     // Shows the De Lijn route suggestion page for a public transport travel group.

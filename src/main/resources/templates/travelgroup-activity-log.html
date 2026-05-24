@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>Travel Group Activity Log</title>
+</head>
+<body class="kdg-page">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+            <a th:href="@{/}"><i class="bi bi-house-door" aria-hidden="true"></i> Home</a>
+            <span>&gt;</span>
+            <a th:href="@{/travelgroups}">Travel Groups</a>
+            <span>&gt;</span>
+            <a th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}" th:text="${group.activity.name}">Activity</a>
+            <span>&gt;</span>
+            <span>Activity log</span>
+        </nav>
+
+        <section class="kdg-page-header travelgroup-hero">
+            <div>
+                <p class="kdg-eyebrow">Notifications</p>
+                <h1 class="kdg-title">Activity log</h1>
+                <p class="kdg-subtitle travelgroup-hero__location">
+                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                    <span th:text="${group.location}">Berchem Station</span>
+                    <span class="travelgroup-hero__separator">•</span>
+                    <i class="bi bi-clock" aria-hidden="true"></i>
+                    <span th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'dd/MM/yyyy HH:mm') : 'Departure time not set'}">
+                        08/06/2026 12:10
+                    </span>
+                </p>
+            </div>
+            <div class="travelgroup-hero__actions">
+                <span class="travelgroup-request-count" th:if="${isOwner and joinApprovalRequired}"
+                      th:text="${pendingJoinRequestCount + ' pending'}">2 pending</span>
+                <a class="kdg-button kdg-button--secondary kdg-button--subtle"
+                   th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    <span>Back to group</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="kdg-detail-layout">
+            <section class="kdg-panel travelgroup-detail__section">
+                <div class="travelgroup-section-heading">
+                    <div>
+                        <p class="kdg-eyebrow">Latest updates</p>
+                        <h2 th:text="${activityLogPage.totalElements + ' notifications'}">0 notifications</h2>
+                    </div>
+                </div>
+
+                <div class="travelgroup-request-list" th:if="${!#lists.isEmpty(activityLogEntries)}">
+                    <article class="travelgroup-request-card travelgroup-log-entry" th:each="logEntry : ${activityLogEntries}">
+                        <div class="travelgroup-request-card__avatar"
+                             th:text="${logEntry.actorInitial}">N</div>
+                        <div class="travelgroup-request-card__body">
+                            <strong th:text="${logEntry.message}">Noah Janssens requested to join</strong>
+                            <span>
+                                <i class="bi"
+                                   th:classappend="${logEntry.iconClass}"
+                                   aria-hidden="true"></i>
+                                <span th:text="${#temporals.format(logEntry.createdAt, 'dd/MM/yyyy HH:mm')}">24/05/2026 02:45</span>
+                            </span>
+                        </div>
+                        <div class="travelgroup-request-card__actions"
+                             th:if="${isOwner and joinApprovalRequired and logEntry.joinRequest != null and logEntry.joinRequest.status.name() == 'PENDING'}">
+                            <form th:action="@{/travelgroups/requests/{requestId}/accept(requestId=${logEntry.joinRequest.id})}"
+                                  method="post">
+                                <input type="hidden"
+                                       name="redirectTo"
+                                       th:value="${'/travelgroups/' + group.groupId + '/activity-log?page=' + activityLogPage.number}">
+                                <button type="submit" class="kdg-button kdg-button--success kdg-button--subtle-success">
+                                    <i class="bi bi-check2" aria-hidden="true"></i>
+                                    <span>Accept</span>
+                                </button>
+                            </form>
+                            <form th:action="@{/travelgroups/requests/{requestId}/reject(requestId=${logEntry.joinRequest.id})}"
+                                  method="post">
+                                <input type="hidden"
+                                       name="redirectTo"
+                                       th:value="${'/travelgroups/' + group.groupId + '/activity-log?page=' + activityLogPage.number}">
+                                <button type="submit" class="kdg-button kdg-button--danger kdg-button--subtle-danger">
+                                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                    <span>Decline</span>
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+
+                <nav class="travelgroup-log-pagination"
+                     th:if="${activityLogPage.totalPages > 1}"
+                     aria-label="Activity log pages">
+                    <a class="kdg-button kdg-button--secondary kdg-button--subtle"
+                       th:classappend="${activityLogPage.first} ? ' disabled'"
+                       th:href="@{/travelgroups/{groupId}/activity-log(groupId=${group.groupId}, page=${activityLogPage.number - 1})}">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        <span>Newer</span>
+                    </a>
+                    <span class="travelgroup-log-pagination__status"
+                          th:text="${'Page ' + (activityLogPage.number + 1) + ' of ' + activityLogPage.totalPages}">
+                        Page 1 of 2
+                    </span>
+                    <a class="kdg-button kdg-button--secondary kdg-button--subtle"
+                       th:classappend="${activityLogPage.last} ? ' disabled'"
+                       th:href="@{/travelgroups/{groupId}/activity-log(groupId=${group.groupId}, page=${activityLogPage.number + 1})}">
+                        <span>Older</span>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </nav>
+
+                <div class="kdg-empty travelgroup-request-empty" th:if="${#lists.isEmpty(activityLogEntries)}">
+                    <i class="bi bi-inbox" aria-hidden="true"></i>
+                    No activity has been recorded for this group yet.
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+</body>
+</html>

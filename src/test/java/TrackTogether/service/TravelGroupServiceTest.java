@@ -14,6 +14,7 @@ import TrackTogether.repository.ActivityRepository;
 import TrackTogether.repository.ConversationRepository;
 import TrackTogether.repository.JoinRequestRepository;
 import TrackTogether.repository.MemberRepository;
+import TrackTogether.repository.TravelGroupActivityLogRepository;
 import TrackTogether.repository.TravelGroupMemberRepository;
 import TrackTogether.repository.TravelGroupRepository;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,9 @@ class TravelGroupServiceTest {
 
     @Mock
     private JoinRequestRepository joinRequestRepository;
+
+    @Mock
+    private TravelGroupActivityLogRepository travelGroupActivityLogRepository;
 
     @Mock
     private MemberRepository memberRepository;
