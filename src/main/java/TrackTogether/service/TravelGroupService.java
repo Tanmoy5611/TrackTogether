@@ -2,8 +2,12 @@ package TrackTogether.service;
 
 import TrackTogether.domain.*;
 import TrackTogether.controller.ModelView.TravelGroupPageView;
+import TrackTogether.dto.TravelGroupActivityLogView;
 import TrackTogether.repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,7 +31,9 @@ public class TravelGroupService {
     private final ActivityRepository activityRepository;
     private final ConversationRepository conversationRepository;
     private final TravelGroupMemberRepository travelGroupMemberRepository;
+    private final MemberConversationRepository memberConversationRepository;
     private final JoinRequestRepository joinRequestRepository;
+    private final TravelGroupActivityLogRepository travelGroupActivityLogRepository;
     private final MemberRepository memberRepository;
     private final CurrentUserService currentUserService;
     private final SystemSettingsService systemSettingsService;
@@ -39,7 +45,9 @@ public class TravelGroupService {
                               ActivityRepository activityRepository,
                               ConversationRepository conversationRepository,
                               TravelGroupMemberRepository travelGroupMemberRepository,
+                              MemberConversationRepository memberConversationRepository,
                               JoinRequestRepository joinRequestRepository,
+                              TravelGroupActivityLogRepository travelGroupActivityLogRepository,
                               MemberRepository memberRepository,
                               CurrentUserService currentUserService,
                               SystemSettingsService systemSettingsService,
@@ -49,7 +57,9 @@ public class TravelGroupService {
         this.activityRepository = activityRepository;
         this.conversationRepository = conversationRepository;
         this.travelGroupMemberRepository = travelGroupMemberRepository;
+        this.memberConversationRepository = memberConversationRepository;
         this.joinRequestRepository = joinRequestRepository;
+        this.travelGroupActivityLogRepository = travelGroupActivityLogRepository;
         this.memberRepository = memberRepository;
         this.currentUserService = currentUserService;
         this.systemSettingsService = systemSettingsService;
@@ -234,6 +244,23 @@ public class TravelGroupService {
         return travelGroupMemberRepository.findAllByGroup(group);
     }
 
+    // Returns newest activity log entries for the detail page
+    public Page<TravelGroupActivityLogView> getActivityLogPage(TravelGroup group, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.max(1, Math.min(size, 25));
+
+        // Keeping this paged so the log stays usable when the group gets busy
+        return travelGroupActivityLogRepository.findAllByGroup(
+                group,
+                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"))
+        ).map(TravelGroupActivityLogView::from);
+    }
+
+    // count activity log
+    public long countActivityLogEntries(TravelGroup group) {
+        return travelGroupActivityLogRepository.countByGroup(group);
+    }
+
     // Returns the logged-in member's row for prefilling the location sharing form
     public TravelGroupMember getCurrentUserMembership(TravelGroup group) {
         Member member = currentUserService.getCurrentUser();
@@ -336,12 +363,15 @@ public class TravelGroupService {
 
         savedGroup.setConversation(conversation);
 
-        conversationRepository.save(conversation);
+        Conversation savedConversation = conversationRepository.save(conversation);
 
         TravelGroupMember ownerMembership = new TravelGroupMember();
         ownerMembership.setGroup(savedGroup);
         ownerMembership.setMember(owner);
         travelGroupMemberRepository.save(ownerMembership);
+
+        addConversationMemberIfMissing(savedConversation, owner);
+        recordActivity(savedGroup, owner, null, null, TravelGroupActivityType.CREATED);
 
         return savedGroup;
     }
@@ -397,7 +427,10 @@ public class TravelGroupService {
         group.setArrivalLatitude(group.getActivity().getLatitude());
         group.setArrivalLongitude(group.getActivity().getLongitude());
 
-        return travelGroupRepository.save(group);
+        TravelGroup updatedGroup = travelGroupRepository.save(group);
+        recordActivity(updatedGroup, currentUserService.getCurrentUser(), null, null, TravelGroupActivityType.UPDATED);
+
+        return updatedGroup;
     }
 
     // Creates a pending join request for the current user
@@ -451,7 +484,8 @@ public class TravelGroupService {
         joinRequest.setRequestedAt(LocalDateTime.now());
         joinRequest.setRespondedAt(null);
 
-        joinRequestRepository.save(joinRequest);
+        JoinRequest savedJoinRequest = joinRequestRepository.save(joinRequest);
+        recordActivity(group, member, null, savedJoinRequest, TravelGroupActivityType.JOIN_REQUESTED);
         notificationService.notifyJoinRequestReceived(group.getOwner(), member, group);
     }
 
@@ -485,9 +519,11 @@ public class TravelGroupService {
                 travelGroupMemberRepository.existsByGroupAndMember(group, joinRequest.getMember());
 
         if (alreadyJoined) {
+            addConversationMemberIfMissing(group.getConversation(), joinRequest.getMember());
             joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
             joinRequest.setRespondedAt(LocalDateTime.now());
             joinRequestRepository.save(joinRequest);
+            recordActivity(group, currentUserService.getCurrentUser(), joinRequest.getMember(), joinRequest, TravelGroupActivityType.JOIN_REQUEST_ACCEPTED);
             return;
         }
 
@@ -505,6 +541,8 @@ public class TravelGroupService {
         groupMember.setMember(joinRequest.getMember());
 
         travelGroupMemberRepository.save(groupMember);
+        addConversationMemberIfMissing(group.getConversation(), joinRequest.getMember());
+        recordActivity(group, joinRequest.getMember(), null, null, TravelGroupActivityType.JOINED);
 
         long newCount = travelGroupMemberRepository.countByGroup(group);
         if (!group.hasAvailableSpots(newCount)) {
@@ -518,6 +556,7 @@ public class TravelGroupService {
         joinRequest.setStatus(JoinRequestStatus.ACCEPTED);
         joinRequest.setRespondedAt(LocalDateTime.now());
         joinRequestRepository.save(joinRequest);
+        recordActivity(group, currentUserService.getCurrentUser(), joinRequest.getMember(), joinRequest, TravelGroupActivityType.JOIN_REQUEST_ACCEPTED);
         notificationService.notifyJoinRequestAccepted(joinRequest.getMember(), group);
     }
 
@@ -538,6 +577,7 @@ public class TravelGroupService {
         joinRequest.setStatus(JoinRequestStatus.REJECTED);
         joinRequest.setRespondedAt(LocalDateTime.now());
         joinRequestRepository.save(joinRequest);
+        recordActivity(joinRequest.getGroup(), currentUserService.getCurrentUser(), joinRequest.getMember(), joinRequest, TravelGroupActivityType.JOIN_REQUEST_REJECTED);
         notificationService.notifyJoinRequestRejected(joinRequest.getMember(), joinRequest.getGroup());
     }
 
@@ -564,6 +604,8 @@ public class TravelGroupService {
                 ));
 
         travelGroupMemberRepository.delete(membership);
+        removeConversationMemberIfPresent(group.getConversation(), member);
+        recordActivity(group, member, null, null, TravelGroupActivityType.LEFT);
 
         if (group.getOwner() != null) {
             notificationService.notifyMemberLeft(group.getOwner(), member, group);
@@ -622,8 +664,13 @@ public class TravelGroupService {
                         "New owner must already be a member of this travel group"
                 ));
 
+        Member previousOwner = currentUserService.getCurrentUser();
+
         group.setOwner(newOwner);
-        return travelGroupRepository.save(group);
+        TravelGroup savedGroup = travelGroupRepository.save(group);
+        recordActivity(savedGroup, previousOwner, newOwner, null, TravelGroupActivityType.OWNERSHIP_TRANSFERRED);
+
+        return savedGroup;
     }
 
     // Lets a joined member share or update the location shown on the group detail page
@@ -716,7 +763,8 @@ public class TravelGroupService {
         joinRequest.setRequestedAt(LocalDateTime.now());
         joinRequest.setRespondedAt(null);
 
-        joinRequestRepository.save(joinRequest);
+        JoinRequest savedJoinRequest = joinRequestRepository.save(joinRequest);
+        recordActivity(group, invitee, null, savedJoinRequest, TravelGroupActivityType.JOIN_REQUESTED);
     }
 
     // Finds current-user request group ids by status for list-page badges
@@ -800,6 +848,8 @@ public class TravelGroupService {
         groupMember.setMember(member);
 
         travelGroupMemberRepository.save(groupMember);
+        addConversationMemberIfMissing(group.getConversation(), member);
+        recordActivity(group, member, null, null, TravelGroupActivityType.JOINED);
 
         if (group.getOwner() != null) {
             notificationService.notifyMemberJoined(group.getOwner(), member, group);
@@ -824,6 +874,8 @@ public class TravelGroupService {
 
     // Removes join requests memberships conversation and the group record
     private void deleteTravelGroupWithRelations(TravelGroup group) {
+        travelGroupActivityLogRepository.deleteAllByGroup(group);
+
         List<JoinRequest> joinRequests = joinRequestRepository.findAllByGroup(group);
         if (!joinRequests.isEmpty()) {
             joinRequestRepository.deleteAll(joinRequests);
@@ -836,6 +888,11 @@ public class TravelGroupService {
 
         Conversation conversation = group.getConversation();
         if (conversation != null) {
+            List<MemberConversation> conversationMembers = memberConversationRepository.findAllByConversation(conversation);
+            if (!conversationMembers.isEmpty()) {
+                memberConversationRepository.deleteAll(conversationMembers);
+            }
+
             group.setConversation(null);
             conversation.setTravelGroup(null);
             conversationRepository.delete(conversation);
@@ -852,6 +909,38 @@ public class TravelGroupService {
                     "Only the group owner can manage this travel group"
             );
         }
+    }
+
+    private void addConversationMemberIfMissing(Conversation conversation, Member member) {
+        if (conversation != null && !memberConversationRepository.existsByConversationAndMember(conversation, member)) {
+            MemberConversation memberConversation = new MemberConversation();
+            memberConversation.setConversation(conversation);
+            memberConversation.setMember(member);
+            memberConversationRepository.save(memberConversation);
+        }
+    }
+
+    private void removeConversationMemberIfPresent(Conversation conversation, Member member) {
+        if (conversation != null) {
+            memberConversationRepository.findByConversationAndMember(conversation, member)
+                    .ifPresent(memberConversationRepository::delete);
+        }
+    }
+
+    private void recordActivity(TravelGroup group,
+                                Member actor,
+                                Member targetMember,
+                                JoinRequest joinRequest,
+                                TravelGroupActivityType type) {
+        // Small history row for the notification page of this travel group
+        TravelGroupActivityLog activityLog = new TravelGroupActivityLog();
+        activityLog.setGroup(group);
+        activityLog.setActor(actor);
+        activityLog.setTargetMember(targetMember);
+        activityLog.setJoinRequest(joinRequest);
+        activityLog.setType(type);
+        activityLog.setCreatedAt(LocalDateTime.now());
+        travelGroupActivityLogRepository.save(activityLog);
     }
 
     // Ensures the activity behind a travel group is visible to the current user
