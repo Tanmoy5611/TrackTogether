@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const latitudeInput = document.getElementById("sharedLatitude");
     const longitudeInput = document.getElementById("sharedLongitude");
     const statusText = document.getElementById("travelgroup-location-share-status");
+    const shareButton = document.getElementById("travelgroup-share-location-button");
+    const removeLocationForm = document.getElementById("travelgroup-remove-location-form");
 
     if (!form || !useLocationButton || !addressInput || !latitudeInput || !longitudeInput || !statusText) {
         return;
@@ -16,6 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
     let watchId = null;
     let lastSharedPosition = null;
     let lastSharedAt = 0;
+    let idleLiveLocationLabel = useLocationButton.dataset.idleLabel || "Live location";
+
+    const setLocationSavedState = () => {
+        shareButton?.remove();
+        removeLocationForm?.classList.remove("travelgroup-location-share__remove--hidden");
+        idleLiveLocationLabel = "Update live location";
+        useLocationButton.dataset.idleLabel = idleLiveLocationLabel;
+        addressInput.readOnly = true;
+    };
 
     const setStatus = (message, statusClass) => {
         statusText.textContent = message;
@@ -53,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         useLocationButton.setAttribute("aria-pressed", String(isLive));
         useLocationButton.querySelector(".bi")?.classList.toggle("bi-broadcast-pin", !isLive);
         useLocationButton.querySelector(".bi")?.classList.toggle("bi-stop-circle", isLive);
-        useLocationButton.querySelector("span").textContent = isLive ? "Stop live location" : "Live location";
+        useLocationButton.querySelector("span").textContent = isLive ? "Stop live location" : idleLiveLocationLabel;
     };
 
     const stopLiveLocation = (message, statusClass) => {
@@ -105,6 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         lastSharedPosition = nextPosition;
         lastSharedAt = now;
+        setLocationSavedState();
         setStatus(
             `Live location shared at ${latitude.toFixed(6)}, ${longitude.toFixed(6)}.`,
             "travelgroup-location-share__hint--success"
