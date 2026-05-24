@@ -28,6 +28,8 @@ public class MemberController {
         model.addAttribute("user",memberService.findByOriginalIdNO(id));
         model.addAttribute("userType","Member");
         model.addAttribute("canEditTravelPreferences", false);
+        // Passing modes from Java keeps the Thymeleaf profile page simple
+        model.addAttribute("transportModes", TransportMode.values());
         return "userOverview";
     }
 
@@ -37,6 +39,8 @@ public class MemberController {
         model.addAttribute("user",member);
         model.addAttribute("userType","Member");
         model.addAttribute("canEditTravelPreferences", true);
+        // Same list is needed when the logged in user edits preferences
+        model.addAttribute("transportModes", TransportMode.values());
         return "userOverview";
     }
 

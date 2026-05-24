@@ -9,6 +9,7 @@ import TrackTogether.domain.TravelGroup;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
@@ -94,11 +95,15 @@ public class HomePageService {
                 .filter(suggestion -> suggestion.getReason() == HomeSuggestionReason.SAME_TIME)
                 .count();
 
-        // Keep the homepage travel group block lightweight
+        // Only count groups the user can actually still join from the home page
         List<TravelGroup> openTravelGroups = travelGroupService.getAllTravelGroups()
                 .stream()
                 .filter(Objects::nonNull)
-                .limit(3)
+                .filter(HomePageService::isUpcomingOrUndated)
+                .filter(group -> !travelGroupService.isCurrentUserMember(group))
+                .filter(group -> !travelGroupService.isCurrentUserOwner(group))
+                .filter(group -> group.getMaxMembers() != null)
+                .filter(group -> group.hasAvailableSpots(travelGroupService.getMemberCount(group)))
                 .toList();
 
         // The latest activity card prefers the user's own upcoming activity first
@@ -117,7 +122,7 @@ public class HomePageService {
                 buildWelcomeSubtitle(myUpcomingActivities, openTravelGroups),
                 buildLatestHeadline(latestActivity, myUpcomingActivities.isEmpty()),
                 buildLatestMeta(latestActivity),
-                "/activities",
+                latestActivity != null ? "/activities/" + latestActivity.getId() : "/activities",
                 latestActivity != null ? "Open event" : "Browse activities",
                 displayedUpcomingActivities,
                 suggestedActivities,
@@ -139,6 +144,24 @@ public class HomePageService {
         return activity.getCreator() != null
                 && activity.getCreator().getUserId() != null
                 && activity.getCreator().getUserId().equals(currentUser.getUserId());
+    }
+
+    private static boolean isUpcomingOrUndated(TravelGroup group) {
+        // Past groups should not make the dashboard look active
+        if (group.getDepartureTime() != null) {
+            return !group.getDepartureTime().isBefore(LocalDateTime.now());
+        }
+
+        Activity activity = group.getActivity();
+        if (activity == null || activity.getDate() == null) {
+            return true;
+        }
+
+        if (activity.getTime() == null) {
+            return !activity.getDate().isBefore(LocalDate.now());
+        }
+
+        return !LocalDateTime.of(activity.getDate(), activity.getTime()).isBefore(LocalDateTime.now());
     }
 
     // Normalize text values before comparing them
