@@ -34,6 +34,16 @@
                     <span th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'dd/MM/yyyy HH:mm') : 'Departure time not set'}">
                         11/05/2026 08:30
                     </span>
+                    <!-- Small shortcut for adding the travel group departure to Google Calendar -->
+                    <a class="google-calendar-icon-link"
+                       th:if="${googleCalendarUrl != null}"
+                       th:href="${googleCalendarUrl}"
+                       target="_blank"
+                       rel="noopener"
+                       aria-label="Add to Google Calendar"
+                       title="Add to Google Calendar">
+                        <span class="google-calendar-button__icon" aria-hidden="true">31</span>
+                    </a>
                 </p>
             </div>
 
@@ -249,14 +259,35 @@
                         <p class="kdg-eyebrow">Map</p>
                         <h2>Meeting point map</h2>
                     </div>
-                    <a class="kdg-button kdg-button--secondary kdg-button--subtle travelgroup-detail__maps-link"
-                       href="https://www.google.com/maps"
-                       target="_blank"
-                       rel="noopener"
-                       th:attr="data-maps-query=${group.location}">
-                        <i class="bi bi-map" aria-hidden="true"></i>
-                        <span>Open in Maps</span>
-                    </a>
+                    <!-- Icon links keep the map header clean on small screens -->
+                    <span class="travelgroup-detail__maps-link" aria-label="Open meeting point in maps">
+                        <a class="travelgroup-map-link"
+                           href="https://www.google.com/maps"
+                           target="_blank"
+                           rel="noopener"
+                           title="Open in Google Maps"
+                           aria-label="Open in Google Maps"
+                           data-maps-provider="google"
+                           th:attr="data-maps-query=${group.location}">
+                            <img class="travelgroup-map-link__icon"
+                                 src="https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico"
+                                 alt=""
+                                 loading="lazy">
+                        </a>
+                        <a class="travelgroup-map-link"
+                           href="https://maps.apple.com"
+                           target="_blank"
+                           rel="noopener"
+                           title="Open in Apple Maps"
+                           aria-label="Open in Apple Maps"
+                           data-maps-provider="apple"
+                           th:attr="data-maps-query=${group.location}">
+                            <img class="travelgroup-map-link__icon"
+                                 src="https://www.apple.com/v/maps/d/images/overview/intro_icon__dfyvjc1ohbcm_large.png"
+                                 alt=""
+                                 loading="lazy">
+                        </a>
+                    </span>
                 </div>
                 <div id="travelgroup-detail-map"
                      class="kdg-map-picker__map travelgroup-detail__map"

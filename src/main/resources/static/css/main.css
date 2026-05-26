@@ -1119,6 +1119,45 @@ body.kdg-page {
     text-decoration: none;
 }
 
+.google-calendar-button__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 2px solid #4285f4;
+    border-top-color: #ea4335;
+    border-right-color: #fbbc04;
+    border-bottom-color: #34a853;
+    border-radius: 0.2rem;
+    background: #fff;
+    color: #1f1f1f;
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.google-calendar-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.25rem;
+    padding: 0.2rem;
+    border: 1px solid transparent;
+    border-radius: 0.35rem;
+    color: inherit;
+    line-height: 1;
+    text-decoration: none;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.google-calendar-icon-link:hover,
+.google-calendar-icon-link:focus-visible {
+    border-color: rgba(47, 127, 163, 0.35);
+    background: rgba(47, 127, 163, 0.1);
+    transform: translateY(-1px);
+}
+
 .travelgroup-detail__section {
     display: grid;
     gap: 1.2rem;
@@ -1173,6 +1212,9 @@ body.kdg-page {
 }
 
 .travelgroup-detail__maps-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     flex: 0 0 auto;
 }
 

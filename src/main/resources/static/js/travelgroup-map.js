@@ -9,6 +9,7 @@ class TravelGroupMap {
         this.transportModeIcon = options.transportModeIcon || null;
         this.transportModeButtons = options.transportModeButtons || [];
         this.mapsLink = options.mapsLink || null;
+        this.mapsLinks = options.mapsLinks ? Array.from(options.mapsLinks) : [];
         this.readOnly = options.readOnly || false;
         this.defaultCenter = [51.2194, 4.4025];
         this.marker = null;
@@ -137,16 +138,26 @@ class TravelGroupMap {
     }
 
     bindMapsLink() {
-        if (!this.mapsLink) {
+        // Supports one old map button or the new Google and Apple icon links
+        const mapsLinks = this.mapsLinks.length > 0 ? this.mapsLinks : [this.mapsLink].filter(Boolean);
+        if (mapsLinks.length === 0) {
             return;
         }
 
-        const query = this.mapsLink.dataset.mapsQuery;
-        if (!query) {
-            return;
-        }
+        mapsLinks.forEach((mapsLink) => {
+            const query = mapsLink.dataset.mapsQuery;
+            if (!query) {
+                return;
+            }
 
-        this.mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+            const encodedQuery = encodeURIComponent(query);
+            if (mapsLink.dataset.mapsProvider === "apple") {
+                mapsLink.href = `https://maps.apple.com/?q=${encodedQuery}`;
+                return;
+            }
+
+            mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
+        });
     }
 
     initReadOnlyMap() {
@@ -293,7 +304,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (detailMapElement) {
         new TravelGroupMap({
             mapElement: detailMapElement,
-            mapsLink: document.querySelector("[data-maps-query]"),
+            mapsLinks: document.querySelectorAll("[data-maps-query]"),
             readOnly: true
         }).init();
     }

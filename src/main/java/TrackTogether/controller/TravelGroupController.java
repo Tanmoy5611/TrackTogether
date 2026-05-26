@@ -6,6 +6,7 @@ import TrackTogether.domain.JoinRequestStatus;
 import TrackTogether.domain.Activity;
 import TrackTogether.dto.TravelGroupActivityLogView;
 import TrackTogether.service.ActivityService;
+import TrackTogether.service.GoogleCalendarLinkService;
 import TrackTogether.service.TravelGroupService;
 import TrackTogether.view.TravelGroupForm;
 import jakarta.validation.Valid;
@@ -34,12 +35,15 @@ public class TravelGroupController {
 
     private final TravelGroupService travelGroupService;
     private final ActivityService activityService;
+    private final GoogleCalendarLinkService googleCalendarLinkService;
 
     // Wires the travel group page controller with its service dependencies
     public TravelGroupController(TravelGroupService travelGroupService,
-                                 ActivityService activityService) {
+                                 ActivityService activityService,
+                                 GoogleCalendarLinkService googleCalendarLinkService) {
         this.travelGroupService = travelGroupService;
         this.activityService = activityService;
+        this.googleCalendarLinkService = googleCalendarLinkService;
     }
 
     // Shows the travel group overview page for the current user
@@ -392,6 +396,8 @@ public class TravelGroupController {
         model.addAttribute("group", group);
         model.addAttribute("groupMembers", groupMembers);
         model.addAttribute("currentUserMembership", travelGroupService.getCurrentUserMembership(group));
+        // Makes the small calendar icon ready only when the group has a departure time
+        model.addAttribute("googleCalendarUrl", googleCalendarLinkService.buildTravelGroupCalendarUrl(group));
         model.addAttribute("activityLogCount", travelGroupService.countActivityLogEntries(group));
         model.addAttribute("pendingJoinRequestCount", travelGroupService.getVisiblePendingRequests(group).size());
         model.addAttribute("memberCount", memberCount);
