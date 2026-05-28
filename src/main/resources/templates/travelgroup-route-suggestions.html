@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${currentLanguage}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title>De Lijn Route Suggestions</title>
+    <title>[[#{html.de.lijn.route.suggestions}]]</title>
     <link rel="stylesheet"
           th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
     <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
@@ -20,21 +20,21 @@
                    data-default-destination-latitude=${group.arrivalLatitude ?: group.activity.latitude},
                    data-default-destination-longitude=${group.arrivalLongitude ?: group.activity.longitude},
                    data-default-departure-time=${group.departureTime != null ? #temporals.format(group.departureTime, 'yyyy-MM-dd''T''HH:mm') : ''}">
-        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
-            <a th:href="@{/}"><i class="bi bi-house-door" aria-hidden="true"></i> Home</a>
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb" th:aria-label="#{html.breadcrumb}">
+            <a th:href="@{/}"><i class="bi bi-house-door" aria-hidden="true"></i> [[#{html.home}]]</a>
             <span>&gt;</span>
-            <a th:href="@{/travelgroups}">Travel Groups</a>
+            <a th:href="@{/travelgroups}">[[#{html.travel.groups.2}]]</a>
             <span>&gt;</span>
             <a th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}"
-               th:text="${group.activity.name}">Travel group</a>
+               th:text="${group.activity.name}">[[#{html.travel.group}]]</a>
             <span>&gt;</span>
-            <span>Route suggestions</span>
+            <span>[[#{html.route.suggestions}]]</span>
         </nav>
 
         <section class="route-planner-hero">
             <div>
                 <p class="kdg-eyebrow">De Lijn</p>
-                <h1>Route suggestions</h1>
+                <h1>[[#{html.route.suggestions}]]</h1>
                 <p>
                     <span th:text="${group.departureLocation ?: group.location}">Berchem Station</span>
                     <i class="bi bi-arrow-right" aria-hidden="true"></i>
@@ -44,14 +44,14 @@
             <a class="kdg-button kdg-button--secondary kdg-button--subtle"
                th:href="@{/travelgroups/{groupId}(groupId=${group.groupId})}">
                 <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                <span>Back to group</span>
+                <span>[[#{html.back.to.group}]]</span>
             </a>
         </section>
 
         <section class="route-planner-layout">
             <aside class="route-planner-panel">
                 <section class="route-planner-card">
-                    <h2>Plan your route</h2>
+                    <h2>[[#{html.plan.your.route}]]</h2>
                     <form class="route-planner-form" data-route-form>
                         <label class="route-planner-place" for="route-origin">
                             <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
@@ -67,7 +67,7 @@
                                 type="button"
                                 title="Swap route"
                                 aria-label="Swap route"
-                                data-route-swap>
+                                data-route-swap th:aria-label="#{html.swap.route}" th:title="#{html.swap.route}">
                             <i class="bi bi-arrow-down-up" aria-hidden="true"></i>
                         </button>
                         <label class="route-planner-place" for="route-destination">
@@ -83,20 +83,20 @@
                         <div class="route-planner-form__actions">
                             <button class="kdg-button" type="submit">
                                 <i class="bi bi-search" aria-hidden="true"></i>
-                                <span>Find options</span>
+                                <span>[[#{html.find.options}]]</span>
                             </button>
                             <button class="kdg-button kdg-button--secondary kdg-button--subtle"
                                     type="button"
                                     data-route-reset>
                                 <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                <span>Reset</span>
+                                <span>[[#{html.reset}]]</span>
                             </button>
                         </div>
                     </form>
 
                     <label class="route-planner-time" for="route-departure-time">
                         <i class="bi bi-calendar-event" aria-hidden="true"></i>
-                        <span>Departure</span>
+                        <span>[[#{html.departure}]]</span>
                         <input id="route-departure-time"
                                name="departureTime"
                                type="datetime-local"
@@ -106,34 +106,46 @@
                             type="button"
                             data-route-use-now>
                         <i class="bi bi-clock" aria-hidden="true"></i>
-                        <span>Use now</span>
+                        <span>[[#{html.use.now}]]</span>
                     </button>
 
                     <div class="route-planner-summary" data-route-summary>
-                        <strong>Checking De Lijn coverage...</strong>
+                        <strong>[[#{html.checking.de.lijn.coverage}]]</strong>
                     </div>
                 </section>
 
             </aside>
 
-            <section class="route-planner-results" aria-label="Route options and map">
-                <section class="route-planner-map-card" aria-label="Route map panel">
+            <section class="route-planner-results" aria-label="Route options and map" th:aria-label="#{html.route.options.and.map}">
+                <section class="route-planner-map-card" aria-label="Route map panel" th:aria-label="#{html.route.map.panel}">
                     <div class="route-planner-map-toolbar">
                         <button type="button" class="kdg-button kdg-button--secondary kdg-button--subtle" data-route-map-recenter>
                             <i class="bi bi-crosshair" aria-hidden="true"></i>
-                            <span>Re-center</span>
+                            <span>[[#{html.re.center}]]</span>
                         </button>
                     </div>
                     <div class="route-planner-map"
                          id="travelgroup-route-map"
-                         aria-label="Route map"></div>
+                         aria-label="Route map" th:aria-label="#{html.route.map}"></div>
+                    <div class="route-planner-map-loading" data-route-map-loading aria-hidden="true">
+                        <div class="route-planner-map-loading__grid"></div>
+                        <div class="route-planner-map-loading__road route-planner-map-loading__road--main"></div>
+                        <div class="route-planner-map-loading__road route-planner-map-loading__road--side"></div>
+                        <div class="route-planner-map-loading__route"></div>
+                        <span class="route-planner-map-loading__pin route-planner-map-loading__pin--origin"></span>
+                        <span class="route-planner-map-loading__pin route-planner-map-loading__pin--destination"></span>
+                        <div class="route-planner-map-loading__label">
+                            <i class="bi bi-arrow-repeat route-planner-loading-icon" aria-hidden="true"></i>
+                            <span>Preparing route map...</span>
+                        </div>
+                    </div>
                 </section>
             </section>
 
-            <section class="route-planner-options-panel" aria-label="Transport options">
+            <section class="route-planner-options-panel" aria-label="Transport options" th:aria-label="#{html.transport.options}">
                 <div class="route-planner-status" data-route-suggestions-status>
                     <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                    <span>Checking De Lijn options...</span>
+                    <span>[[#{html.checking.de.lijn.options}]]</span>
                 </div>
 
                 <div class="route-planner-options-shell">

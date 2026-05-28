@@ -9,6 +9,7 @@
     const status = panel.querySelector("[data-route-suggestions-status]");
     const routeSummary = panel.querySelector("[data-route-summary]");
     const mapElement = document.getElementById("travelgroup-route-map");
+    const mapLoading = panel.querySelector("[data-route-map-loading]");
     const recenterButton = panel.querySelector("[data-route-map-recenter]");
     const routeForm = panel.querySelector("[data-route-form]");
     const originInput = document.getElementById("route-origin");
@@ -19,6 +20,9 @@
     const resetButton = panel.querySelector("[data-route-reset]");
     const departureInput = document.getElementById("route-departure-time");
     const useNowButton = panel.querySelector("[data-route-use-now]");
+    const routeActionButtons = [routeForm, resetButton, useNowButton]
+        .filter(Boolean)
+        .flatMap((element) => element.matches && element.matches("button") ? [element] : Array.from(element.querySelectorAll("button")));
     let routeMap = null;
     let routeBounds = null;
     let selectedRouteLine = null;
@@ -217,6 +221,16 @@
         selectedRouteLine = null;
     };
 
+    const setMapLoading = (isLoading) => {
+        if (mapLoading) {
+            mapLoading.hidden = !isLoading;
+        }
+
+        if (mapElement) {
+            mapElement.classList.toggle("route-planner-map--loading", isLoading);
+        }
+    };
+
     // Initializes or redraws the map for the current origin/destination payload
     const drawRouteMap = (payload) => {
         if (!mapElement || !window.L) {
@@ -228,6 +242,7 @@
 
         if (!hasCoordinates(origin[0], origin[1]) || !hasCoordinates(destination[0], destination[1])) {
             mapElement.classList.add("travelgroup-route-suggestions__map--hidden");
+            setMapLoading(false);
             return;
         }
 
@@ -261,6 +276,7 @@
         routeBounds = L.latLngBounds([origin, destination]);
         fitRoute();
         settleRouteMap();
+        setMapLoading(false);
     };
 
     // Builds the backend route suggestions URL from the current form/map state
@@ -412,6 +428,49 @@
         `;
     };
 
+    // Shows skeleton cards while the backend waits for De Lijn responses
+    const renderLoading = (message = "Checking De Lijn options...") => {
+        setMapLoading(true);
+        status.innerHTML = `
+            <i class="bi bi-arrow-repeat route-planner-loading-icon" aria-hidden="true"></i>
+            <span>${escapeHtml(message)}</span>
+        `;
+
+        if (routeSummary) {
+            routeSummary.innerHTML = `
+                <strong>Checking nearby stops and departures...</strong>
+                <span>De Lijn can take a few seconds because the app checks live external data</span>
+            `;
+        }
+
+        list.innerHTML = Array.from({length: 3}).map(() => `
+            <article class="travelgroup-route-card travelgroup-route-card--loading" aria-hidden="true">
+                <div class="travelgroup-route-card__mode">
+                    <span class="route-planner-skeleton route-planner-skeleton--icon"></span>
+                </div>
+                <div class="travelgroup-route-card__times">
+                    <span class="route-planner-skeleton route-planner-skeleton--short"></span>
+                    <span class="route-planner-skeleton route-planner-skeleton--medium"></span>
+                </div>
+                <div class="travelgroup-route-card__body">
+                    <span class="route-planner-skeleton route-planner-skeleton--wide"></span>
+                    <span class="route-planner-skeleton route-planner-skeleton--medium"></span>
+                </div>
+                <div class="travelgroup-route-card__meta">
+                    <span class="route-planner-skeleton route-planner-skeleton--short"></span>
+                    <span class="route-planner-skeleton route-planner-skeleton--short"></span>
+                </div>
+            </article>
+        `).join("");
+    };
+
+    const setActionsLoading = (isLoading) => {
+        routeActionButtons.forEach((button) => {
+            button.disabled = isLoading;
+            button.classList.toggle("is-loading", isLoading);
+        });
+    };
+
     // Updates the summary text shown under the route form
     const renderRouteSummary = (payload, options = []) => {
         if (!routeSummary) {
@@ -515,7 +574,11 @@
     };
 
     // Loads suggestions, updates the summary/cards, and refreshes the map
-    const loadSuggestions = (url = buildSuggestionsUrl(), useNearestStopsForFields = false) => fetch(url)
+    const loadSuggestions = (url = buildSuggestionsUrl(), useNearestStopsForFields = false) => {
+        renderLoading();
+        setActionsLoading(true);
+
+        return fetch(url)
         .then((response) => {
             if (!response.ok) {
                 throw new Error("Route suggestions unavailable");
@@ -570,6 +633,7 @@
         })
         .catch(() => {
             status.textContent = "Unavailable";
+            setMapLoading(false);
             if (routeSummary) {
                 routeSummary.innerHTML = `
                     <strong>De Lijn route suggestions are unavailable.</strong>
@@ -577,7 +641,11 @@
                 `;
             }
             renderEmpty("De Lijn route suggestions are temporarily unavailable.", "bi-wifi-off");
+        })
+        .finally(() => {
+            setActionsLoading(false);
         });
+    };
 
     setInputsFromState();
     loadSuggestions(buildSuggestionsUrl(), true);

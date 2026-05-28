@@ -36,6 +36,7 @@ public class DeLijnService {
     private static final Logger LOGGER = Logger.getLogger(DeLijnService.class.getName());
     private static final String API_KEY_HEADER = "Ocp-Apim-Subscription-Key";
     private static final int DEBUG_BODY_PREVIEW_LENGTH = 1200;
+    private static final int MAX_DEPARTURE_STOP_CANDIDATES = 6;
     private static final String TRANSPORT_BUS = "BUS";
     private static final String TRANSPORT_TRAM = "TRAM";
     private static final Set<String> ANTWERP_TRAM_LINES = Set.of("2", "3", "4", "5", "6", "7", "8", "9", "10", "15", "24");
@@ -741,7 +742,8 @@ public class DeLijnService {
 
         LocalDate travelDate = requestedDepartureTime != null ? requestedDepartureTime.toLocalDate() : LocalDate.now();
 
-        for (DeLijnStopDto originStop : originStops.stream().limit(Math.min(properties.getMaxNearbyStops(), 20)).toList()) {
+        // Keep the first search quick by checking only the closest useful departure stops
+        for (DeLijnStopDto originStop : originStops.stream().limit(MAX_DEPARTURE_STOP_CANDIDATES).toList()) {
             List<DeLijnDepartureDto> departures = getScheduledDepartures(
                     originStop.getEntityNumber(),
                     originStop.getStopNumber(),
