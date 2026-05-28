@@ -10,6 +10,8 @@ import TrackTogether.service.GoogleCalendarLinkService;
 import TrackTogether.service.TravelGroupService;
 import TrackTogether.view.TravelGroupForm;
 import jakarta.validation.Valid;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -36,14 +38,17 @@ public class TravelGroupController {
     private final TravelGroupService travelGroupService;
     private final ActivityService activityService;
     private final GoogleCalendarLinkService googleCalendarLinkService;
+    private final MessageSource messageSource;
 
     // Wires the travel group page controller with its service dependencies
     public TravelGroupController(TravelGroupService travelGroupService,
                                  ActivityService activityService,
-                                 GoogleCalendarLinkService googleCalendarLinkService) {
+                                 GoogleCalendarLinkService googleCalendarLinkService,
+                                 MessageSource messageSource) {
         this.travelGroupService = travelGroupService;
         this.activityService = activityService;
         this.googleCalendarLinkService = googleCalendarLinkService;
+        this.messageSource = messageSource;
     }
 
     // Shows the travel group overview page for the current user
@@ -111,7 +116,7 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute(
                     "toastMessage",
-                    "Only the group owner can edit this travel group."
+                    message("flash.travelGroup.ownerOnlyEdit")
             );
             return "redirect:/travelgroups/" + groupId;
         }
@@ -159,7 +164,7 @@ public class TravelGroupController {
             );
 
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Travel group details updated.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.updated"));
             return "redirect:/travelgroups/" + updatedGroup.getGroupId();
         } catch (ResponseStatusException exception) {
             rejectTravelGroupFormValue(bindingResult, exception);
@@ -181,8 +186,8 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute(
                     "toastMessage",
                     joinApprovalRequired
-                            ? "Join request sent. The group owner can accept or reject it."
-                            : "Joined travel group."
+                            ? message("flash.travelGroup.joinRequestSent")
+                            : message("flash.travelGroup.joined")
             );
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
@@ -208,7 +213,7 @@ public class TravelGroupController {
         try {
             travelGroupService.leaveTravelGroup(groupId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "You left the travel group.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.left"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -232,7 +237,7 @@ public class TravelGroupController {
         try {
             travelGroupService.deleteOwnedTravelGroup(groupId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Travel group deleted.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.deleted"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -260,7 +265,7 @@ public class TravelGroupController {
         try {
             travelGroupService.transferOwnership(groupId, newOwnerId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Travel group ownership transferred.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.ownershipTransferred"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -283,7 +288,7 @@ public class TravelGroupController {
         try {
             travelGroupService.updateCurrentMemberLocation(groupId, address, latitude, longitude);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Shared location updated.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.locationUpdated"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -314,7 +319,7 @@ public class TravelGroupController {
         try {
             travelGroupService.clearCurrentMemberLocation(groupId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Shared location removed.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.locationRemoved"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -331,7 +336,7 @@ public class TravelGroupController {
         try {
             travelGroupService.inviteMemberToTravelGroup(groupId, inviteeEmail);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Invitation sent as a pending join request.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.invitationSent"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -348,7 +353,7 @@ public class TravelGroupController {
         try {
             travelGroupService.acceptJoinRequest(requestId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Join request accepted.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.joinRequestAccepted"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -369,7 +374,7 @@ public class TravelGroupController {
         try {
             travelGroupService.rejectJoinRequest(requestId);
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Join request rejected.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.travelGroup.joinRequestRejected"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
@@ -438,7 +443,7 @@ public class TravelGroupController {
         TravelGroup group = travelGroupService.getTravelGroupById(groupId);
 
         model.addAttribute("group", group);
-        model.addAttribute("routeSuggestionsUrl", "/api/travelgroups/" + group.getGroupId() + "/route-suggestions?maxResults=20");
+        model.addAttribute("routeSuggestionsUrl", "/api/travelgroups/" + group.getGroupId() + "/route-suggestions?maxResults=8");
 
         return "travelgroup-route-suggestions";
     }
@@ -509,5 +514,9 @@ public class TravelGroupController {
     // Formats a date and time for HTML datetime-local inputs
     private String formatDateTime(LocalDateTime dateTime) {
         return dateTime.format(DATE_TIME_INPUT_FORMATTER);
+    }
+
+    private String message(String key, Object... arguments) {
+        return messageSource.getMessage(key, arguments, LocaleContextHolder.getLocale());
     }
 }
