@@ -1,13 +1,10 @@
 package TrackTogether.webapi;
 
-import TrackTogether.domain.Activity;
 import TrackTogether.domain.TransportMode;
-import TrackTogether.domain.TravelGroup;
 import TrackTogether.dto.TravelFriendSuggestionDto;
-import TrackTogether.dto.delijn.DeLijnRouteOptionDto;
 import TrackTogether.service.FriendMatchingService;
+import TrackTogether.service.TravelGroupRouteSuggestionService;
 import TrackTogether.service.TravelGroupService;
-import TrackTogether.service.delijn.DeLijnService;
 import TrackTogether.webapi.dto.TravelGroupRouteSuggestionsDto;
 import TrackTogether.webapi.mapper.TravelGroupMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,17 +12,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.context.MessageSource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +44,10 @@ class TravelGroupApiControllerTest {
     private FriendMatchingService friendMatchingService;
 
     @Mock
-    private DeLijnService deLijnService;
+    private TravelGroupRouteSuggestionService routeSuggestionService;
+
+    @Mock
+    private MessageSource messageSource;
 
     private TravelGroupApiController controller;
 
@@ -57,8 +59,11 @@ class TravelGroupApiControllerTest {
                 travelGroupService,
                 travelGroupMapper,
                 friendMatchingService,
-                deLijnService
+                routeSuggestionService,
+                messageSource
         );
+        lenient().when(messageSource.getMessage(anyString(), any(Object[].class), any(Locale.class)))
+                .thenAnswer(invocation -> englishMessage(invocation.getArgument(0)));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -102,141 +107,75 @@ class TravelGroupApiControllerTest {
     }
 
     @Test
-    void routeSuggestionsAreOnlySupportedForPublicTransportGroups() {
+    void routeSuggestionsEndpointDelegatesToService() {
         UUID groupId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");
-        TravelGroup group = travelGroup(groupId, TransportMode.BIKE);
-
-        when(travelGroupService.getTravelGroupById(groupId)).thenReturn(group);
-        when(deLijnService.isConfigured()).thenReturn(true);
-
-        TravelGroupRouteSuggestionsDto response = controller.getRouteSuggestions(groupId, 4, null, null, null, null, null, null, null);
-
-        assertThat(response.isSupported()).isFalse();
-        assertThat(response.getOptions()).isEmpty();
-        verify(deLijnService, never()).getRouteOptions(
-                eq(group.getDepartureLatitude()),
-                eq(group.getDepartureLongitude()),
-                eq(group.getDepartureLocation()),
-                eq(group.getArrivalLatitude()),
-                eq(group.getArrivalLongitude()),
-                eq(null),
-                eq(group.getDepartureTime()),
-                eq(group.getEstimatedArrivalTime())
-        );
-    }
-
-    @Test
-    void routeSuggestionsRequireDepartureAndArrivalCoordinates() {
-        UUID groupId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
-        TravelGroup group = travelGroup(groupId, TransportMode.PUBLIC_TRANSPORT);
-        group.setDepartureLatitude(null);
-
-        when(travelGroupService.getTravelGroupById(groupId)).thenReturn(group);
-        when(deLijnService.isConfigured()).thenReturn(true);
-
-        TravelGroupRouteSuggestionsDto response = controller.getRouteSuggestions(groupId, 4, null, null, null, null, null, null, null);
-
-        assertThat(response.isSupported()).isTrue();
-        assertThat(response.getOptions()).isEmpty();
-        assertThat(response.getMessage()).contains("coordinates");
-        verify(deLijnService, never()).getRouteOptions(
-                eq(group.getDepartureLatitude()),
-                eq(group.getDepartureLongitude()),
-                eq(group.getDepartureLocation()),
-                eq(group.getArrivalLatitude()),
-                eq(group.getArrivalLongitude()),
-                eq(null),
-                eq(group.getDepartureTime()),
-                eq(group.getEstimatedArrivalTime())
-        );
-    }
-
-    @Test
-    void routeSuggestionsAreSortedAndLimited() {
-        UUID groupId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3");
-        TravelGroup group = travelGroup(groupId, TransportMode.PUBLIC_TRANSPORT);
-        DeLijnRouteOptionDto laterOption = routeOption(LocalDateTime.of(2026, 5, 20, 18, 20));
-        DeLijnRouteOptionDto earlierOption = routeOption(LocalDateTime.of(2026, 5, 20, 18, 5));
-
-        when(travelGroupService.getTravelGroupById(groupId)).thenReturn(group);
-        when(deLijnService.isConfigured()).thenReturn(true);
-        when(deLijnService.getRouteOptions(
-                group.getDepartureLatitude(),
-                group.getDepartureLongitude(),
-                group.getDepartureLocation(),
-                group.getArrivalLatitude(),
-                group.getArrivalLongitude(),
-                null,
-                group.getDepartureTime(),
-                group.getEstimatedArrivalTime()
-        )).thenReturn(List.of(laterOption, earlierOption));
-
-        TravelGroupRouteSuggestionsDto response = controller.getRouteSuggestions(groupId, 1, null, null, null, null, null, null, null);
-
-        assertThat(response.isSupported()).isTrue();
-        assertThat(response.isConfigured()).isTrue();
-        assertThat(response.getOptions()).containsExactly(earlierOption);
-    }
-
-    @Test
-    void routeSuggestionsUseRequestedDepartureTimeWhenProvided() {
-        UUID groupId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb4");
-        TravelGroup group = travelGroup(groupId, TransportMode.PUBLIC_TRANSPORT);
         LocalDateTime requestedDepartureTime = LocalDateTime.of(2026, 5, 21, 14, 30);
-
-        when(travelGroupService.getTravelGroupById(groupId)).thenReturn(group);
-        when(deLijnService.isConfigured()).thenReturn(true);
-        when(deLijnService.getRouteOptions(
-                group.getDepartureLatitude(),
-                group.getDepartureLongitude(),
-                group.getDepartureLocation(),
-                group.getArrivalLatitude(),
-                group.getArrivalLongitude(),
-                null,
-                requestedDepartureTime,
-                group.getEstimatedArrivalTime()
-        )).thenReturn(List.of());
-
-        controller.getRouteSuggestions(groupId, 4, null, null, null, null, null, null, requestedDepartureTime);
-
-        verify(deLijnService).getRouteOptions(
-                group.getDepartureLatitude(),
-                group.getDepartureLongitude(),
-                group.getDepartureLocation(),
-                group.getArrivalLatitude(),
-                group.getArrivalLongitude(),
-                null,
-                requestedDepartureTime,
-                group.getEstimatedArrivalTime()
-        );
-    }
-
-    private static TravelGroup travelGroup(UUID groupId, TransportMode transportMode) {
-        Activity activity = new Activity();
-        activity.setLatitude(51.2030);
-        activity.setLongitude(4.4210);
-
-        TravelGroup group = new TravelGroup(4, "Antwerp Central Station", transportMode);
-        ReflectionTestUtils.setField(group, "groupId", groupId);
-        group.setActivity(activity);
-        group.setDepartureLatitude(51.2172);
-        group.setDepartureLongitude(4.4211);
-        group.setArrivalLatitude(activity.getLatitude());
-        group.setArrivalLongitude(activity.getLongitude());
-        group.setDepartureTime(LocalDateTime.of(2026, 5, 20, 18, 0));
-        group.setEstimatedArrivalTime(LocalDateTime.of(2026, 5, 20, 18, 45));
-        return group;
-    }
-
-    private static DeLijnRouteOptionDto routeOption(LocalDateTime departureTime) {
-        return new DeLijnRouteOptionDto(
-                null,
-                null,
-                departureTime,
-                departureTime.plusMinutes(25),
-                List.of("1"),
+        TravelGroupRouteSuggestionsDto routeSuggestions = new TravelGroupRouteSuggestionsDto(
                 true,
-                true
+                true,
+                "De Lijn bus/tram route suggestions loaded.",
+                "Antwerp Central Station",
+                51.2172,
+                4.4211,
+                "Campus",
+                51.2030,
+                4.4210,
+                "De Lijn covers buses and trams.",
+                List.of()
         );
+
+        when(routeSuggestionService.getRouteSuggestions(
+                groupId,
+                4,
+                51.2172,
+                4.4211,
+                "Antwerp Central Station",
+                51.2030,
+                4.4210,
+                "Campus",
+                requestedDepartureTime
+        )).thenReturn(routeSuggestions);
+
+        controller.getRouteSuggestions(
+                groupId,
+                4,
+                51.2172,
+                4.4211,
+                "Antwerp Central Station",
+                51.2030,
+                4.4210,
+                "Campus",
+                requestedDepartureTime
+        );
+
+        verify(routeSuggestionService).getRouteSuggestions(
+                groupId,
+                4,
+                51.2172,
+                4.4211,
+                "Antwerp Central Station",
+                51.2030,
+                4.4210,
+                "Campus",
+                requestedDepartureTime
+        );
+    }
+
+    private static String englishMessage(String key) {
+        return switch (key) {
+            case "routeSuggestions.publicTransportOnly" -> "Route suggestions are only available for public transport groups.";
+            case "routeSuggestions.coverage" -> "De Lijn covers buses and trams.";
+            case "routeSuggestions.addCoordinates" -> "Add departure and activity coordinates to get De Lijn route suggestions.";
+            case "routeSuggestions.apiKeyMissing" -> "De Lijn API key is not configured.";
+            case "routeSuggestions.loaded" -> "De Lijn bus/tram route suggestions loaded.";
+            case "routeSuggestions.liveDeparturesLoaded" -> "Live De Lijn bus/tram departures near the selected start loaded.";
+            case "routeSuggestions.scheduledDeparturesLoaded" -> "Scheduled De Lijn bus/tram departures for the selected date and time loaded.";
+            case "routeSuggestions.endpointMissing" -> "De Lijn is configured, but no route planner or nearby stops endpoint is configured yet.";
+            case "routeSuggestions.noScheduledDepartures" -> "No scheduled De Lijn bus/tram departures were found near the selected start for this date and time.";
+            case "routeSuggestions.noDepartures" -> "No De Lijn bus/tram departures were found near the selected start.";
+            case "flash.travelGroup.joinRequestSent" -> "Join request sent. The group owner can accept or reject it.";
+            case "html.you.re.going.too" -> "You're going too!";
+            default -> key;
+        };
     }
 }
