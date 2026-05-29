@@ -101,7 +101,7 @@
 
         <section class="home-grid">
             <div class="home-column">
-                <article class="home-panel">
+                <article id="home-suggested-activities" class="home-panel">
                     <div class="home-panel__header">
                         <div>
                             <p class="home-panel__eyebrow">Upcoming Events</p>
@@ -246,7 +246,7 @@
                     </div>
 
                     <div class="home-list">
-                        <div class="home-item">
+                        <a class="home-item home-item--link" href="#home-suggested-activities">
                             <div class="home-item__icon">
                                 <i class="bi bi-geo-alt" aria-hidden="true"></i>
                             </div>
@@ -257,9 +257,13 @@
                                     suggestions line up with places you already use.
                                 </p>
                             </div>
-                        </div>
+                            <span class="home-item__tag">
+                                <i class="bi bi-arrow-down" aria-hidden="true"></i>
+                                [[#{html.view}]]
+                            </span>
+                        </a>
 
-                        <div class="home-item">
+                        <a class="home-item home-item--link" href="#home-suggested-activities">
                             <div class="home-item__icon">
                                 <i class="bi bi-clock-history" aria-hidden="true"></i>
                             </div>
@@ -270,7 +274,11 @@
                                     activities happen around the same time as your existing plans.
                                 </p>
                             </div>
-                        </div>
+                            <span class="home-item__tag">
+                                <i class="bi bi-arrow-down" aria-hidden="true"></i>
+                                [[#{html.view}]]
+                            </span>
+                        </a>
 
                         <div class="home-item">
                             <div class="home-item__icon">

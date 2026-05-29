@@ -3,11 +3,16 @@ package TrackTogether.service;
 import TrackTogether.dto.HomePageView;
 import TrackTogether.dto.HomeSuggestionReason;
 import TrackTogether.dto.HomeSuggestionView;
+import TrackTogether.dto.TravelFriendSuggestionDto;
+import TrackTogether.dto.analytics.UserAnalyticsView;
 import TrackTogether.domain.Activity;
 import TrackTogether.domain.Member;
 import TrackTogether.domain.TravelGroup;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,13 +29,22 @@ public class HomePageService {
     private final ActivityService activityService;
     private final TravelGroupService travelGroupService;
     private final CurrentUserService currentUserService;
+    private final FriendMatchingService friendMatchingService;
+    private final AnalyticsService analyticsService;
+    private final MessageSource messageSource;
 
     public HomePageService(ActivityService activityService,
                            TravelGroupService travelGroupService,
-                           CurrentUserService currentUserService) {
+                           CurrentUserService currentUserService,
+                           FriendMatchingService friendMatchingService,
+                           AnalyticsService analyticsService,
+                           MessageSource messageSource) {
         this.activityService = activityService;
         this.travelGroupService = travelGroupService;
         this.currentUserService = currentUserService;
+        this.friendMatchingService = friendMatchingService;
+        this.analyticsService = analyticsService;
+        this.messageSource = messageSource;
     }
 
     public HomePageView buildHomePage() {
@@ -67,14 +81,14 @@ public class HomePageService {
                 .filter(location -> !location.isBlank())
                 .collect(Collectors.toSet());
 
-        Set<String> myTimeKeys = myUpcomingActivities.stream()
-                .map(HomePageService::timeKey)
-                .filter(key -> !key.isBlank())
-                .collect(Collectors.toSet());
+        List<LocalTime> myActivityTimes = myUpcomingActivities.stream()
+                .map(Activity::getTime)
+                .filter(Objects::nonNull)
+                .toList();
 
         // Find the best matching suggestions from the community activities
         List<HomeSuggestionView> matchedSuggestions = communityUpcomingActivities.stream()
-                .map(activity -> toSuggestion(activity, myLocations, myTimeKeys))
+                .map(activity -> toSuggestion(activity, myLocations, myActivityTimes))
                 .filter(Objects::nonNull)
                 .limit(3)
                 .toList();
@@ -106,6 +120,14 @@ public class HomePageService {
                 .filter(group -> group.hasAvailableSpots(travelGroupService.getMemberCount(group)))
                 .toList();
 
+        List<TravelFriendSuggestionDto> suggestedTravelGroups = friendMatchingService
+                .suggestTravelGroupsForCurrentUser()
+                .stream()
+                .limit(3)
+                .toList();
+
+        UserAnalyticsView userAnalytics = analyticsService.getUserAnalytics(currentUser);
+
         // The latest activity card prefers the user's own upcoming activity first
         Activity latestActivity = !myUpcomingActivities.isEmpty()
                 ? myUpcomingActivities.getFirst()
@@ -123,13 +145,14 @@ public class HomePageService {
                 buildLatestHeadline(latestActivity, myUpcomingActivities.isEmpty()),
                 buildLatestMeta(latestActivity),
                 latestActivity != null ? "/activities/" + latestActivity.getId() : "/activities",
-                latestActivity != null ? "Open event" : "Browse activities",
+                latestActivity != null ? message("home.latest.link.openEvent") : message("home.latest.link.browseActivities"),
                 displayedUpcomingActivities,
                 suggestedActivities,
                 locationSuggestionCount,
                 timeSuggestionCount,
                 openTravelGroups,
-                currentUser.getCo2Saved()
+                suggestedTravelGroups,
+                userAnalytics.personalCo2SavingsKg()
         );
     }
 
@@ -169,76 +192,80 @@ public class HomePageService {
         return value == null ? "" : value.trim().toLowerCase();
     }
 
-    // Combine date and time into one comparable key
-    private static String timeKey(Activity activity) {
-        if (activity.getDate() == null || activity.getTime() == null) {
-            return "";
-        }
-
-        return activity.getDate() + "|" + activity.getTime();
-    }
-
     private static HomeSuggestionView toSuggestion(Activity activity,
                                                    Set<String> myLocations,
-                                                   Set<String> myTimeKeys) {
+                                                   List<LocalTime> myActivityTimes) {
         // Prefer location match first, otherwise try time match
         if (myLocations.contains(normalize(activity.getLocation()))) {
             return new HomeSuggestionView(activity, HomeSuggestionReason.SAME_LOCATION);
         }
 
-        if (myTimeKeys.contains(timeKey(activity))) {
+        if (happensAroundKnownTime(activity, myActivityTimes)) {
             return new HomeSuggestionView(activity, HomeSuggestionReason.SAME_TIME);
         }
 
         return null;
     }
 
-    private static String buildWelcomeTitle(Member currentUser) {
+    private static boolean happensAroundKnownTime(Activity activity, List<LocalTime> knownTimes) {
+        if (activity.getTime() == null || knownTimes.isEmpty()) {
+            return false;
+        }
+
+        return knownTimes.stream()
+                .anyMatch(knownTime -> Math.abs(Duration.between(knownTime, activity.getTime()).toMinutes()) <= 60);
+    }
+
+    private String buildWelcomeTitle(Member currentUser) {
         String name = currentUser.getName();
 
         if (name == null || name.isBlank()) {
-            return "Good to see you again.";
+            return message("home.welcome.noName");
         }
 
-        return "Welcome back, " + name + ".";
+        return message("home.welcome.withName", name);
     }
 
-    private static String buildWelcomeSubtitle(List<Activity> myUpcomingActivities,
-                                               List<TravelGroup> openTravelGroups) {
+    private String buildWelcomeSubtitle(List<Activity> myUpcomingActivities,
+                                        List<TravelGroup> openTravelGroups) {
         // Adjust the subtitle depending on whether the user already has upcoming plans
         if (!myUpcomingActivities.isEmpty()) {
-            return "You already have plans ahead. Here is a clean view of what is next, plus matching suggestions around your schedule.";
+            return message("home.subtitle.hasPlans");
         }
 
         if (!openTravelGroups.isEmpty()) {
-            return "No personal events yet, but there are travel groups and upcoming activities you can jump into right away.";
+            return message("home.subtitle.hasGroups");
         }
 
-        return "Start with upcoming activities, then use suggestions and travel groups to make coordination easier.";
+        return message("home.subtitle.empty");
     }
 
-    private static String buildLatestHeadline(Activity latestActivity, boolean communityFallback) {
+    private String buildLatestHeadline(Activity latestActivity, boolean communityFallback) {
         if (latestActivity == null) {
-            return "Your home page is ready for the next activity.";
+            return message("home.latest.noActivity");
         }
 
         if (communityFallback) {
-            return latestActivity.getName() + " is one of the next activities you can explore.";
+            return message("home.latest.community", latestActivity.getName());
         }
 
-        return latestActivity.getName() + " is the next event on your radar.";
+        return message("home.latest.personal", latestActivity.getName());
     }
 
-    private static String buildLatestMeta(Activity latestActivity) {
+    private String buildLatestMeta(Activity latestActivity) {
         // Build the short line that appears under the latest update card
         if (latestActivity == null) {
-            return "As soon as new events or travel opportunities are available, they will show up here.";
+            return message("home.latest.meta.empty");
         }
 
         String location = latestActivity.getLocation() == null || latestActivity.getLocation().isBlank()
-                ? "Location to be confirmed"
+                ? message("home.latest.meta.locationUnknown")
                 : latestActivity.getLocation();
 
-        return location + " · " + latestActivity.getDate() + " · " + latestActivity.getTime();
+        return location + " - " + latestActivity.getDate() + " - " + latestActivity.getTime();
+    }
+
+    private String message(String key, Object... arguments) {
+        return messageSource.getMessage(key, arguments, LocaleContextHolder.getLocale());
     }
 }
