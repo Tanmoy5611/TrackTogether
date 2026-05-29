@@ -1,4 +1,4 @@
-package TrackTogether.controller.ModelView;
+package TrackTogether.dto;
 
 import TrackTogether.domain.TravelGroup;
 
@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+// View data used by the travel group overview page
 public class TravelGroupPageView {
     private final List<TravelGroup> groups;
     private final List<TravelGroup> myTravelGroups;
@@ -21,6 +22,7 @@ public class TravelGroupPageView {
     private final Set<UUID> rejectedJoinRequestGroupIds;
     private final Map<UUID, Long> pendingJoinRequestCounts;
 
+    // Stores all values the Thymeleaf overview needs in one object
     public TravelGroupPageView(List<TravelGroup> groups,
                                List<TravelGroup> myTravelGroups,
                                List<TravelGroup> exploreTravelGroups,

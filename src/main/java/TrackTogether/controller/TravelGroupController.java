@@ -194,8 +194,9 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
         }
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+        String safeRedirect = safeInternalRedirect(redirectTo);
+        if (safeRedirect != null) {
+            return safeRedirect;
         }
 
         TravelGroup group = travelGroupService.getTravelGroupById(groupId);
@@ -219,8 +220,9 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
         }
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+        String safeRedirect = safeInternalRedirect(redirectTo);
+        if (safeRedirect != null) {
+            return safeRedirect;
         }
 
         return "redirect:/activities/" + activityId;
@@ -242,15 +244,17 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
 
-            if (redirectTo != null && !redirectTo.isBlank()) {
-                return "redirect:" + redirectTo;
+            String safeRedirect = safeInternalRedirect(redirectTo);
+            if (safeRedirect != null) {
+                return safeRedirect;
             }
 
             return "redirect:/travelgroups/" + groupId;
         }
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+        String safeRedirect = safeInternalRedirect(redirectTo);
+        if (safeRedirect != null) {
+            return safeRedirect;
         }
 
         return "redirect:/activities/" + activityId;
@@ -271,8 +275,9 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
         }
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+        String safeRedirect = safeInternalRedirect(redirectTo);
+        if (safeRedirect != null) {
+            return safeRedirect;
         }
 
         return "redirect:/travelgroups/" + groupId;
@@ -359,8 +364,9 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
         }
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+        String safeRedirect = safeInternalRedirect(redirectTo);
+        if (safeRedirect != null) {
+            return safeRedirect;
         }
 
         return "redirect:/travelgroups";
@@ -380,8 +386,9 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
         }
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+        String safeRedirect = safeInternalRedirect(redirectTo);
+        if (safeRedirect != null) {
+            return safeRedirect;
         }
 
         return "redirect:/travelgroups";
@@ -437,7 +444,7 @@ public class TravelGroupController {
         return "travelgroup-activity-log";
     }
 
-    // Shows the De Lijn route suggestion page for a public transport travel group.
+    // Shows the De Lijn route suggestion page for a public transport travel group
     @GetMapping("/{groupId}/route-suggestions")
     public String showRouteSuggestions(@PathVariable UUID groupId, Model model) {
         TravelGroup group = travelGroupService.getTravelGroupById(groupId);
@@ -518,5 +525,19 @@ public class TravelGroupController {
 
     private String message(String key, Object... arguments) {
         return messageSource.getMessage(key, arguments, LocaleContextHolder.getLocale());
+    }
+
+    // Allows redirect targets only when they stay inside this application
+    private static String safeInternalRedirect(String redirectTo) {
+        if (redirectTo == null || redirectTo.isBlank()) {
+            return null;
+        }
+
+        String target = redirectTo.trim();
+        if (!target.startsWith("/") || target.startsWith("//") || target.contains("\r") || target.contains("\n")) {
+            return null;
+        }
+
+        return "redirect:" + target;
     }
 }

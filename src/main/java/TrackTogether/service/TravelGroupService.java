@@ -1,7 +1,7 @@
 package TrackTogether.service;
 
 import TrackTogether.domain.*;
-import TrackTogether.controller.ModelView.TravelGroupPageView;
+import TrackTogether.dto.TravelGroupPageView;
 import TrackTogether.dto.TravelGroupActivityLogView;
 import TrackTogether.repository.*;
 import jakarta.transaction.Transactional;
