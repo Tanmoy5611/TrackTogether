@@ -79,22 +79,24 @@
 
         <!-- Suggestions section — populated by travelgroups.js via /api/travelgroups/suggestions -->
         <section id="suggestions-section"
-                 class="travelgroup-list-section travelgroup-list-section--suggestions"
+                 class="travelgroup-list-section travelgroup-list-section--suggestions is-loading"
                  aria-labelledby="suggestions-title"
-                 th:data-count-template="#{common.count.groups('__count__')}"
+                 aria-busy="true"
+                 th:data-count-template="#{common.count.groups('COUNT_PLACEHOLDER')}"
                  th:data-departure-label="#{html.departure}"
                  th:data-time-label="#{html.time}"
+                 th:data-date-time-label="#{html.date.and.time}"
                  th:data-transport-label="#{html.transport}"
                  th:data-capacity-label="#{html.capacity}"
                  th:data-view-details-label="#{html.view.details}"
                  th:data-i-am-going-too-label="#{html.i.m.going.too}"
+                 th:data-for-activity-label="#{html.for.activity}"
                  th:data-not-set-label="#{html.not.set}"
                  th:data-transport-car="#{transportMode.CAR}"
                  th:data-transport-carpool="#{transportMode.CARPOOL}"
                  th:data-transport-bike="#{transportMode.BIKE}"
                  th:data-transport-walk="#{transportMode.WALK}"
-                 th:data-transport-public-transport="#{transportMode.PUBLIC_TRANSPORT}"
-                 hidden>
+                 th:data-transport-public-transport="#{transportMode.PUBLIC_TRANSPORT}">
             <div class="travelgroup-list-section__header">
                 <div>
                     <p class="kdg-eyebrow">[[#{html.recommended.for.you}]]</p>
@@ -108,7 +110,44 @@
                     <span id="suggestions-count">[[#{common.count.groups(0)}]]</span>
                 </span>
             </div>
-            <div id="suggestions-grid" class="kdg-grid"></div>
+            <div id="suggestions-grid" class="kdg-grid">
+                <article class="kdg-group-card travelgroup-skeleton-card" aria-hidden="true">
+                    <span class="travelgroup-skeleton travelgroup-skeleton--title"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--pill"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--pill travelgroup-skeleton--wide"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <div class="travelgroup-skeleton-card__actions">
+                        <span class="travelgroup-skeleton travelgroup-skeleton--button"></span>
+                        <span class="travelgroup-skeleton travelgroup-skeleton--button"></span>
+                    </div>
+                </article>
+                <article class="kdg-group-card travelgroup-skeleton-card" aria-hidden="true">
+                    <span class="travelgroup-skeleton travelgroup-skeleton--title"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--pill"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--pill travelgroup-skeleton--wide"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <div class="travelgroup-skeleton-card__actions">
+                        <span class="travelgroup-skeleton travelgroup-skeleton--button"></span>
+                        <span class="travelgroup-skeleton travelgroup-skeleton--button"></span>
+                    </div>
+                </article>
+                <article class="kdg-group-card travelgroup-skeleton-card" aria-hidden="true">
+                    <span class="travelgroup-skeleton travelgroup-skeleton--title"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--pill"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--pill travelgroup-skeleton--wide"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <span class="travelgroup-skeleton travelgroup-skeleton--line"></span>
+                    <div class="travelgroup-skeleton-card__actions">
+                        <span class="travelgroup-skeleton travelgroup-skeleton--button"></span>
+                        <span class="travelgroup-skeleton travelgroup-skeleton--button"></span>
+                    </div>
+                </article>
+            </div>
         </section>
 
         <section th:if="${#lists.isEmpty(groups)}"
@@ -169,10 +208,11 @@
                                 Antwerp Central
                             </h2>
 
-                            <p class="kdg-help">
+                            <p class="kdg-help travelgroup-activity-reference">
                                 <i class="bi bi-calendar-event" aria-hidden="true"></i>
                                 <span>[[#{html.for.activity}]]</span>
-                                <a th:href="@{/activities/{id}(id=${group.activity.id})}"
+                                <a class="travelgroup-activity-link"
+                                   th:href="@{/activities/{id}(id=${group.activity.id})}"
                                    th:text="${group.activity.name}">
                                     [[#{html.activity.name}]]
                                 </a>
@@ -448,10 +488,11 @@
                                 Antwerp Central
                             </h2>
 
-                            <p class="kdg-help">
+                            <p class="kdg-help travelgroup-activity-reference">
                                 <i class="bi bi-calendar-event" aria-hidden="true"></i>
                                 <span>[[#{html.for.activity}]]</span>
-                                <a th:href="@{/activities/{id}(id=${group.activity.id})}"
+                                <a class="travelgroup-activity-link"
+                                   th:href="@{/activities/{id}(id=${group.activity.id})}"
                                    th:text="${group.activity.name}">
                                     [[#{html.activity.name}]]
                                 </a>

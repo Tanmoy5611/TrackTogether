@@ -878,6 +878,17 @@ body.kdg-page {
     line-height: 1.15;
 }
 
+.travelgroups-card-actions > .kdg-button:only-child,
+.travelgroups-card-actions form:only-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: min(100%, 13rem);
+}
+
+.travelgroups-card-actions form:only-child .kdg-button {
+    width: 100%;
+}
+
 .activity-group-actions__leave,
 .travelgroup-detail__leave {
     margin-left: 0 !important;
@@ -1011,7 +1022,7 @@ body.kdg-page {
     color: #a83d3d;
 }
 
-/* Styling for the two Travel Group page sections. */
+/* Styling for the two Travel Group page sections */
 .travelgroup-list-sections {
     display: grid;
     gap: 2rem;
@@ -1103,6 +1114,29 @@ body.kdg-page {
     color: var(--kdg-blue-dark);
 }
 
+.travelgroup-list-section--suggestions.is-loading .travelgroup-list-section__count {
+    position: relative;
+    overflow: hidden;
+    width: 7rem;
+    height: 2rem;
+    border-color: #e9f1ee;
+    background: #e9f1ee;
+    color: transparent;
+}
+
+.travelgroup-list-section--suggestions.is-loading .travelgroup-list-section__count .bi {
+    color: transparent;
+}
+
+.travelgroup-list-section--suggestions.is-loading .travelgroup-list-section__count::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+    animation: travelgroup-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
 .travelgroup-list-section__empty {
     max-width: none;
 }
@@ -1145,6 +1179,31 @@ body.kdg-page {
     padding-right: 2.35rem;
 }
 
+.kdg-group-card .travelgroup-activity-reference {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--kdg-muted);
+    font-size: 0.92rem;
+}
+
+.kdg-group-card .travelgroup-activity-reference > span,
+.kdg-group-card .travelgroup-activity-link {
+    font-size: inherit;
+    font-weight: 900;
+}
+
+.kdg-group-card .travelgroup-activity-link {
+    color: var(--kdg-blue-dark);
+    text-decoration: none;
+}
+
+.kdg-group-card a.travelgroup-activity-link:hover,
+.kdg-group-card a.travelgroup-activity-link:focus-visible {
+    color: var(--kdg-blue);
+    text-decoration: underline;
+}
+
 .travelgroup-pin-button {
     position: absolute;
     top: 0.85rem;
@@ -1173,6 +1232,69 @@ body.kdg-page {
     border-color: #d4aa00;
     background: #ffdd00;
     color: var(--kdg-ink);
+}
+
+.travelgroup-skeleton-card {
+    display: grid;
+    gap: 0.85rem;
+    min-height: 19rem;
+    padding: 1.25rem;
+}
+
+.travelgroup-skeleton {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e9f1ee;
+}
+
+.travelgroup-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+    animation: travelgroup-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.travelgroup-skeleton--title {
+    width: min(16rem, 72%);
+    height: 1.75rem;
+    border-radius: 0.45rem;
+}
+
+.travelgroup-skeleton--pill {
+    width: min(11rem, 56%);
+    height: 2.15rem;
+}
+
+.travelgroup-skeleton--wide {
+    width: min(15rem, 74%);
+}
+
+.travelgroup-skeleton--line {
+    width: 100%;
+    height: 2rem;
+    border-radius: 0.35rem;
+}
+
+.travelgroup-skeleton-card__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.travelgroup-skeleton--button {
+    height: 2.85rem;
+    border-radius: 0.2rem;
+}
+
+@keyframes travelgroup-skeleton-shimmer {
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 .travelgroup-detail__summary {
@@ -2682,6 +2804,21 @@ body.kdg-page {
     padding: 1rem 1.05rem;
     border: 1px solid #e4e7e3;
     background: #fbfcfa;
+}
+
+.home-item--link {
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.home-item--link:hover,
+.home-item--link:focus-visible {
+    border-color: rgba(47, 127, 163, 0.35);
+    box-shadow: 0 0.85rem 1.5rem rgba(34, 34, 34, 0.06);
+    color: inherit;
+    text-decoration: none;
+    transform: translateY(-1px);
 }
 
 .home-item__icon {

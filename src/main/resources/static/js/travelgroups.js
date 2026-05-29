@@ -184,17 +184,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // SUGGESTIONS
+    function hideSuggestions() {
+        const section = document.getElementById("suggestions-section");
+        if (!section) return;
+
+        section.hidden = true;
+        section.classList.remove("is-loading");
+        section.removeAttribute("aria-busy");
+    }
+
     async function loadSuggestions() {
         try {
             const response = await fetch("/api/travelgroups/suggestions");
-            if (!response.ok) return;
+            if (!response.ok) {
+                hideSuggestions();
+                return;
+            }
 
             const suggestions = await response.json();
-            if (!suggestions.length) return;
+            if (!suggestions.length) {
+                hideSuggestions();
+                return;
+            }
 
             renderSuggestions(suggestions);
         } catch (_) {
-            // Suggestions are non-critical — fail silently
+            hideSuggestions();
         }
     }
 
@@ -209,6 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
         countEl.textContent = formatCount(suggestionLabels.countTemplate, suggestions.length);
         grid.innerHTML = suggestions.map(suggestion => buildSuggestionCard(suggestion, suggestionLabels)).join("");
         section.hidden = false;
+        section.classList.remove("is-loading");
+        section.removeAttribute("aria-busy");
 
         grid.querySelectorAll(".suggestion-join-btn").forEach(btn => {
             btn.addEventListener("click", () => joinFromSuggestion(btn));
@@ -227,7 +244,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function formatCount(template, count) {
-        return (template || "__count__ groups").replace("__count__", count);
+        return (template || "COUNT_PLACEHOLDER groups")
+            .replace("COUNT_PLACEHOLDER", count)
+            .replace("__count__", count);
+    }
+
+    function mapSearchUrl(provider, location) {
+        const encodedLocation = encodeURIComponent(location || "");
+        return provider === "apple"
+            ? `https://maps.apple.com/?q=${encodedLocation}`
+            : `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+    }
+
+    function googleCalendarUrl(suggestion) {
+        if (!suggestion.departureTime) {
+            return null;
+        }
+
+        const start = new Date(suggestion.departureTime);
+        if (Number.isNaN(start.getTime())) {
+            return null;
+        }
+
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const formatCalendarDate = date => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+        const title = suggestion.activityName
+            ? `Travel group: ${suggestion.activityName}`
+            : "Travel group";
+        const location = suggestion.departureLocation || "";
+
+        return "https://calendar.google.com/calendar/render?action=TEMPLATE"
+            + `&text=${encodeURIComponent(title)}`
+            + `&dates=${formatCalendarDate(start)}/${formatCalendarDate(end)}`
+            + `&location=${encodeURIComponent(location)}`;
     }
 
     function transportLabel(transportMode, labels) {
@@ -254,8 +303,32 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(r => `<span class="travelgroup-status"><i class="bi bi-check" aria-hidden="true"></i> ${escapeHtml(r)}</span>`)
             .join("");
         const groupId = encodeURIComponent(s.groupId);
+        const activityId = s.activityId ? encodeURIComponent(s.activityId) : null;
         const activityName = escapeHtml(s.activityName ?? labels.notSetLabel ?? "-");
         const departureLocation = escapeHtml(s.departureLocation ?? labels.notSetLabel ?? "-");
+        const departureLocationValue = s.departureLocation ?? "";
+        const calendarUrl = googleCalendarUrl(s);
+        const activityContent = activityId
+            ? `<a class="travelgroup-activity-link" href="/activities/${activityId}">${activityName}</a>`
+            : `<span class="travelgroup-activity-link">${activityName}</span>`;
+        const calendarLink = calendarUrl
+            ? `<a class="google-calendar-icon-link google-calendar-icon-link--compact"
+                  href="${calendarUrl}"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Add to Google Calendar"
+                  title="Add to Google Calendar">
+                   <span class="google-calendar-button__icon" aria-hidden="true">31</span>
+               </a>`
+            : "";
+        const deLijnLink = s.transportMode === "PUBLIC_TRANSPORT"
+            ? `<a class="travelgroup-delijn-icon-link"
+                  href="/travelgroups/${groupId}/route-suggestions"
+                  title="Check De Lijn routes"
+                  aria-label="Check De Lijn routes">
+                   <i class="bi bi-route" aria-hidden="true"></i>
+               </a>`
+            : "";
 
         return `
             <article class="kdg-group-card" id="suggestion-card-${groupId}" data-group-id="${escapeHtml(s.groupId)}">
@@ -268,6 +341,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 </button>
                 <div class="kdg-group-card__body">
                     <h2>${activityName}</h2>
+                    <p class="kdg-help travelgroup-activity-reference">
+                        <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                        <span>${escapeHtml(labels.forActivityLabel || "For activity:")}</span>
+                        ${activityContent}
+                    </p>
                     <div class="travelgroup-card-status-block">${reasons}</div>
                     <dl class="kdg-meta">
                         <div class="kdg-meta__row">
@@ -275,21 +353,53 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <i class="bi bi-geo-alt" aria-hidden="true"></i>
                                 <span>${escapeHtml(labels.departureLabel || "Departure")}</span>
                             </dt>
-                            <dd class="kdg-meta__value">${departureLocation}</dd>
+                            <dd class="kdg-meta__value travelgroup-meta-value-with-actions">
+                                <span>${departureLocation}</span>
+                                <span class="travelgroup-meta-actions" aria-label="Open departure in maps">
+                                    <a class="travelgroup-map-link travelgroup-map-link--compact"
+                                       target="_blank"
+                                       rel="noopener"
+                                       href="${mapSearchUrl("google", departureLocationValue)}"
+                                       title="Open in Google Maps"
+                                       aria-label="Open in Google Maps">
+                                        <img class="travelgroup-map-link__icon"
+                                             src="https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico"
+                                             alt=""
+                                             loading="lazy">
+                                    </a>
+                                    <a class="travelgroup-map-link travelgroup-map-link--compact"
+                                       target="_blank"
+                                       rel="noopener"
+                                       href="${mapSearchUrl("apple", departureLocationValue)}"
+                                       title="Open in Apple Maps"
+                                       aria-label="Open in Apple Maps">
+                                        <img class="travelgroup-map-link__icon"
+                                             src="https://www.apple.com/v/maps/d/images/overview/intro_icon__dfyvjc1ohbcm_large.png"
+                                             alt=""
+                                             loading="lazy">
+                                    </a>
+                                </span>
+                            </dd>
                         </div>
                         <div class="kdg-meta__row">
                             <dt class="kdg-meta__label">
                                 <i class="bi bi-clock" aria-hidden="true"></i>
-                                <span>${escapeHtml(labels.timeLabel || "Time")}</span>
+                                <span>${escapeHtml(labels.dateTimeLabel || labels.timeLabel || "Date & time")}</span>
                             </dt>
-                            <dd class="kdg-meta__value">${time}</dd>
+                            <dd class="kdg-meta__value travelgroup-meta-value-with-actions">
+                                <span>${escapeHtml(time)}</span>
+                                ${calendarLink}
+                            </dd>
                         </div>
                         <div class="kdg-meta__row">
                             <dt class="kdg-meta__label">
                                 <i class="bi bi-signpost-split" aria-hidden="true"></i>
                                 <span>${escapeHtml(labels.transportLabel || "Transport")}</span>
                             </dt>
-                            <dd class="kdg-meta__value kdg-meta__value--transport">${escapeHtml(transport)}</dd>
+                            <dd class="kdg-meta__value kdg-meta__value--transport travelgroup-meta-value-with-actions">
+                                <span>${escapeHtml(transport)}</span>
+                                ${deLijnLink}
+                            </dd>
                         </div>
                         <div class="kdg-meta__row">
                             <dt class="kdg-meta__label">
@@ -307,6 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <span>${escapeHtml(labels.viewDetailsLabel || "View details")}</span>
                         </a>
                         <button class="kdg-button kdg-button--success suggestion-join-btn"
+                                type="button"
                                 data-group-id="${escapeHtml(s.groupId)}">
                             <i class="bi bi-person-check" aria-hidden="true"></i>
                             ${escapeHtml(labels.iAmGoingTooLabel || "I'm going too")}
@@ -318,6 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function joinFromSuggestion(btn) {
         const groupId = btn.dataset.groupId;
+        const targetUrl = `/travelgroups/${encodeURIComponent(groupId)}`;
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = `<i class="bi bi-hourglass-split" aria-hidden="true"></i> ${escapeHtml(label("joining", "Joining..."))}`;
@@ -346,30 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const result = await response.json();
-
-        const countEl = document.getElementById(`suggestion-count-${groupId}`);
-        if (countEl) {
-            countEl.textContent = `${result.memberCount} / ${result.maxMembers}`;
-        }
-
-        const statusClass = result.pendingApproval
-            ? "travelgroup-status travelgroup-status--pending"
-            : "travelgroup-status travelgroup-status--joined";
-        const iconClass = result.pendingApproval
-            ? "bi-hourglass-split"
-            : "bi-check-circle";
-        const statusText = result.message || (result.pendingApproval
-            ? label("requestSent", "Request sent")
-            : label("youreGoingToo", "You're going too!"));
-
-        btn.outerHTML = `
-            <span class="${statusClass}">
-                <i class="bi ${iconClass}" aria-hidden="true"></i>
-                <span>${escapeHtml(statusText)}</span>
-            </span>`;
-
-        showToast(statusText);
+        window.location.assign(targetUrl);
     }
 
     loadSuggestions();
