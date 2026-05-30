@@ -18,8 +18,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -109,15 +111,21 @@ public class HomePageService {
                 .filter(suggestion -> suggestion.getReason() == HomeSuggestionReason.SAME_TIME)
                 .count();
 
+        // Reuse batch data here so the home dashboard stays quick
+        List<TravelGroup> allTravelGroups = travelGroupService.getAllTravelGroups();
+        Set<UUID> joinedTravelGroupIds = travelGroupService.getJoinedGroupIds(allTravelGroups);
+        Set<UUID> ownedTravelGroupIds = travelGroupService.getOwnedGroupIds(allTravelGroups);
+        Map<UUID, Long> travelGroupMemberCounts = travelGroupService.getMemberCounts(allTravelGroups);
+
         // Only count groups the user can actually still join from the home page
-        List<TravelGroup> openTravelGroups = travelGroupService.getAllTravelGroups()
+        List<TravelGroup> openTravelGroups = allTravelGroups
                 .stream()
                 .filter(Objects::nonNull)
                 .filter(HomePageService::isUpcomingOrUndated)
-                .filter(group -> !travelGroupService.isCurrentUserMember(group))
-                .filter(group -> !travelGroupService.isCurrentUserOwner(group))
+                .filter(group -> !joinedTravelGroupIds.contains(group.getGroupId()))
+                .filter(group -> !ownedTravelGroupIds.contains(group.getGroupId()))
                 .filter(group -> group.getMaxMembers() != null)
-                .filter(group -> group.hasAvailableSpots(travelGroupService.getMemberCount(group)))
+                .filter(group -> group.hasAvailableSpots(travelGroupMemberCounts.getOrDefault(group.getGroupId(), 0L)))
                 .toList();
 
         List<TravelFriendSuggestionDto> suggestedTravelGroups = friendMatchingService

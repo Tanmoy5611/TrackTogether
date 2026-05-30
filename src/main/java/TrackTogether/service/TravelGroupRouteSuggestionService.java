@@ -49,6 +49,7 @@ public class TravelGroupRouteSuggestionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max results must be between 1 and 25");
         }
 
+        // Load the group first so the saved route values can be used as defaults
         TravelGroup group = travelGroupService.getTravelGroupById(groupId);
 
         // User-selected coordinates override saved group route points
@@ -83,8 +84,9 @@ public class TravelGroupRouteSuggestionService {
             );
         }
 
-        if (!hasCoordinates(routeOriginLatitude, routeOriginLongitude)
-                || !hasCoordinates(routeDestinationLatitude, routeDestinationLongitude)) {
+        if (missingCoordinates(routeOriginLatitude, routeOriginLongitude)
+                || missingCoordinates(routeDestinationLatitude, routeDestinationLongitude)) {
+            // The frontend can still show the page but cannot ask De Lijn without valid coordinates
             return new TravelGroupRouteSuggestionsDto(
                     true,
                     deLijnService.isConfigured(),
@@ -101,6 +103,7 @@ public class TravelGroupRouteSuggestionService {
         }
 
         if (!deLijnService.isConfigured()) {
+            // Keep the response friendly when the API key is missing from the environment
             return new TravelGroupRouteSuggestionsDto(
                     true,
                     false,
@@ -116,6 +119,7 @@ public class TravelGroupRouteSuggestionService {
             );
         }
 
+        // Ask the De Lijn service for options after all group and setup checks passed
         List<DeLijnRouteOptionDto> options = deLijnService.getRouteOptions(
                         routeOriginLatitude,
                         routeOriginLongitude,
@@ -134,6 +138,7 @@ public class TravelGroupRouteSuggestionService {
                 ))
                 .toList();
 
+        // Return the same route points the backend actually used so the map and summary stay honest
         return new TravelGroupRouteSuggestionsDto(
                 true,
                 true,
@@ -149,14 +154,13 @@ public class TravelGroupRouteSuggestionService {
         );
     }
 
-    // Validates complete latitude and longitude pairs before external route calls
-    private static boolean hasCoordinates(Double latitude, Double longitude) {
-        return latitude != null
-                && longitude != null
-                && latitude >= -90
-                && latitude <= 90
-                && longitude >= -180
-                && longitude <= 180;
+    private static boolean missingCoordinates(Double latitude, Double longitude) {
+        return latitude == null
+                || longitude == null
+                || latitude < -90
+                || latitude > 90
+                || longitude < -180
+                || longitude > 180;
     }
 
     // Checks whether a label from the request can override the saved label
@@ -177,7 +181,9 @@ public class TravelGroupRouteSuggestionService {
                     : message("routeSuggestions.scheduledDeparturesLoaded");
         }
 
-        if (!deLijnService.hasRouteOptionsEndpoint() && !deLijnService.hasNearbyStopsEndpoint()) {
+        if (!deLijnService.hasRouteOptionsEndpoint()
+                && !deLijnService.hasNearbyStopsEndpoint()
+                && !deLijnService.hasScheduledDeparturesEndpoint()) {
             return message("routeSuggestions.endpointMissing");
         }
 
@@ -202,6 +208,7 @@ public class TravelGroupRouteSuggestionService {
         addFirstTransportType(options, selected, "BUS");
         addFirstTransportType(options, selected, "TRAM");
 
+        // Fill the rest with earliest options after reserving space for bus and tram
         for (DeLijnRouteOptionDto option : options) {
             if (selected.size() >= maxResults) {
                 break;
