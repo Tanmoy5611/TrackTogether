@@ -217,11 +217,11 @@
                     <div class="kdg-meta__row">
                         <span class="kdg-meta__label">
                             <i class="bi bi-calendar-event" aria-hidden="true"></i>
-                            [[#{html.date.and.time}]]
+                            [[#{html.activity.start.date.time}]]
                         </span>
                         <span class="kdg-meta__value"
-                              th:text="${#temporals.format(group.activity.date, 'yyyy-MM-dd') + ' ' + group.activity.time}">
-                            2026-05-31 14:00
+                              th:text="${#temporals.format(group.activity.date, 'dd/MM/yyyy') + ' ' + #temporals.format(group.activity.time, 'HH:mm')}">
+                            31/05/2026 14:00
                         </span>
                     </div>
                     <div class="kdg-meta__row">

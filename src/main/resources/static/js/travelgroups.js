@@ -294,7 +294,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function buildSuggestionCard(s, labels) {
         const time = s.departureTime
-            ? new Date(s.departureTime).toLocaleString(pageLanguage, { dateStyle: "medium", timeStyle: "short" })
+            ? new Date(s.departureTime).toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            }).replace(",", "")
             : labels.notSetLabel || "-";
         const transport = s.transportMode
             ? transportLabel(s.transportMode, labels)

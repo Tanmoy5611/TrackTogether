@@ -330,8 +330,8 @@
                                     </dt>
                                     <dd class="kdg-meta__value travelgroup-meta-value-with-actions"
                                         th:with="calendarUrl=${@googleCalendarLinkService.buildTravelGroupCalendarUrl(group)}">
-                                        <span th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'MMM d, yyyy, h:mm a') : #messages.msg('html.departure.time.not.set')}">
-                                            Jun 8, 2026, 12:10 PM
+                                        <span th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'dd/MM/yyyy HH:mm') : #messages.msg('html.departure.time.not.set')}">
+                                            08/06/2026 12:10
                                         </span>
                                         <a class="google-calendar-icon-link google-calendar-icon-link--compact"
                                            th:if="${calendarUrl != null}"
@@ -604,8 +604,8 @@
                                         <span th:text="#{html.date.and.time}">Date &amp; time</span>
                                     </dt>
                                     <dd class="kdg-meta__value"
-                                        th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'MMM d, yyyy, h:mm a') : #messages.msg('html.departure.time.not.set')}">
-                                        Jun 8, 2026, 12:10 PM
+                                        th:text="${group.departureTime != null ? #temporals.format(group.departureTime, 'dd/MM/yyyy HH:mm') : #messages.msg('html.departure.time.not.set')}">
+                                        08/06/2026 12:10
                                     </dd>
                                 </div>
 
