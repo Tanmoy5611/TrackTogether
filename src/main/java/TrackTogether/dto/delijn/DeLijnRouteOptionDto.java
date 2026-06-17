@@ -85,42 +85,34 @@ public class DeLijnRouteOptionDto {
         this.arrivesBeforeRequestedTime = arrivesBeforeRequestedTime;
     }
 
-    // Returns the stop where the suggested De Lijn leg starts
     public DeLijnStopDto getOriginStop() {
         return originStop;
     }
 
-    // Returns the stop near the destination side of the route
     public DeLijnStopDto getDestinationStop() {
         return destinationStop;
     }
 
-    // Returns the departure time used for sorting and display
     public LocalDateTime getDepartureTime() {
         return departureTime;
     }
 
-    // Returns the route arrival time when the route planner provides it
     public LocalDateTime getArrivalTime() {
         return arrivalTime;
     }
 
-    // Returns the De Lijn line numbers involved in the option
     public List<String> getLineNumbers() {
         return lineNumbers;
     }
 
-    // Returns the normalized transport type, usually BUS or TRAM
     public String getTransportType() {
         return transportType;
     }
 
-    // Returns the destination direction shown on the bus/tram line
     public String getLineDestination() {
         return lineDestination;
     }
 
-    // Returns an explanatory note for fallback-generated route options
     public String getNote() {
         return note;
     }

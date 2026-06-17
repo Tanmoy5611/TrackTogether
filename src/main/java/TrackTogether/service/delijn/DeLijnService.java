@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -177,11 +176,6 @@ public class DeLijnService {
                     exception.getMessage()
             );
         }
-    }
-
-    // Gets real-time departures using the configured default maximum
-    public List<DeLijnDepartureDto> getRealtimeDepartures(String entityNumber, String stopNumber) {
-        return getRealtimeDepartures(entityNumber, stopNumber, properties.getMaxDepartures());
     }
 
     // Gets real-time departures for a specific De Lijn stop
@@ -414,8 +408,7 @@ public class DeLijnService {
         );
 
         return fetchJson(properties.getEndpoints().getStopDetails(), variables)
-                .map(this::parseStop)
-                .filter(Objects::nonNull);
+                .map(this::parseStop);
     }
 
     // Returns diagnostic information for one stop details request.
@@ -729,7 +722,7 @@ public class DeLijnService {
                                                                         Double destinationLongitude,
                                                                         String destinationLabel,
                                                                         LocalDateTime requestedDepartureTime,
-                                                                        LocalDateTime arriveBefore) {
+                                                                        @SuppressWarnings("unused") LocalDateTime arriveBefore) {
         List<DeLijnStopDto> originStops = candidateStops(originLatitude, originLongitude, originLabel);
         List<DeLijnStopDto> destinationStops = candidateStops(destinationLatitude, destinationLongitude, destinationLabel);
 
@@ -782,7 +775,7 @@ public class DeLijnService {
                                 ? "Scheduled departure for the TravelGroup date from a nearby De Lijn stop."
                                 : "Live departure from a nearby De Lijn stop.",
                         departure.getRealtimeDepartureTime() != null,
-                        arrivesBefore(null, arriveBefore)
+                        false
                 ));
             }
         }
@@ -1081,8 +1074,6 @@ public class DeLijnService {
 
         try {
             return parseStops(objectMapper.readTree(body)).size();
-        } catch (RuntimeException exception) {
-            return 0;
         } catch (Exception exception) {
             return 0;
         }
@@ -1096,8 +1087,6 @@ public class DeLijnService {
 
         try {
             return parseDepartures(objectMapper.readTree(body), fallbackEntityNumber, fallbackStopNumber).size();
-        } catch (RuntimeException exception) {
-            return 0;
         } catch (Exception exception) {
             return 0;
         }

@@ -43,37 +43,30 @@ public class DeLijnDepartureDto {
         this.cancelled = cancelled;
     }
 
-    // Returns the De Lijn entity number for the stop
     public String getEntityNumber() {
         return entityNumber;
     }
 
-    // Returns the De Lijn stop number
     public String getStopNumber() {
         return stopNumber;
     }
 
-    // Returns the bus or tram line number
     public String getLineNumber() {
         return lineNumber;
     }
 
-    // Returns the normalized transport type when available
     public String getTransportType() {
         return transportType;
     }
 
-    // Returns the line destination text
     public String getDestination() {
         return destination;
     }
 
-    // Returns the scheduled departure timestamp
     public LocalDateTime getScheduledDepartureTime() {
         return scheduledDepartureTime;
     }
 
-    // Returns the real-time departure timestamp when De Lijn provides it
     public LocalDateTime getRealtimeDepartureTime() {
         return realtimeDepartureTime;
     }
