@@ -2,6 +2,8 @@ package TrackTogether.controller;
 
 import TrackTogether.service.SuperAdminService;
 import TrackTogether.service.SystemSettingsService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,11 +22,14 @@ public class SuperAdminController {
 
     private final SuperAdminService superAdminService;
     private final SystemSettingsService systemSettingsService;
+    private final MessageSource messageSource;
 
     public SuperAdminController(SuperAdminService superAdminService,
-                                SystemSettingsService systemSettingsService) {
+                                SystemSettingsService systemSettingsService,
+                                MessageSource messageSource) {
         this.superAdminService = superAdminService;
         this.systemSettingsService = systemSettingsService;
+        this.messageSource = messageSource;
     }
 
     @GetMapping("/home")
@@ -51,7 +56,6 @@ public class SuperAdminController {
         return "allActivities";
     }
 
-    // Superadmin can change platform-wide settings from this page
     @GetMapping("/settings")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String systemSettings(Model model) {
@@ -63,15 +67,14 @@ public class SuperAdminController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public String updateTravelGroupApproval(@RequestParam(required = false) boolean enabled,
                                             RedirectAttributes redirectAttributes) {
-        // The checkbox sends the new value, then we show a small confirmation toast.
         systemSettingsService.updateTravelGroupJoinApproval(enabled);
 
         redirectAttributes.addFlashAttribute("toastType", "success");
         redirectAttributes.addFlashAttribute(
                 "toastMessage",
                 enabled
-                        ? "Travel group join approval is now enabled."
-                        : "Travel groups now use direct join."
+                        ? message("flash.settings.joinApprovalEnabled")
+                        : message("flash.settings.directJoinEnabled")
         );
 
         return "redirect:/super_admin/settings";
@@ -82,6 +85,11 @@ public class SuperAdminController {
     public String userManagement(@PathVariable UUID id, Model model){
 
         model.addAttribute("user",superAdminService.findByIdWithRole(id));
+        model.addAttribute("lastSuperAdmin", superAdminService.isLastSuperAdmin(id));
         return "userManagement";
+    }
+
+    private String message(String key, Object... arguments) {
+        return messageSource.getMessage(key, arguments, LocaleContextHolder.getLocale());
     }
 }
