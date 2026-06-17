@@ -53,47 +53,38 @@ public class TravelGroupRouteSuggestionsDto {
         return configured;
     }
 
-    // Returns the user-facing route suggestion status message
     public String getMessage() {
         return message;
     }
 
-    // Returns the origin label used for the route query
     public String getOriginLabel() {
         return originLabel;
     }
 
-    // Returns the origin latitude used for the route query
     public Double getOriginLatitude() {
         return originLatitude;
     }
 
-    // Returns the origin longitude used for the route query
     public Double getOriginLongitude() {
         return originLongitude;
     }
 
-    // Returns the destination label used for the route query
     public String getDestinationLabel() {
         return destinationLabel;
     }
 
-    // Returns the destination latitude used for the route query
     public Double getDestinationLatitude() {
         return destinationLatitude;
     }
 
-    // Returns the destination longitude used for the route query
     public Double getDestinationLongitude() {
         return destinationLongitude;
     }
 
-    // Returns text describing De Lijn transport coverage
     public String getTransitCoverage() {
         return transitCoverage;
     }
 
-    // Returns the suggested De Lijn route options
     public List<DeLijnRouteOptionDto> getOptions() {
         return options;
     }

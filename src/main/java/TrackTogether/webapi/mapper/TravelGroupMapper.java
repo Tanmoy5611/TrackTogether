@@ -21,9 +21,17 @@ public class TravelGroupMapper {
                 group.getGroupId(),
                 group.getMaxMembers(),
                 group.getLocation(),
+                group.getDepartureLocation(),
+                group.getDepartureLatitude(),
+                group.getDepartureLongitude(),
+                group.getArrivalLatitude(),
+                group.getArrivalLongitude(),
+                group.getDepartureTime(),
+                group.getEstimatedArrivalTime(),
                 group.getTransportMode(),
                 group.getOwner() != null ? group.getOwner().getUserId() : null,
                 group.getOwner() != null ? group.getOwner().getName() : null
         );
+
     }
 }
