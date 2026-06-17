@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${currentLanguage}"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>[[#{html.create.activity.2}]]</title>
+
+    <link rel="stylesheet"
+          th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
+    <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
+
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-full {
+            grid-column: span 2;
+        }
+
+        #map {
+            height: 300px;
+            border-radius: 12px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .kdg-panel--form {
+            padding: 2rem;
+        }
+
+        .kdg-form-actions {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .kdg-button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+        }
+
+        #suggestions {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            position: absolute;
+            z-index: 999;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #suggestions div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #suggestions div:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body class="kdg-page">
+
+<div class="kdg-shell">
+
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main">
+
+        <section class="kdg-page-header">
+            <h1 class="kdg-title">[[#{html.create.activity.2}]]</h1>
+            <p class="kdg-subtitle">[[#{html.fill.in.the.details.and.pick.a.location}]]</p>
+        </section>
+
+        <section class="kdg-panel kdg-panel--form">
+
+            <form th:action="@{/activities/new}"
+                  method="post"
+                  id="form"
+                  th:data-select-location-message="#{html.please.select.a.location}">
+
+                <div class="form-grid">
+
+                    <div>
+                        <label for="activityName" class="kdg-label">[[#{html.name}]]</label>
+                        <input type="text" id="activityName" name="name" class="kdg-control" required>
+                    </div>
+
+                    <div>
+                        <label for="date" class="kdg-label">[[#{html.date}]]</label>
+                        <input type="date" id="date" name="date" class="kdg-control" required>
+                    </div>
+
+                    <div>
+                        <label for="time" class="kdg-label">[[#{html.time}]]</label>
+                        <input type="time" id="time" name="time" class="kdg-control" required>
+                    </div>
+
+                    <!-- LOCATION -->
+                    <div class="form-full" style="position: relative;">
+                        <label for="location" class="kdg-label">[[#{html.location}]]</label>
+                        <input type="text"
+                               id="location"
+                               name="location"
+                               class="kdg-control"
+                               placeholder="Start typing an address..."
+                               required th:placeholder="#{html.start.typing.an.address}">
+
+                        <div id="suggestions"></div>
+                    </div>
+
+                    <input type="hidden" name="latitude" id="lat">
+                    <input type="hidden" name="longitude" id="lng">
+
+                    <div class="form-full">
+                        <div id="map"></div>
+                    </div>
+
+                    <div class="form-full">
+                        <label for="description" class="kdg-label">[[#{html.description}]]</label>
+                        <textarea id="description"
+                                  name="description"
+                                  class="kdg-control"
+                                  rows="4"
+                                  required></textarea>
+                    </div>
+
+                </div>
+
+                <div class="kdg-form-actions">
+                    <button class="kdg-button">[[#{html.create.activity.2}]]</button>
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+</div>
+
+<script th:src="@{/js/new-activity.js}"></script>
+</body>
+</html>

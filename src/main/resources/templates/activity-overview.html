@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${currentLanguage}"
+<html lang="en" th:lang="${currentLanguage}"
       xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -64,7 +64,10 @@
       </div>
 
       <!-- MAP -->
-      <div id="map" style="height:350px; margin-top:20px;"></div>
+      <div id="map"
+           style="height:350px; margin-top:20px;"
+           th:data-latitude="${activity.latitude}"
+           th:data-longitude="${activity.longitude}"></div>
 
       <div class="kdg-form-actions">
         <a th:href="@{/travelgroups/create(activityId=${activity.id})}" class="kdg-button">
@@ -244,12 +247,13 @@
                 </dt>
                 <dd class="kdg-meta__value travelgroup-meta-value-with-actions">
                   <span th:text="${group.departureLocation ?: group.location}">Antwerp Central</span>
-                  <span class="travelgroup-meta-actions" aria-label="Open departure in maps" th:aria-label="#{html.open.meeting.point.in.maps}">
+                  <span class="travelgroup-meta-actions" aria-label="Open departure in maps" th:aria-label="#{html.open.meeting.point.in.maps}"
+                        th:with="mapLocation=${group.departureLocation ?: group.location}">
                     <a class="travelgroup-map-link travelgroup-map-link--compact"
                        target="_blank"
                        rel="noopener"
                        href="https://www.google.com/maps"
-                       th:href="${'https://www.google.com/maps/search/?api=1&query=' + #uris.escapeQueryParam(group.departureLocation ?: group.location)}"
+                       th:href="${'https://www.google.com/maps/search/?api=1&query=' + #uris.escapeQueryParam(mapLocation)}"
                        title="Open in Google Maps"
                        aria-label="Open in Google Maps"
                        th:aria-label="#{html.open.in.google.maps}"
@@ -263,7 +267,7 @@
                        target="_blank"
                        rel="noopener"
                        href="https://maps.apple.com"
-                       th:href="${'https://maps.apple.com/?q=' + #uris.escapeQueryParam(group.departureLocation ?: group.location)}"
+                       th:href="${'https://maps.apple.com/?q=' + #uris.escapeQueryParam(mapLocation)}"
                        title="Open in Apple Maps"
                        aria-label="Open in Apple Maps"
                        th:aria-label="#{html.open.in.apple.maps}"
@@ -428,33 +432,7 @@
 
 </div>
 
-<!-- MAP SCRIPT -->
-<script th:inline="javascript">
-  /*<![CDATA[*/
-
-  let lat = /*[[${activity.latitude}]]*/ null;
-  let lng = /*[[${activity.longitude}]]*/ null;
-
-  document.addEventListener("DOMContentLoaded", function () {
-
-    // fallback if missing
-    if (lat == null || lng == null) {
-      lat = 51.0543;
-      lng = 3.7174;
-    }
-
-    const map = L.map('map').setView([lat, lng], 14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    L.marker([lat, lng]).addTo(map);
-
-  });
-
-  /*]]>*/
-</script>
+<script th:src="@{/js/activity-overview-map.js}"></script>
 <script defer th:src="@{/js/travelgroup-delete-modal.js}"></script>
 
 </body>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title>TrackTogether | Home</title>
+    <title>[[#{html.tracktogether.home}]]</title>
 </head>
 <body class="kdg-page">
 <div class="kdg-shell">
@@ -14,11 +14,11 @@
                 <div class="home-band__content">
                     <div class="home-band__meta">
                         <i class="bi bi-stars" aria-hidden="true"></i>
-                        <span>Today at a glance</span>
+                        <span>[[#{html.today.at.a.glance}]]</span>
                     </div>
-                    <h1 th:text="${homePage.welcomeTitle}">Good evening, welcome back.</h1>
+                    <h1 th:text="${homePage.welcomeTitle}">[[#{html.good.evening.welcome.back}]]</h1>
                     <p th:text="${homePage.welcomeSubtitle}">
-                        Keep an eye on your latest update, upcoming events, and practical suggestions for matching activities.
+                        [[#{html.keep.an.eye.on.your.latest.update.upcoming.events.and}]]
                     </p>
                 </div>
 
@@ -26,25 +26,25 @@
                     <div class="home-band__next">
                         <span class="home-band__next-label">
                             <i class="bi bi-compass" aria-hidden="true"></i>
-                            Next up
+                            [[#{html.next.up}]]
                         </span>
-                        <strong th:text="${homePage.latestHeadline}">Your dashboard is ready.</strong>
+                        <strong th:text="${homePage.latestHeadline}">[[#{html.your.dashboard.is.ready}]]</strong>
                         <span th:text="${homePage.latestMeta}">
-                            We will keep the most useful update for your next step right here.
+                            [[#{html.we.will.keep.the.most.useful.update.for.your.next}]]
                         </span>
                     </div>
-                    <div class="home-band__actions">
+                    <div class="home-band__actions" data-tutorial="home-quick-actions">
                         <a class="kdg-button"
                            th:href="${homePage.latestLink}"
                            href="/activities">
                             <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-                            <span th:text="${homePage.latestLinkLabel}">Open event</span>
+                            <span th:text="${homePage.latestLinkLabel}">[[#{html.open.event}]]</span>
                         </a>
                         <a class="kdg-button kdg-button--secondary kdg-button--subtle"
                            href="/travelgroups"
                            th:href="@{/travelgroups}">
                             <i class="bi bi-signpost-2" aria-hidden="true"></i>
-                            <span>Find a group</span>
+                            <span>[[#{html.find.a.group}]]</span>
                         </a>
                     </div>
                 </div>
@@ -54,28 +54,28 @@
                 <article class="home-panel home-stat">
                     <div class="home-stat__label">
                         <i class="bi bi-calendar2-week" aria-hidden="true"></i>
-                        <span>Upcoming</span>
+                        <span>[[#{html.upcoming}]]</span>
                     </div>
                     <div class="home-stat__value" th:text="${#lists.size(homePage.upcomingActivities)}">0</div>
-                    <div class="home-stat__hint">events currently in your dashboard</div>
+                    <div class="home-stat__hint">[[#{html.events.currently.in.your.dashboard}]]</div>
                 </article>
 
                 <article class="home-panel home-stat">
                     <div class="home-stat__label">
                         <i class="bi bi-signpost-2" aria-hidden="true"></i>
-                        <span>Travel Groups</span>
+                        <span>[[#{html.travel.groups.2}]]</span>
                     </div>
                     <div class="home-stat__value" th:text="${#lists.size(homePage.openTravelGroups)}">0</div>
-                    <div class="home-stat__hint">open groups you can explore today</div>
+                    <div class="home-stat__hint">[[#{html.open.groups.you.can.explore.today}]]</div>
                 </article>
 
                 <article class="home-panel home-stat">
                     <div class="home-stat__label">
                         <i class="bi bi-leaf" aria-hidden="true"></i>
-                        <span>CO2 Saved</span>
+                        <span>[[#{html.co2.saved}]]</span>
                     </div>
                     <div class="home-stat__value" th:text="${#numbers.formatDecimal(homePage.co2Saved, 1, 1)}">0.0</div>
-                    <div class="home-stat__hint">tracked on your member profile</div>
+                    <div class="home-stat__hint">[[#{html.tracked.on.your.member.profile}]]</div>
                 </article>
             </div>
         </section>
@@ -85,33 +85,33 @@
                 <i class="bi bi-bell" aria-hidden="true"></i>
             </div>
             <div>
-                <p class="home-alert__eyebrow">Latest</p>
-                <h2 class="home-alert__title" th:text="${homePage.latestHeadline}">Your dashboard is ready.</h2>
+                <p class="home-alert__eyebrow">[[#{html.latest}]]</p>
+                <h2 class="home-alert__title" th:text="${homePage.latestHeadline}">[[#{html.your.dashboard.is.ready}]]</h2>
                 <p class="home-alert__meta" th:text="${homePage.latestMeta}">
-                    We will keep the most useful update for your next step right here.
+                    [[#{html.we.will.keep.the.most.useful.update.for.your.next}]]
                 </p>
             </div>
             <a class="kdg-button kdg-button--secondary"
                th:href="${homePage.latestLink}"
                href="/activities">
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                <span th:text="${homePage.latestLinkLabel}">Open</span>
+                <span th:text="${homePage.latestLinkLabel}">[[#{html.open}]]</span>
             </a>
         </section>
 
         <section class="home-grid">
             <div class="home-column">
                 <article id="home-suggested-activities" class="home-panel">
-                    <div class="home-panel__header">
+                    <div class="home-panel__header" data-tutorial="home-upcoming-events">
                         <div>
-                            <p class="home-panel__eyebrow">Upcoming Events</p>
-                            <h2>Your next moments</h2>
-                            <p>Events ordered by date so the next thing you should care about is always on top.</p>
+                            <p class="home-panel__eyebrow">[[#{html.upcoming.events}]]</p>
+                            <h2>[[#{html.your.next.moments}]]</h2>
+                            <p>[[#{html.events.ordered.by.date.so.the.next.thing.you.should}]]</p>
                         </div>
                         <a class="kdg-button"
                            href="/activities">
                             <i class="bi bi-grid" aria-hidden="true"></i>
-                            <span>All Activities</span>
+                            <span>[[#{html.all.activities}]]</span>
                         </a>
                     </div>
 
@@ -124,9 +124,9 @@
                                 <i class="bi bi-calendar-event" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h3 class="home-item__title" th:text="${activity.name}">Event title</h3>
+                                <h3 class="home-item__title" th:text="${activity.name}">[[#{html.event.title}]]</h3>
                                 <p class="home-item__meta">
-                                    <span th:text="${activity.location}">Location</span>
+                                    <span th:text="${activity.location}">[[#{html.location}]]</span>
                                     <span>&middot;</span>
                                     <span th:text="${activity.date}">2026-04-28</span>
                                     <span>&middot;</span>
@@ -135,22 +135,22 @@
                             </div>
                             <span class="home-item__tag">
                                 <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-                                View
+                                [[#{html.view}]]
                             </span>
                         </a>
                     </div>
 
                     <div class="home-empty" th:if="${homePage.upcomingActivities == null or #lists.isEmpty(homePage.upcomingActivities)}">
-                        No upcoming events yet. Create or join an activity to start filling your schedule.
+                        [[#{html.no.upcoming.events.yet.create.or.join.an.activity.to}]]
                     </div>
                 </article>
 
                 <article class="home-panel">
-                    <div class="home-panel__header">
+                    <div class="home-panel__header" data-tutorial="home-suggested-activities">
                         <div>
-                            <p class="home-panel__eyebrow">Suggested Activities</p>
-                            <h2>Matched for you</h2>
-                            <p>We highlight activities that line up with your usual locations, timing, or simply what is coming up soon.</p>
+                            <p class="home-panel__eyebrow">[[#{html.suggested.activities}]]</p>
+                            <h2>[[#{html.matched.for.you}]]</h2>
+                            <p>[[#{html.we.highlight.activities.that.line.up.with.your.usual.locations}]]</p>
                         </div>
                     </div>
 
@@ -159,7 +159,7 @@
                              th:each="suggestion : ${homePage.suggestedActivities}">
                             <div class="home-suggestion__body">
                                 <div>
-                                    <h3 class="home-item__title" th:text="${suggestion.activity.name}">Suggested activity</h3>
+                                    <h3 class="home-item__title" th:text="${suggestion.activity.name}">[[#{html.suggested.activity}]]</h3>
                                     <p class="home-item__meta">
                                         <span th:text="${suggestion.activity.location}">Antwerp</span>
                                         <span>&middot;</span>
@@ -168,35 +168,35 @@
                                         <span th:text="${suggestion.activity.time}">18:30</span>
                                     </p>
                                 </div>
-                                <span class="home-item__tag" th:text="${suggestion.reason.label}">Same location</span>
+                                <span class="home-item__tag" th:text="${#messages.msg(suggestion.reason.messageKey)}">[[#{html.same.location}]]</span>
                             </div>
                             <a class="kdg-button kdg-button--secondary"
                                href="/activities"
                                th:href="@{/activities/{id}(id=${suggestion.activity.id})}">
                                 <i class="bi bi-eye" aria-hidden="true"></i>
-                                <span>See Activity</span>
+                                <span>[[#{html.see.activity}]]</span>
                             </a>
                         </div>
                     </div>
 
                     <div class="home-empty" th:if="${homePage.suggestedActivities == null or #lists.isEmpty(homePage.suggestedActivities)}">
-                        We do not have enough matching activity data yet, so for now we only show the next upcoming events.
+                        [[#{html.we.do.not.have.enough.matching.activity.data.yet.so}]]
                     </div>
                 </article>
             </div>
 
             <div class="home-column">
                 <article class="home-panel">
-                    <div class="home-panel__header">
+                    <div class="home-panel__header" data-tutorial="home-travel-buddies">
                         <div>
-                            <p class="home-panel__eyebrow">Travel Buddies</p>
-                            <h2>Travel groups worth checking</h2>
-                            <p>Personalized travel group matches ranked by route, timing, transport, and available spots.</p>
+                            <p class="home-panel__eyebrow">[[#{html.travel.buddies}]]</p>
+                            <h2>[[#{html.travel.groups.worth.checking}]]</h2>
+                            <p>[[#{html.personalized.travel.group.matches.ranked.by.route.timing.transport.and}]]</p>
                         </div>
                         <a class="kdg-button"
                            href="/travelgroups">
                             <i class="bi bi-people" aria-hidden="true"></i>
-                            <span>Travel Groups</span>
+                            <span>[[#{html.travel.groups.2}]]</span>
                         </a>
                     </div>
 
@@ -207,17 +207,17 @@
                                 <i class="bi bi-signpost-2" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h3 class="home-item__title" th:text="${suggestion.activityName}">Suggested group</h3>
+                                <h3 class="home-item__title" th:text="${suggestion.activityName}">[[#{html.suggested.group}]]</h3>
                                 <p class="home-item__meta">
-                                    <span th:text="${suggestion.departureLocation ?: 'Departure not set'}">Central Station</span>
+                                    <span th:text="${suggestion.departureLocation ?: #messages.msg('html.departure.not.set')}">Central Station</span>
                                     <span>&middot;</span>
-                                    <span th:text="${suggestion.departureTime != null ? #temporals.format(suggestion.departureTime, 'dd/MM HH:mm') : 'Time not set'}">08/06 12:10</span>
+                                    <span th:text="${suggestion.departureTime != null ? #temporals.format(suggestion.departureTime, 'dd/MM HH:mm') : #messages.msg('html.time.not.set')}">08/06 12:10</span>
                                     <span>&middot;</span>
-                                    <span th:text="${suggestion.availableSpots + ' spots'}">3 spots</span>
+                                    <span th:text="#{common.count.spots(${suggestion.availableSpots})}">3 spots</span>
                                 </p>
                                 <p class="home-item__meta" th:if="${suggestion.matchReasons != null and !#lists.isEmpty(suggestion.matchReasons)}">
                                     <span th:each="reason, iter : ${suggestion.matchReasons}">
-                                        <span th:text="${reason}">Same event</span><span th:if="${!iter.last}">, </span>
+                                        <span th:text="${reason}">[[#{html.same.event}]]</span><span th:if="${!iter.last}">, </span>
                                     </span>
                                 </p>
                             </div>
@@ -226,22 +226,22 @@
                                 <input type="hidden" name="redirectTo" value="/">
                                 <button type="submit" class="kdg-button kdg-button--success">
                                     <i class="bi bi-person-check" aria-hidden="true"></i>
-                                    <span>I'm going too</span>
+                                    <span>[[#{html.i.m.going.too}]]</span>
                                 </button>
                             </form>
                         </div>
                     </div>
 
                     <div class="home-empty" th:if="${homePage.suggestedTravelGroups == null or #lists.isEmpty(homePage.suggestedTravelGroups)}">
-                        No personalized travel group matches yet. Open groups will still appear on the travel groups page.
+                        [[#{html.no.personalized.travel.group.matches.yet.open.groups.will.still}]]
                     </div>
                 </article>
 
                 <article class="home-panel">
-                    <div class="home-panel__header">
+                    <div class="home-panel__header" data-tutorial="home-quick-insight">
                         <div>
-                            <p class="home-panel__eyebrow">Quick Insight</p>
-                            <h2>What looks relevant today</h2>
+                            <p class="home-panel__eyebrow">[[#{html.quick.insight}]]</p>
+                            <h2>[[#{html.what.looks.relevant.today}]]</h2>
                         </div>
                     </div>
 
@@ -251,10 +251,9 @@
                                 <i class="bi bi-geo-alt" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h3 class="home-item__title">Location matches</h3>
-                                <p class="home-item__meta">
-                                    <span th:text="${homePage.locationSuggestionCount}">0</span>
-                                    suggestions line up with places you already use.
+                                <h3 class="home-item__title">[[#{html.location.matches}]]</h3>
+                                <p class="home-item__meta" th:text="#{home.quick.locationSuggestions(${homePage.locationSuggestionCount})}">
+                                    0 suggestions line up with places you already use.
                                 </p>
                             </div>
                             <span class="home-item__tag">
@@ -268,10 +267,9 @@
                                 <i class="bi bi-clock-history" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h3 class="home-item__title">Time matches</h3>
-                                <p class="home-item__meta">
-                                    <span th:text="${homePage.timeSuggestionCount}">0</span>
-                                    activities happen around the same time as your existing plans.
+                                <h3 class="home-item__title">[[#{html.time.matches}]]</h3>
+                                <p class="home-item__meta" th:text="#{home.quick.timeSuggestions(${homePage.timeSuggestionCount})}">
+                                    0 activities happen around the same time as your existing plans.
                                 </p>
                             </div>
                             <span class="home-item__tag">
@@ -285,15 +283,15 @@
                                 <i class="bi bi-person-badge" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h3 class="home-item__title">Profile ready</h3>
+                                <h3 class="home-item__title">[[#{html.profile.ready}]]</h3>
                                 <p class="home-item__meta">
-                                    Your account is active and ready for joining activities and travel groups.
+                                    [[#{html.your.account.is.active.and.ready.for.joining.activities.and}]]
                                 </p>
                             </div>
                             <a class="kdg-button kdg-button--secondary"
                                href="/member/profile">
                                 <i class="bi bi-person" aria-hidden="true"></i>
-                                <span>Profile</span>
+                                <span>[[#{html.profile}]]</span>
                             </a>
                         </div>
                     </div>

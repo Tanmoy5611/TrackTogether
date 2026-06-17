@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title>TrackTogether | Travel smarter together</title>
+    <title>[[#{html.tracktogether.travel.smarter.together}]]</title>
 </head>
 <body class="landing-page">
 <div class="landing-shell">
@@ -10,12 +10,24 @@
         <a class="landing-brand" th:href="@{/}" href="/">
             <img th:src="@{/images/logo.png}" src="../static/images/logo.png" alt="TrackTogether">
         </a>
-        <nav class="landing-nav__links" aria-label="Landing navigation">
-            <a href="#features">Features</a>
-            <a href="#matching">Matching</a>
+        <nav class="landing-nav__links" aria-label="Landing navigation" th:aria-label="#{html.landing.navigation}">
+            <a href="#features">[[#{html.features}]]</a>
+            <a href="#matching">[[#{html.matching}]]</a>
+            <span class="tt-language-switch tt-language-switch--landing" th:aria-label="#{common.language}">
+                <a class="tt-language-switch__option"
+                   th:classappend="${currentLanguage == 'nl'} ? ' is-active'"
+                   th:href="@{/(lang='nl')}"
+                   href="/?lang=nl"
+                   th:text="#{common.dutch.short}">NL</a>
+                <a class="tt-language-switch__option"
+                   th:classappend="${currentLanguage == 'en'} ? ' is-active'"
+                   th:href="@{/(lang='en')}"
+                   href="/?lang=en"
+                   th:text="#{common.english.short}">EN</a>
+            </span>
             <a class="landing-nav__login" th:href="@{/oauth2/authorization/google}" href="/oauth2/authorization/google">
                 <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
-                <span>Log in</span>
+                <span>[[#{html.log.in}]]</span>
             </a>
         </nav>
     </header>
@@ -23,27 +35,26 @@
     <main>
         <section class="landing-hero">
             <div class="landing-hero__content">
-                <p class="landing-eyebrow">Route matching for campus life</p>
-                <h1>Find people going your way.</h1>
+                <p class="landing-eyebrow">[[#{html.route.matching.for.campus.life}]]</p>
+                <h1>[[#{html.find.people.going.your.way}]]</h1>
                 <p class="landing-hero__copy">
-                    TrackTogether helps students and colleagues join travel groups for activities,
-                    compare departure points, and choose transport that fits the trip.
+                    [[#{html.tracktogether.helps.students.and.colleagues.join.travel.groups.for.activities}]]
                 </p>
                 <div class="landing-actions">
                     <a class="landing-button landing-button--primary"
                        th:href="@{/oauth2/authorization/google}"
                        href="/oauth2/authorization/google">
                         <i class="bi bi-google" aria-hidden="true"></i>
-                        <span>Continue with Google</span>
+                        <span>[[#{html.continue.with.google}]]</span>
                     </a>
                     <a class="landing-button landing-button--secondary" href="#features">
                         <i class="bi bi-arrow-down" aria-hidden="true"></i>
-                        <span>See how it works</span>
+                        <span>[[#{html.see.how.it.works}]]</span>
                     </a>
                 </div>
             </div>
 
-            <div class="landing-route" aria-label="Travel group preview">
+            <div class="landing-route" aria-label="Travel group preview" th:aria-label="#{html.travel.group.preview}">
                 <div class="landing-route__map">
                     <span class="landing-route__pin landing-route__pin--start"></span>
                     <span class="landing-route__pin landing-route__pin--end"></span>
@@ -51,21 +62,21 @@
                 </div>
                 <div class="landing-route__panel">
                     <div>
-                        <span>Suggested group</span>
-                        <strong>Antwerp Central to Event Hall</strong>
+                        <span>[[#{html.suggested.group}]]</span>
+                        <strong>[[#{html.antwerp.central.to.event.hall}]]</strong>
                     </div>
                     <dl>
                         <div>
-                            <dt>Transport</dt>
-                            <dd>Public transport</dd>
+                            <dt>[[#{html.transport}]]</dt>
+                            <dd>[[#{html.public.transport}]]</dd>
                         </div>
                         <div>
-                            <dt>Leaves</dt>
+                            <dt>[[#{html.leaves}]]</dt>
                             <dd>12:10</dd>
                         </div>
                         <div>
-                            <dt>Match</dt>
-                            <dd>Same event, nearby start</dd>
+                            <dt>[[#{html.match}]]</dt>
+                            <dd>[[#{html.same.event.nearby.start}]]</dd>
                         </div>
                     </dl>
                 </div>
@@ -74,49 +85,48 @@
 
         <section id="features" class="landing-section">
             <div class="landing-section__heading">
-                <p class="landing-eyebrow">What changes after login</p>
-                <h2>Plan the route, not just the event.</h2>
+                <p class="landing-eyebrow">[[#{html.what.changes.after.login}]]</p>
+                <h2>[[#{html.plan.the.route.not.just.the.event}]]</h2>
             </div>
             <div class="landing-feature-grid">
                 <article>
                     <i class="bi bi-signpost-split" aria-hidden="true"></i>
-                    <h3>Travel groups</h3>
-                    <p>Create groups with departure locations, planned leave times, capacity, and transport mode.</p>
+                    <h3>[[#{html.travel.groups}]]</h3>
+                    <p>[[#{html.create.groups.with.departure.locations.planned.leave.times.capacity.and}]]</p>
                 </article>
                 <article>
                     <i class="bi bi-stars" aria-hidden="true"></i>
-                    <h3>Smart suggestions</h3>
-                    <p>See recommended travel friends on the homepage and activity detail pages.</p>
+                    <h3>[[#{html.smart.suggestions}]]</h3>
+                    <p>[[#{html.see.recommended.travel.friends.on.the.homepage.and.activity.detail}]]</p>
                 </article>
                 <article>
                     <i class="bi bi-person-check" aria-hidden="true"></i>
-                    <h3>One-click joining</h3>
-                    <p>Use “I’m going too” to join a matching group quickly when spots are available.</p>
+                    <h3>[[#{html.one.click.joining}]]</h3>
+                    <p>[[#{html.use.i.m.going.too.to.join.a.matching.group}]]</p>
                 </article>
                 <article class="landing-feature-card--delijn">
                     <span class="landing-feature-card__delijn-icon" aria-hidden="true">
                         <i class="bi bi-bus-front"></i>
                     </span>
-                    <h3>De Lijn routes</h3>
-                    <p>Get suggested public transport routes based on the group departure point and activity location.</p>
+                    <h3>[[#{html.de.lijn.routes}]]</h3>
+                    <p>[[#{html.get.suggested.public.transport.routes.based.on.the.group.departure}]]</p>
                 </article>
             </div>
         </section>
 
         <section id="matching" class="landing-band">
             <div>
-                <p class="landing-eyebrow">Matching signals</p>
-                <h2>Same event, compatible transport, close departure point.</h2>
+                <p class="landing-eyebrow">[[#{html.matching.signals}]]</p>
+                <h2>[[#{html.same.event.compatible.transport.close.departure.point}]]</h2>
                 <p>
-                    Suggestions are ranked by the activity you are attending, transport preference,
-                    route start, departure timing, and available seats.
+                    [[#{html.suggestions.are.ranked.by.the.activity.you.are.attending.transport}]]
                 </p>
             </div>
             <a class="landing-button landing-button--primary"
                th:href="@{/oauth2/authorization/google}"
                href="/oauth2/authorization/google">
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                <span>Start matching</span>
+                <span>[[#{html.start.matching}]]</span>
             </a>
         </section>
     </main>

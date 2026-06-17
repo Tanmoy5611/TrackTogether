@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>[[#{html.activities}]]</title>
+</head>
+
+<body class="kdg-page">
+
+<div class="kdg-shell">
+
+    <!-- NAV -->
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <!-- MAIN -->
+    <main class="kdg-main">
+
+        <!-- HEADER -->
+        <div class="kdg-page-header">
+            <div>
+                <p class="kdg-eyebrow">[[#{html.overview}]]</p>
+                <h1 class="kdg-title">[[#{html.my.activities}]]</h1>
+                <p class="kdg-subtitle">[[#{html.manage.and.view.your.activities}]]</p>
+            </div>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div th:if="${#lists.isEmpty(activities)}" class="kdg-empty">
+            <div class="kdg-empty__icon">📅</div>
+            <h2>[[#{html.no.activities.yet}]]</h2>
+            <p>[[#{html.create.your.first.activity.to.get.started}]]</p>
+        </div>
+
+        <!-- ACTIVITY LIST -->
+        <div th:if="${activities != null and !#lists.isEmpty(activities)}" class="kdg-grid">
+
+            <a th:each="activity : ${activities}"
+               th:href="@{/activities/{id}(id=${activity.id})}"
+               class="kdg-group-card">
+
+                <div class="kdg-group-card__body">
+
+                    <h2 th:text="${activity.name}">[[#{html.activity.name}]]</h2>
+                    <span th:if="${kdgActivityIds.contains(activity.id)}"
+                          class="badge text-bg-primary">
+                        [[#{html.kdg.activity}]]
+                    </span>
+                    <span th:if="${activity.verificationStatus != null and activity.verificationStatus.name() != 'APPROVED'}"
+                          th:class="${activity.verificationStatus.name() == 'DISAPPROVED' ? 'badge text-bg-danger' : 'badge text-bg-warning'}"
+                          th:text="${#messages.msg('activityVerificationStatus.' + activity.verificationStatus.name())}">
+                        PENDING
+                    </span>
+
+                    <div class="kdg-meta">
+
+                        <div class="kdg-meta__row">
+                            <span class="kdg-meta__label">[[#{html.description}]]</span>
+                            <span class="kdg-meta__value"
+                                  th:text="${activity.description}">
+                            </span>
+                        </div>
+
+                        <div class="kdg-meta__row">
+                            <span class="kdg-meta__label">[[#{html.location}]]</span>
+                            <span class="kdg-meta__value"
+                                  th:text="${activity.location}">
+                            </span>
+                        </div>
+
+                        <div class="kdg-meta__row">
+                            <span class="kdg-meta__label">[[#{html.date}]]</span>
+                            <span class="kdg-meta__value"
+                                  th:text="${activity.date}">
+                            </span>
+                        </div>
+
+                        <div class="kdg-meta__row">
+                            <span class="kdg-meta__label">[[#{html.time}]]</span>
+                            <span class="kdg-meta__value"
+                                  th:text="${activity.time}">
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="kdg-actions">
+                        <span class="kdg-button kdg-button--secondary">[[#{html.view}]]</span>
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <!-- CREATE BUTTON -->
+        <div class="kdg-actions" style="margin-top: 2rem; justify-content: center;">
+            <a href="/activities/new" class="kdg-button" data-tutorial="activities-create">
+                [[#{html.create.activity}]]
+            </a>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+
+</div>
+
+</body>
+</html>
