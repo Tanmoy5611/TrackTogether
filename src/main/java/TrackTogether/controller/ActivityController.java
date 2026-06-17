@@ -3,14 +3,13 @@ package TrackTogether.controller;
 import TrackTogether.domain.Activity;
 import TrackTogether.domain.Member;
 import TrackTogether.service.ActivityService;
-import TrackTogether.service.MemberService;
+import TrackTogether.service.FriendMatchingService;
 import TrackTogether.service.TravelGroupService;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -22,22 +21,23 @@ import java.util.UUID;
 public class ActivityController {
 
     private final ActivityService activityService;
-    private final MemberService memberService;
     private final TravelGroupService travelGroupService;
+    private final FriendMatchingService friendMatchingService;
 
     public ActivityController(ActivityService activityService,
-                              MemberService memberService,
-                              TravelGroupService travelGroupService) {
+                              TravelGroupService travelGroupService,
+                              FriendMatchingService friendMatchingService) {
         this.activityService = activityService;
-        this.memberService = memberService;
         this.travelGroupService = travelGroupService;
+        this.friendMatchingService = friendMatchingService;
     }
 
     @GetMapping
     public String getAllActivities(Model model) {
         List<Activity> activities = activityService.getAllActivities();
-        model.addAttribute("activities",
-                activities != null ? activities : List.of());
+        List<Activity> visibleActivities = activities != null ? activities : List.of();
+        model.addAttribute("activities", visibleActivities);
+        model.addAttribute("kdgActivityIds", activityService.getKdgActivityIds(visibleActivities));
         return "activities";
     }
 
@@ -56,8 +56,7 @@ public class ActivityController {
                                  @RequestParam String date,
                                  @RequestParam String time,
                                  @RequestParam(required = false) Double latitude,
-                                 @RequestParam(required = false) Double longitude,
-                                 Principal principal) {
+                                 @RequestParam(required = false) Double longitude) {
 
         Member member = (Member) model.getAttribute("currentUser");
 
@@ -79,11 +78,10 @@ public class ActivityController {
         activity.setDate(activityDate);
         activity.setTime(activityTime);
 
-        // CRUCIAL
         activity.setLatitude(latitude);
         activity.setLongitude(longitude);
 
-        activityService.createActivity(principal.getName(), activity);
+        activityService.createActivity(activity);
 
         return "redirect:/activities";
     }
@@ -94,6 +92,7 @@ public class ActivityController {
         var activityTravelGroups = travelGroupService.getTravelGroupsForActivity(id);
 
         model.addAttribute("activity", activity);
+        model.addAttribute("kdgActivity", activityService.isKdgActivity(activity));
         model.addAttribute("activityTravelGroups", activityTravelGroups);
         model.addAttribute("joinedGroupIds", travelGroupService.getJoinedGroupIds(activityTravelGroups));
         model.addAttribute("ownedGroupIds", travelGroupService.getOwnedGroupIds(activityTravelGroups));
@@ -104,6 +103,7 @@ public class ActivityController {
         model.addAttribute("pendingJoinRequestGroupIds", travelGroupService.getPendingJoinRequestGroupIds(activityTravelGroups));
         model.addAttribute("rejectedJoinRequestGroupIds", travelGroupService.getRejectedJoinRequestGroupIds(activityTravelGroups));
         model.addAttribute("pendingJoinRequestCounts", travelGroupService.getPendingJoinRequestCounts(activityTravelGroups));
+        model.addAttribute("suggestedTravelGroups", friendMatchingService.suggestTravelGroupsForCurrentUser(id, null));
         return "activity-overview";
     }
 
