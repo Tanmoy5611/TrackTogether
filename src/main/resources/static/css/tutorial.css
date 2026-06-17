@@ -1,0 +1,179 @@
+.kdg-nav__tutorial {
+    gap: 0.45rem;
+    border: 0;
+    border-left: 1px solid #202020;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.kdg-nav__tutorial i {
+    color: var(--kdg-yellow);
+    font-size: 1rem;
+}
+
+body.tutorial-active {
+    overscroll-behavior: none;
+}
+
+.tutorial-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: transparent;
+    cursor: default;
+}
+
+.tutorial-highlight {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1050;
+    border: 4px solid var(--kdg-yellow);
+    border-radius: 0.35rem;
+    background: rgba(255, 242, 0, 0.08);
+    box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.58),
+        0 1rem 2.25rem rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+    transition:
+        transform 0.24s ease,
+        width 0.24s ease,
+        height 0.24s ease,
+        border-radius 0.24s ease;
+}
+
+.tutorial-card {
+    position: fixed;
+    z-index: 1060;
+    width: min(27.5rem, calc(100vw - 2rem));
+    overflow: auto;
+    padding: 1.75rem;
+    border: 2px solid var(--kdg-border);
+    border-radius: 0.45rem;
+    background: var(--kdg-white);
+    box-shadow: 0 1.5rem 3.5rem rgba(0, 0, 0, 0.26);
+    color: var(--kdg-ink);
+    outline: none;
+    transition:
+        left 0.24s ease,
+        top 0.24s ease,
+        opacity 0.2s ease,
+        transform 0.24s ease;
+}
+
+.tutorial-card__close {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    border: 2px solid var(--kdg-border);
+    border-radius: 0.35rem;
+    background: var(--kdg-white);
+    color: #8a9094;
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.tutorial-card__close:hover,
+.tutorial-card__close:focus-visible {
+    border-color: var(--kdg-blue);
+    color: var(--kdg-blue);
+}
+
+.tutorial-card__step {
+    margin: 0 3rem 0.55rem 0;
+    color: var(--kdg-blue);
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.tutorial-card__title {
+    max-width: 18rem;
+    margin: 0;
+    color: var(--kdg-ink);
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.08;
+}
+
+.tutorial-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    margin: 1.3rem 0 1rem;
+    border-radius: 50%;
+    background: #e4f3f7;
+    color: var(--kdg-blue);
+    font-size: 1.25rem;
+}
+
+.tutorial-card__body {
+    margin: 0 0 1.6rem;
+    color: #3f4448;
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.tutorial-card__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.tutorial-card__button {
+    min-width: 9.5rem;
+    justify-content: center;
+    gap: 0.45rem;
+}
+
+.tutorial-card__button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.tutorial-card__skip {
+    display: block;
+    margin: 1.15rem auto 0;
+    border: 0;
+    background: transparent;
+    color: #656b70;
+    font: inherit;
+    font-weight: 900;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.tutorial-card__skip:hover,
+.tutorial-card__skip:focus-visible {
+    color: var(--kdg-blue);
+}
+
+@media (max-width: 48rem) {
+    .tutorial-card {
+        padding: 1.35rem;
+    }
+
+    .tutorial-card__title {
+        max-width: 14rem;
+        font-size: 1.55rem;
+    }
+
+    .tutorial-card__actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .tutorial-card__button {
+        width: 100%;
+    }
+}
