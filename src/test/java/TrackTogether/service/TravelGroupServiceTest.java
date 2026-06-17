@@ -13,6 +13,7 @@ import TrackTogether.domain.TravelGroupMember;
 import TrackTogether.repository.ActivityRepository;
 import TrackTogether.repository.ConversationRepository;
 import TrackTogether.repository.JoinRequestRepository;
+import TrackTogether.repository.MemberConversationRepository;
 import TrackTogether.repository.MemberRepository;
 import TrackTogether.repository.TravelGroupActivityLogRepository;
 import TrackTogether.repository.TravelGroupMemberRepository;
@@ -57,9 +58,14 @@ class TravelGroupServiceTest {
     private TravelGroupMemberRepository travelGroupMemberRepository;
 
     @Mock
+    @SuppressWarnings("unused")
+    private MemberConversationRepository memberConversationRepository;
+
+    @Mock
     private JoinRequestRepository joinRequestRepository;
 
     @Mock
+    @SuppressWarnings("unused")
     private TravelGroupActivityLogRepository travelGroupActivityLogRepository;
 
     @Mock
@@ -181,6 +187,31 @@ class TravelGroupServiceTest {
                 });
 
         // This proves a full locked group fails cleanly instead of overbooking the last seat.
+        verify(travelGroupRepository).findByIdForUpdate(groupId);
+        verify(travelGroupMemberRepository, never()).save(any(TravelGroupMember.class));
+    }
+
+    @Test
+    void joinTravelGroupDirectlyRejectsDuplicateMember() {
+        UUID groupId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb7");
+        Member owner = member("11111111-1111-1111-1111-111111111111");
+        Member joiningMember = member("22222222-2222-2222-2222-222222222222");
+        TravelGroup group = travelGroup(groupId, owner, 3);
+
+        when(systemSettingsService.isTravelGroupJoinApprovalEnabled()).thenReturn(false);
+        when(travelGroupRepository.findByIdForUpdate(groupId)).thenReturn(Optional.of(group));
+        when(activityPolicyService.isVisibleTo(group.getActivity(), joiningMember)).thenReturn(true);
+        when(currentUserService.getCurrentUser()).thenReturn(joiningMember);
+        when(travelGroupMemberRepository.existsByGroupAndMember(group, joiningMember)).thenReturn(true);
+
+        assertThatThrownBy(() -> travelGroupService.joinTravelGroup(groupId))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(exception -> {
+                    ResponseStatusException responseStatusException = (ResponseStatusException) exception;
+                    assertThat(responseStatusException.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(responseStatusException.getReason()).isEqualTo("Member already joined this travel group");
+                });
+
         verify(travelGroupRepository).findByIdForUpdate(groupId);
         verify(travelGroupMemberRepository, never()).save(any(TravelGroupMember.class));
     }
