@@ -14,6 +14,10 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID conversationId;
     private LocalDateTime createdAt;
+    private String title;
+
+    @Enumerated(EnumType.STRING)
+    private ConversationType type;
 
     @OneToOne(optional = true)
     @JoinColumn(name = "travel_group_id", unique = true)
@@ -58,6 +62,26 @@ public class Conversation {
         this.createdAt = createdAt;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public ConversationType getType() {
+        if (type != null) {
+            return type;
+        }
+
+        return travelGroup == null ? ConversationType.DIRECT : ConversationType.TRAVEL_GROUP;
+    }
+
+    public void setType(ConversationType type) {
+        this.type = type;
+    }
+
     public TravelGroup getTravelGroup() {
         return travelGroup;
     }
@@ -65,4 +89,21 @@ public class Conversation {
     public void setTravelGroup(TravelGroup travelGroup) {
         this.travelGroup = travelGroup;
     }
+
+    public List<MemberConversation> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<MemberConversation> members) {
+        this.members = members;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<Message> messages) {
+        this.messages = messages;
+    }
+
 }

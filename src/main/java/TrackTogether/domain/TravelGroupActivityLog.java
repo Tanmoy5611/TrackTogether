@@ -1,14 +1,21 @@
 package TrackTogether.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
 public class TravelGroupActivityLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Setter(AccessLevel.NONE)
     private Integer id;
 
     @ManyToOne(optional = false)
@@ -33,56 +40,4 @@ public class TravelGroupActivityLog {
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
-
-    public Integer getId() {
-        return id;
-    }
-
-    public TravelGroup getGroup() {
-        return group;
-    }
-
-    public void setGroup(TravelGroup group) {
-        this.group = group;
-    }
-
-    public Member getActor() {
-        return actor;
-    }
-
-    public void setActor(Member actor) {
-        this.actor = actor;
-    }
-
-    public Member getTargetMember() {
-        return targetMember;
-    }
-
-    public void setTargetMember(Member targetMember) {
-        this.targetMember = targetMember;
-    }
-
-    public JoinRequest getJoinRequest() {
-        return joinRequest;
-    }
-
-    public void setJoinRequest(JoinRequest joinRequest) {
-        this.joinRequest = joinRequest;
-    }
-
-    public TravelGroupActivityType getType() {
-        return type;
-    }
-
-    public void setType(TravelGroupActivityType type) {
-        this.type = type;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }
