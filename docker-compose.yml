@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:18.1-alpine
+    container_name: tracktogether-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: tracktogether
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5052:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  backend-1:
+    build: .
+    container_name: tracktogether-backend-1
+    restart: unless-stopped
+    profiles: ["production"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+        SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-production}
+        SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/tracktogether}
+        SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+        SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+        GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        DELIJN_API_KEY: ${DELIJN_API_KEY:-}
+        DELIJN_API_BASE_URL: ${DELIJN_API_BASE_URL:-https://api.delijn.be}
+        DELIJN_API_TIMEOUT: ${DELIJN_API_TIMEOUT:-3s}
+        DELIJN_API_NEARBY_STOPS_PATH: ${DELIJN_API_NEARBY_STOPS_PATH:-}
+        DELIJN_API_REALTIME_DEPARTURES_PATH: ${DELIJN_API_REALTIME_DEPARTURES_PATH:-/DLKernOpenData/api/v1/haltes/{entityNumber}/{stopNumber}/real-time?maxAantalDoorkomsten={maxDepartures}}
+        DELIJN_API_STOP_DETAILS_PATH: ${DELIJN_API_STOP_DETAILS_PATH:-/DLKernOpenData/api/v1/haltes/{entityNumber}/{stopNumber}}
+        DELIJN_API_ROUTE_OPTIONS_PATH: ${DELIJN_API_ROUTE_OPTIONS_PATH:-}
+    ports:
+      - "127.0.0.1:8080:80"
+  backend-2:
+    build: .
+    container_name: tracktogether-backend-2
+    restart: unless-stopped
+    profiles: ["production"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+        SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-production}
+        SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/tracktogether}
+        SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+        SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+        GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        DELIJN_API_KEY: ${DELIJN_API_KEY:-}
+        DELIJN_API_BASE_URL: ${DELIJN_API_BASE_URL:-https://api.delijn.be}
+        DELIJN_API_TIMEOUT: ${DELIJN_API_TIMEOUT:-3s}
+        DELIJN_API_NEARBY_STOPS_PATH: ${DELIJN_API_NEARBY_STOPS_PATH:-}
+        DELIJN_API_REALTIME_DEPARTURES_PATH: ${DELIJN_API_REALTIME_DEPARTURES_PATH:-/DLKernOpenData/api/v1/haltes/{entityNumber}/{stopNumber}/real-time?maxAantalDoorkomsten={maxDepartures}}
+        DELIJN_API_STOP_DETAILS_PATH: ${DELIJN_API_STOP_DETAILS_PATH:-/DLKernOpenData/api/v1/haltes/{entityNumber}/{stopNumber}}
+        DELIJN_API_ROUTE_OPTIONS_PATH: ${DELIJN_API_ROUTE_OPTIONS_PATH:-}
+    ports:
+      - "127.0.0.1:8081:80"
+volumes:
+  postgres_data:
