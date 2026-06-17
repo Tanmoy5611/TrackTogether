@@ -2,6 +2,8 @@ class TravelGroupMap {
     constructor(options) {
         this.mapElement = options.mapElement;
         this.locationInput = options.locationInput || null;
+        this.latitudeInput = options.latitudeInput || null;
+        this.longitudeInput = options.longitudeInput || null;
         this.activitySelect = options.activitySelect || null;
         this.activityLocationButton = options.activityLocationButton || null;
         this.departureTimeInput = options.departureTimeInput || null;
@@ -54,11 +56,11 @@ class TravelGroupMap {
             const lng = event.latlng.lng;
             const fallback = this.formatCoordinates(lat, lng);
 
-            this.setMarker(lat, lng, fallback, true);
+            this.setMarker(lat, lng, fallback, true, true);
 
             try {
                 const label = await this.reverseGeocode(lat, lng);
-                this.setMarker(lat, lng, label, true);
+                this.setMarker(lat, lng, label, true, true);
             } catch (error) {
                 this.locationInput.value = fallback;
             }
@@ -74,7 +76,7 @@ class TravelGroupMap {
             }
 
             this.searchTimeout = setTimeout(() => {
-                this.searchLocation(query).catch(() => {
+                this.searchLocation(query, false, true).catch(() => {
                     // Keep manual entry usable when geocoding is unavailable
                 });
             }, 450);
@@ -89,7 +91,7 @@ class TravelGroupMap {
             this.updateDepartureTimeLimit();
         } else if (this.locationInput.value.trim().length >= 3) {
             // On the edit page there is no activity selector, so start from the saved meeting point.
-            this.searchLocation(this.locationInput.value.trim(), true).catch(() => {
+                this.searchLocation(this.locationInput.value.trim(), true, true).catch(() => {
                 // Manual editing should still work if the map search is unavailable.
             });
         }
@@ -226,11 +228,12 @@ class TravelGroupMap {
             Number(option.dataset.latitude),
             Number(option.dataset.longitude),
             label,
+            shouldUpdateInput,
             shouldUpdateInput
         );
     }
 
-    setMarker(lat, lng, label, shouldUpdateInput) {
+    setMarker(lat, lng, label, shouldUpdateInput, shouldUpdateCoordinates = false) {
         const position = [lat, lng];
 
         if (this.marker) {
@@ -247,10 +250,24 @@ class TravelGroupMap {
             this.locationInput.value = label;
         }
 
+        if (shouldUpdateCoordinates) {
+            this.updateCoordinateInputs(lat, lng);
+        }
+
         this.map.setView(position, 15);
     }
 
-    async searchLocation(query, shouldUseAsLabel = false) {
+    updateCoordinateInputs(lat, lng) {
+        if (this.latitudeInput) {
+            this.latitudeInput.value = Number.isFinite(lat) ? lat : "";
+        }
+
+        if (this.longitudeInput) {
+            this.longitudeInput.value = Number.isFinite(lng) ? lng : "";
+        }
+    }
+
+    async searchLocation(query, shouldUseAsLabel = false, shouldUpdateCoordinates = false) {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
         );
@@ -264,7 +281,8 @@ class TravelGroupMap {
             Number(results[0].lat),
             Number(results[0].lon),
             shouldUseAsLabel ? query : results[0].display_name,
-            false
+            false,
+            shouldUpdateCoordinates
         );
     }
 
@@ -288,7 +306,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (createMapElement) {
         new TravelGroupMap({
             mapElement: createMapElement,
-            locationInput: document.getElementById("location"),
+            locationInput: document.getElementById("departureLocation"),
+            latitudeInput: document.getElementById("departureLatitude"),
+            longitudeInput: document.getElementById("departureLongitude"),
             activitySelect: document.getElementById("activityId"),
             activityLocationButton: document.getElementById("useActivityLocation"),
             departureTimeInput: document.getElementById("departureTime"),
