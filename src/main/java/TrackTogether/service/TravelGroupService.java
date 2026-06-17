@@ -410,6 +410,7 @@ public class TravelGroupService {
         // Every travel group gets its own chat conversation
         Conversation conversation = new Conversation();
         conversation.setTravelGroup(savedGroup);
+        conversation.setType(ConversationType.TRAVEL_GROUP);
         conversation.setCreatedAt(LocalDateTime.now());
 
         savedGroup.setConversation(conversation);
@@ -982,6 +983,7 @@ public class TravelGroupService {
             MemberConversation memberConversation = new MemberConversation();
             memberConversation.setConversation(conversation);
             memberConversation.setMember(member);
+            memberConversation.setRole(MemberConversationRole.MEMBER);
             memberConversationRepository.save(memberConversation);
         }
     }
