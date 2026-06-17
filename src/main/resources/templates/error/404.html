@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+<head>
+    <title>[[#{html.page.not.found}]]</title>
+</head>
+<body>
+
+<nav class="tt-language-switch" th:aria-label="#{common.language}">
+    <a class="tt-language-switch__option"
+       th:classappend="${currentLanguage == 'nl'} ? ' is-active'"
+       href="?lang=nl"
+       th:text="#{common.dutch.short}">NL</a>
+    <a class="tt-language-switch__option"
+       th:classappend="${currentLanguage == 'en'} ? ' is-active'"
+       href="?lang=en"
+       th:text="#{common.english.short}">EN</a>
+</nav>
+
+<h1>[[#{html.404.page.not.found}]]</h1>
+<p th:text="${message}"></p>
+
+<a href="/">[[#{html.back.to.home}]]</a>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${currentLanguage}" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <title>TrackTogether</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet"
@@ -12,7 +13,7 @@
     <div class="tt-footer__inner">
         <div>
             <strong>TrackTogether</strong>
-            <p>Plan activities, join travel groups, and keep conversations in one place.</p>
+            <p>[[#{html.plan.activities.join.travel.groups.and.keep.conversations.in.one}]]</p>
         </div>
 
         <p class="tt-footer__meta">&copy; 2026 - Team 6</p>

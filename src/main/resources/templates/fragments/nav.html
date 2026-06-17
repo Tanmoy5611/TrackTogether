@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${currentLanguage}" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TrackTogether</title>
     <link rel="stylesheet"
           href="../../static/css/main.css"
           th:href="@{/css/main.css}">
 </head>
 <body>
-<header th:fragment="appNav">
-    <nav class="kdg-nav" aria-label="Main navigation">
+<header th:fragment="appNav"
+        th:data-current-language="${currentLanguage}"
+        th:data-inactivity-timeout-millis="${inactivityLogoutTimeoutMillis}">
+    <nav class="kdg-nav" th:aria-label="#{nav.main}">
         <div class="kdg-nav__inner">
 
             <a class="kdg-brand"
@@ -25,7 +29,7 @@
                     type="button"
                     aria-expanded="false"
                     aria-controls="primary-navigation"
-                    aria-label="Toggle navigation">
+                    th:aria-label="#{nav.toggle}">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -38,64 +42,181 @@
                     <a class="kdg-nav__link"
                        data-nav-item="dashboard"
                        href="../superAdminDashboard.html"
-                       th:href="@{/super_admin/home}">
-                        Dashboard
+                       th:href="@{/admin/dashboard}">
+                        <span th:text="#{nav.dashboard}">[[#{html.admin.dashboard}]]</span>
                     </a>
                 </li>
 
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="home"
+                       data-tutorial="nav-home"
                        href="../index.html"
                        th:href="@{/}">
-                        Home
+                        <span th:text="#{nav.home}">[[#{html.home}]]</span>
                     </a>
                 </li>
 
-                <!-- ✅ ACTIVITIES ADDED HERE -->
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="activities"
+                       data-tutorial="nav-activities"
                        href="../activities.html"
                        th:href="@{/activities}">
-                        Activities
+                        <span th:text="#{nav.activities}">[[#{html.activities}]]</span>
                     </a>
                 </li>
 
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="travelgroups"
+                       data-tutorial="nav-travelgroups"
                        href="../travelgroups.html"
                        th:href="@{/travelgroups}">
-                        Travel Groups
+                        <span th:text="#{nav.travelGroups}">[[#{html.travel.groups.2}]]</span>
                     </a>
                 </li>
 
                 <li>
                     <a class="kdg-nav__link"
                        data-nav-item="chats"
+                       data-tutorial="nav-chats"
                        href="../chat-overview.html"
                        th:href="@{/chat}">
-                        Chats
+                        <span th:text="#{nav.chats}">[[#{html.chats}]]</span>
                     </a>
                 </li>
 
-                <li>
+                <li sec:authorize="hasRole('MODERATOR')">
                     <a class="kdg-nav__link"
                        data-nav-item="moderation"
                        href="../moderator.html"
                        th:href="@{/moderator}">
-                        Moderation
+                        <span th:text="#{nav.moderation}">[[#{html.moderation}]]</span>
                     </a>
                 </li>
 
-                <li>
-                    <a class="kdg-enrol"
-                       data-nav-item="profile"
-                       href="../userOverview.html"
-                       th:href="@{/member/profile}">
-                        Profile
-                    </a>
+                <li sec:authorize="isAuthenticated()">
+                    <button class="kdg-nav__link kdg-nav__tutorial"
+                            type="button"
+                            data-tutorial-start
+                            th:aria-label="#{nav.tutorial}">
+                        <i class="bi bi-question-circle" aria-hidden="true"></i>
+                        <span th:text="#{nav.tutorial}">Tutorial</span>
+                    </button>
+                </li>
+
+                <li class="tt-profile-menu">
+                    <div class="tt-profile-menu__bar">
+                        <div class="tt-notif-menu" sec:authorize="isAuthenticated()">
+                            <button class="tt-notif-bell"
+                                    id="notifBell"
+                                    type="button"
+                                    th:aria-label="#{nav.notifications}"
+                                    aria-expanded="false"
+                                    aria-controls="notifDropdown"
+                                    th:data-csrf="${_csrf.token}"
+                                    th:data-csrf-header="${_csrf.headerName}"
+                                    th:data-empty-label="#{nav.notifications.empty}"
+                                    th:data-just-now-label="#{nav.notifications.justNow}"
+                                    th:data-minutes-ago-template="#{nav.notifications.minutesAgo('__count__')}"
+                                    th:data-hours-ago-template="#{nav.notifications.hoursAgo('__count__')}">
+                                <i class="bi bi-bell" aria-hidden="true"></i>
+                                <span class="tt-notif-badge" id="notifBadge" hidden>0</span>
+                            </button>
+
+                            <div class="tt-notif-dropdown" id="notifDropdown" hidden>
+                                <div class="tt-notif-header">
+                                    <span th:text="#{nav.notifications.title}">[[#{html.notifications}]]</span>
+                                    <button class="tt-notif-read-all" id="notifReadAll" type="button">
+                                        <span th:text="#{nav.notifications.markAllRead}">[[#{html.mark.all.as.read}]]</span>
+                                    </button>
+                                </div>
+                                <ul class="tt-notif-list" id="notifList">
+                                    <li class="tt-notif-empty" th:text="#{nav.notifications.empty}">[[#{html.no.notifications.yet}]]</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <a class="kdg-nav__link"
+                           data-nav-item="profile"
+                           data-tutorial="nav-profile"
+                           href="../userOverview.html"
+                           th:href="@{/member/profile}">
+                            <span th:text="#{nav.profile}">[[#{html.profile}]]</span>
+                        </a>
+                    </div>
+
+                    <div class="tt-profile-card"
+                         sec:authorize="isAuthenticated()">
+
+                        <div class="tt-profile-card__top">
+                            <span class="tt-profile-card__email"
+                                  th:text="${#authentication.principal.attributes['name']}">
+                                <span th:text="#{nav.profile.fullName}">[[#{html.full.name}]]</span>
+                            </span>
+                        </div>
+
+                        <div class="tt-profile-card__avatar">
+                            <i class="bi bi-person-circle" aria-hidden="true"></i>
+                        </div>
+
+                        <p class="tt-profile-card__greeting">
+                            <span th:text="#{nav.profile.greeting}">[[#{html.hello}]]</span>
+                        </p>
+
+                        <div class="tt-profile-card__quick-links">
+                            <a class="tt-profile-card__quick-link"
+                               th:href="@{/member/profile}">
+                                <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                                <span th:text="#{nav.profile.manage}">[[#{html.manage.your.profile}]]</span>
+                            </a>
+
+                            <a class="tt-profile-card__quick-link"
+                               th:href="@{/analytics/me}">
+                                <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+                                <span th:text="#{nav.profile.analytics}">Personal analytics</span>
+                            </a>
+                        </div>
+
+                        <div class="tt-profile-card__language"
+                             th:aria-label="#{common.language}">
+                            <span class="tt-profile-card__language-label">
+                                <i class="bi bi-translate" aria-hidden="true"></i>
+                                <span th:text="#{common.language}">Language</span>
+                            </span>
+                            <div class="tt-profile-card__language-options">
+                                <a class="tt-profile-card__language-option"
+                                   th:classappend="${currentLanguage == 'nl'} ? ' is-active'"
+                                   th:href="@{${currentRequestUri}(lang='nl')}"
+                                   th:text="#{common.dutch.short}">
+                                    NL
+                                </a>
+                                <a class="tt-profile-card__language-option"
+                                   th:classappend="${currentLanguage == 'en'} ? ' is-active'"
+                                   th:href="@{${currentRequestUri}(lang='en')}"
+                                   th:text="#{common.english.short}">
+                                    EN
+                                </a>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/logout}"
+                              method="post"
+                              data-inactivity-logout-form
+                              class="tt-profile-card__logout-form">
+
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}" />
+
+                            <button type="submit"
+                                    class="tt-profile-card__logout">
+                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                                <span th:text="#{nav.profile.logout}">[[#{html.log.out}]]</span>
+                            </button>
+                        </form>
+                    </div>
                 </li>
 
             </ul>
@@ -115,13 +236,21 @@
                 <i class="bi"
                    th:classappend="${toastType == 'success'} ? ' bi-check-circle' : (${toastType == 'danger'} ? ' bi-exclamation-triangle' : ' bi-info-circle')"
                    aria-hidden="true"></i>
-                <span th:text="${toastMessage}">Request sent.</span>
+                <span th:text="${toastMessage}">[[#{html.request.sent.2}]]</span>
             </div>
         </div>
     </div>
 
     <script type="module"
             th:src="@{/js/main.js}">
+    </script>
+    <script type="module"
+            th:src="@{/js/inactivity-logout.js}"
+            sec:authorize="isAuthenticated()">
+    </script>
+    <script type="module"
+            th:src="@{/js/notifications.js}"
+            sec:authorize="isAuthenticated()">
     </script>
 </header>
 </body>

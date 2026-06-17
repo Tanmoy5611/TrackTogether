@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{html.login}">[[#{html.login}]]</title>
+</head>
+<body>
+<h1 th:text="#{html.login.with.google}">[[#{html.login.with.google}]]</h1>
+<nav class="tt-language-switch" th:aria-label="#{common.language}">
+    <a class="tt-language-switch__option"
+       th:classappend="${currentLanguage == 'nl'} ? ' is-active'"
+       href="?lang=nl"
+       th:text="#{common.dutch.short}">NL</a>
+    <a class="tt-language-switch__option"
+       th:classappend="${currentLanguage == 'en'} ? ' is-active'"
+       href="?lang=en"
+       th:text="#{common.english.short}">EN</a>
+</nav>
+<a href="/oauth2/authorization/google" th:text="#{html.login.with.google.2}">[[#{html.login.with.google.2}]]</a>
+
+</body>
+</html>

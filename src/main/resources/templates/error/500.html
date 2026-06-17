@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+<head>
+    <title>[[#{html.server.error}]]</title>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+
+</head>
+<body class="kdg-page">
+    <div class="kdg-shell">
+        <header th:replace="~{fragments/nav :: appNav}"></header>
+
+        <main class="kdg-main">
+            <h1>[[#{html.500.server.error}]]</h1>
+            <p th:text="${message}"></p>
+
+            <a th:href="@{/}" class="btn btn-primary">
+                [[#{html.back.to.home.2}]]
+            </a>
+        </main>
+        <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${currentLanguage}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>[[#{html.account.disabled}]]</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<main class="container py-5">
+    <section class="kdg-section">
+        <nav class="tt-language-switch mb-3" th:aria-label="#{common.language}">
+            <a class="tt-language-switch__option"
+               th:classappend="${currentLanguage == 'nl'} ? ' is-active'"
+               href="?lang=nl"
+               th:text="#{common.dutch.short}">NL</a>
+            <a class="tt-language-switch__option"
+               th:classappend="${currentLanguage == 'en'} ? ' is-active'"
+               href="?lang=en"
+               th:text="#{common.english.short}">EN</a>
+        </nav>
+
+        <div class="kdg-section__header">
+            <p class="kdg-eyebrow">[[#{html.account.disabled}]]</p>
+            <h1>[[#{html.you.cannot.access.tracktogether.right.now}]]</h1>
+            <p class="kdg-section__lead">
+                [[#{html.your.account.has.been.disabled.by.an.administrator.you.can}]]
+            </p>
+        </div>
+
+        <form th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="btn btn-primary">
+                [[#{html.log.out}]]
+            </button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
