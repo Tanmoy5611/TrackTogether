@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -244,20 +245,10 @@ public class TravelGroupController {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
 
-            String safeRedirect = safeInternalRedirect(redirectTo);
-            if (safeRedirect != null) {
-                return safeRedirect;
-            }
-
-            return "redirect:/travelgroups/" + groupId;
+            return Objects.requireNonNullElse(safeInternalRedirect(redirectTo), "redirect:/travelgroups/" + groupId);
         }
 
-        String safeRedirect = safeInternalRedirect(redirectTo);
-        if (safeRedirect != null) {
-            return safeRedirect;
-        }
-
-        return "redirect:/activities/" + activityId;
+        return Objects.requireNonNullElse(safeInternalRedirect(redirectTo), "redirect:/activities/" + activityId);
     }
 
     // Transfers group ownership from the current owner to another joined member
