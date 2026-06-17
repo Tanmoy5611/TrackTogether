@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${currentLanguage}">
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>[[#{html.moderator.dashboard.tracktogether}]]</title>
+</head>
+<body class="kdg-page"
+      th:data-is-admin="${#authorization.expression('hasRole(''ADMIN'')')}">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb" th:aria-label="#{html.breadcrumb}">
+            <a th:href="@{/}" href="/">
+                <i class="bi bi-house-door" aria-hidden="true"></i>
+                [[#{html.home}]]
+            </a>
+            <span>&gt;</span>
+            <span>[[#{html.moderator}]]</span>
+        </nav>
+
+        <section class="kdg-page-header">
+            <div>
+                <p class="kdg-eyebrow">TrackTogether</p>
+                <h1 class="kdg-title">[[#{html.moderator.dashboard}]]</h1>
+                <p class="kdg-subtitle">[[#{html.review.and.manage.user.reports.efficiently}]]</p>
+            </div>
+            <div class="kdg-actions">
+                <a class="kdg-button kdg-button--secondary" th:href="@{/super_admin/activities}">
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                    [[#{html.activity.verification}]]
+                </a>
+            </div>
+        </section>
+
+        <section class="kdg-grid" aria-label="Report status summary" th:aria-label="#{html.report.status.summary}">
+            <article class="kdg-panel" aria-live="polite">
+                <h2>[[#{html.open}]]</h2>
+                <p style="margin:0; font-size:2rem; font-weight:900;">
+                    <span id="cnt-open">&ndash;</span>
+                </p>
+            </article>
+            <article class="kdg-panel" aria-live="polite">
+                <h2>[[#{html.reviewed.2}]]</h2>
+                <p style="margin:0; font-size:2rem; font-weight:900;">
+                    <span id="cnt-reviewed">&ndash;</span>
+                </p>
+            </article>
+            <article class="kdg-panel" aria-live="polite">
+                <h2>[[#{html.resolved.2}]]</h2>
+                <p style="margin:0; font-size:2rem; font-weight:900;">
+                    <span id="cnt-resolved">&ndash;</span>
+                </p>
+            </article>
+            <article class="kdg-panel" aria-live="polite">
+                <h2>[[#{html.rejected.2}]]</h2>
+                <p style="margin:0; font-size:2rem; font-weight:900;">
+                    <span id="cnt-rejected">&ndash;</span>
+                </p>
+            </article>
+        </section>
+
+        <section class="kdg-panel" style="margin-top:1.5rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; padding-bottom:1rem; border-bottom:1px solid var(--kdg-border, #e5e7eb); margin-bottom:1rem;">
+                <button id="tab-btn-current" class="kdg-button" type="button">
+                    <i class="bi bi-list-ul" aria-hidden="true"></i>
+                    [[#{html.current.reports}]]
+                </button>
+                <button id="tab-btn-history" class="kdg-button" type="button">
+                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                    [[#{html.history}]]
+                </button>
+                <div id="tab-controls" style="margin-left:auto; display:flex; align-items:center; gap:0.5rem;">
+                    <label for="statusFilter" class="visually-hidden">[[#{html.filter.by.status}]]</label>
+                    <div style="position:relative; display:inline-flex; align-items:center;">
+                        <i class="bi bi-funnel-fill"
+                           style="position:absolute; left:0.75rem; z-index:1; color:var(--kdg-muted); pointer-events:none; font-size:0.85rem;"
+                           aria-hidden="true"></i>
+                        <select id="statusFilter"
+                                class="kdg-input"
+                                style="width:auto; min-width:14rem; padding-left:2.25rem; cursor:pointer;"
+                                th:aria-label="#{html.filter.by.status}">
+                            <option value="">[[#{html.all.statuses}]]</option>
+                            <option value="PENDING" selected>[[#{html.pending}]]</option>
+                            <option value="OPEN">[[#{html.open}]]</option>
+                            <option value="REVIEWED">[[#{html.reviewed.2}]]</option>
+                            <option value="RESOLVED">[[#{html.resolved.2}]]</option>
+                            <option value="REJECTED">[[#{html.rejected.2}]]</option>
+                        </select>
+                    </div>
+                    <button id="refreshReportsButton" class="kdg-button" type="button">
+                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                        [[#{html.refresh}]]
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-current" class="kdg-grid" aria-live="polite" aria-busy="true">
+                <div class="kdg-empty" style="grid-column: 1 / -1; text-align:center;">
+                    <span class="spinner-border" aria-hidden="true"></span>
+                    <p style="margin-top:0.75rem;">[[#{html.loading.reports}]]</p>
+                </div>
+            </div>
+
+            <div id="tab-history" style="display:none;" aria-live="polite">
+                <div style="text-align:center;">
+                    <span class="spinner-border" aria-hidden="true"></span>
+                    <p style="margin-top:0.75rem;">[[#{html.loading.history}]]</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+
+<div id="toast"
+     aria-live="polite"
+     style="position:fixed; bottom:1.75rem; right:1.5rem; z-index:1100; min-width:min(24rem, calc(100vw - 2rem));"></div>
+
+<!-- Assign-to-moderator modal (admin only) -->
+<div id="assign-modal"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="assign-modal-title"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:.75rem; padding:1.5rem; min-width:22rem; max-width:90vw; box-shadow:0 8px 32px rgba(0,0,0,.18);">
+        <h2 id="assign-modal-title" style="margin-top:0; font-size:1.15rem;">[[#{html.assign.report.to.a.moderator}]]</h2>
+        <label for="moderator-select" style="display:block; margin-bottom:.4rem; font-weight:500;">[[#{html.moderator}]]</label>
+        <select id="moderator-select" style="width:100%; margin-bottom:1.25rem; padding:.45rem .6rem; border:1px solid #d1d5db; border-radius:.4rem;">
+            <option value="">[[#{html.loading.moderators}]]</option>
+        </select>
+        <div style="display:flex; justify-content:flex-end; gap:.5rem;">
+            <button id="assign-cancel-btn" class="kdg-button kdg-button--secondary" type="button">[[#{html.cancel}]]</button>
+            <button id="assign-confirm-btn" class="kdg-button" type="button">
+                <i class="bi bi-person-check" aria-hidden="true"></i>
+                [[#{html.assign}]]
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module" th:src="@{/js/moderator.js}"></script>
+</body>
+</html>

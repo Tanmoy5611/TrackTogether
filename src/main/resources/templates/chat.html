@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+<head>
+    <meta charset="UTF-8">
+    <title>[[#{html.chat}]]</title>
+</head>
+<body>
+
+<div class="container">
+    <nav class="tt-language-switch" th:aria-label="#{common.language}">
+        <a class="tt-language-switch__option"
+           th:classappend="${currentLanguage == 'nl'} ? ' is-active'"
+           href="?lang=nl"
+           th:text="#{common.dutch.short}">NL</a>
+        <a class="tt-language-switch__option"
+           th:classappend="${currentLanguage == 'en'} ? ' is-active'"
+           href="?lang=en"
+           th:text="#{common.english.short}">EN</a>
+    </nav>
+
+    <h2>[[#{html.chat}]]</h2>
+
+    <div>
+        <div th:each="message : ${messages}">
+            <p>
+                <strong th:text="${message.sender.name}">[[#{html.sender}]]</strong>:
+                <span th:text="${message.message}">[[#{html.message}]] text</span>
+                <small th:text="${message.timeStamp}">[[#{html.time}]]</small>
+            </p>
+        </div>
+    </div>
+
+    <hr>
+
+    <form th:action="@{'/chat/' + ${conversationId} + '/send'}" method="post">
+        <div>
+            <label for="senderOriginalId">[[#{html.sender.original.id}]]</label>
+            <input type="text" id="senderOriginalId" name="senderOriginalId" placeholder="e.g. GOOGLE-1" required>
+        </div>
+
+        <div>
+            <label for="message">[[#{html.message.2}]]</label>
+            <input type="text" id="message" name="message" placeholder="Type message..." required th:placeholder="#{html.type.message}">
+        </div>
+
+        <button type="submit">[[#{html.send}]]</button>
+    </form>
+</div>
+
+</body>
+</html>

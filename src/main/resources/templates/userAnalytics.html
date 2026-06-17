@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+<head>
+    <title th:text="#{analytics.user.title}">My [[#{html.analytics}]]</title>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="kdg-page">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main analytics-page">
+        <div class="analytics-hero">
+            <div>
+                <p class="analytics-eyebrow" th:text="#{analytics.user.eyebrow}">Personal travel analytics</p>
+                <h1 th:text="#{analytics.user.heading}">My travel impact</h1>
+                <p th:text="#{analytics.user.subtitle}">
+                    A personal view of created trips, joined travel groups, transport choices, and estimated CO2 savings.
+                </p>
+            </div>
+        </div>
+
+        <section class="analytics-kpi-grid" aria-label="My analytics figures" data-tutorial="analytics-overview">
+            <article class="analytics-kpi analytics-kpi--primary">
+                <span class="analytics-kpi__label" th:text="#{analytics.user.kpi.savings}">Personal CO2 savings</span>
+                <strong><span th:text="${analytics.personalCo2SavingsKg}">0</span> [[#{common.kg}]]</strong>
+                <small th:text="#{analytics.user.kpi.savings.percent(${analytics.personalSavingsPercentage})}">
+                    0% below the car-alone baseline
+                </small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.user.kpi.created}">Trips created</span>
+                <strong th:text="${analytics.totalTripsCreated}">0</strong>
+                <small th:text="#{analytics.user.kpi.created.help}">[[#{html.activities}]] started by you</small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.user.kpi.joined}">Joined trips</span>
+                <strong th:text="${analytics.totalJoinedTrips}">0</strong>
+                <small th:text="#{analytics.user.kpi.joined.help}">[[#{html.travel.groups}]] you joined</small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.user.kpi.actual}">Actual emissions</span>
+                <strong><span th:text="${analytics.personalActualEmissionsKg}">0</span> [[#{common.kg}]]</strong>
+                <small th:text="#{analytics.user.kpi.baseline(${analytics.personalBaselineEmissionsKg})}">Baseline: 0 kg</small>
+            </article>
+        </section>
+
+        <section class="analytics-layout">
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.user.chart.title}">Baseline vs actual emissions</h2>
+                        <p th:text="#{analytics.user.chart.subtitle}">Your joined trips compared with the everyone-drives-alone scenario.</p>
+                    </div>
+                </div>
+                <div class="analytics-chart analytics-chart--compact">
+                    <canvas id="personalCo2Chart"></canvas>
+                </div>
+            </article>
+
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.user.transportMix.title}">My transport mix</h2>
+                        <p th:text="#{analytics.user.transportMix.subtitle}">[[#{html.participants}]] counted by the transport mode of the groups you joined.</p>
+                    </div>
+                </div>
+                <div class="analytics-mode-list">
+                    <div class="analytics-mode" th:each="mode : ${analytics.transportModeBreakdown}">
+                        <div>
+                            <span th:text="${mode.transportMode}">[[#{html.carpool}]]</span>
+                            <strong th:text="${mode.memberCount}">0</strong>
+                        </div>
+                        <div class="analytics-bar">
+                            <span th:style="|width: ${mode.memberCount == 0 ? 4 : mode.memberCount * 20}%|"></span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-formula-panel">
+            <div>
+                <p class="analytics-eyebrow" th:text="#{analytics.user.model.eyebrow}">CO2 calculation model</p>
+                <h2 th:text="#{analytics.user.model.title}">How my savings are calculated</h2>
+                <p th:text="#{analytics.user.model.subtitle}">
+                    Every joined travel group is compared with a baseline where you would have travelled alone by car.
+                </p>
+            </div>
+            <ul>
+                <li th:text="#{analytics.user.model.car}">[[#{html.car}]]: 0.120 kg CO2/km per person</li>
+                <li th:text="#{analytics.user.model.carpool}">[[#{html.carpool}]]: 0.120 kg CO2/km divided across passengers</li>
+                <li th:text="#{analytics.user.model.publicTransport}">[[#{html.public.transport}]]: 0.040 kg CO2/km per person</li>
+                <li th:text="#{analytics.user.model.bikeWalk}">[[#{html.bike}]]/walk: 0 kg CO2/km</li>
+                <li th:text="#{analytics.user.model.fallback}">Fallback distance: 10 km when no activity distance is set</li>
+                <li th:text="#{analytics.user.model.formula}">Personal CO2 savings = personal baseline emissions - personal actual emissions</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+
+<script id="userAnalyticsConfig" type="text/plain" th:inline="javascript">
+{
+    "personalBaseline": /*[[${analytics.personalBaselineEmissionsKg}]]*/ 0,
+    "personalActual": /*[[${analytics.personalActualEmissionsKg}]]*/ 0,
+    "i18n": {
+        "baseline": /*[[#{analytics.chart.baseline}]]*/ "Baseline emissions (kg)",
+        "actual": /*[[#{analytics.chart.actual}]]*/ "Actual emissions (kg)",
+        "co2Axis": /*[[#{analytics.chart.co2Axis}]]*/ "CO2 emissions (kg)"
+    }
+}
+</script>
+<script th:src="@{/js/user-analytics.js}"></script>
+</body>
+</html>

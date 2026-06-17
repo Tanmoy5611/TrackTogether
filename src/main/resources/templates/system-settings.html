@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:lang="${currentLanguage}">
 <head>
     <meta charset="UTF-8">
-    <title>System Settings</title>
+    <title>[[#{html.system.settings}]]</title>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
 </head>
 <body class="kdg-page">
@@ -11,21 +11,21 @@
     <header th:replace="~{fragments/nav :: appNav}"></header>
 
     <main class="kdg-main">
-        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb" th:aria-label="#{html.breadcrumb}">
             <a th:href="@{/}">
                 <i class="bi bi-house-door" aria-hidden="true"></i>
-                Home
+                [[#{html.home}]]
             </a>
             <span>&gt;</span>
-            <a th:href="@{/admin/dashboard}">Admin Dashboard</a>
+            <a th:href="@{/admin/dashboard}">[[#{html.admin.dashboard}]]</a>
             <span>&gt;</span>
-            <span>System Settings</span>
+            <span>[[#{html.system.settings}]]</span>
         </nav>
 
         <section class="kdg-page-header">
             <div>
-                <p class="kdg-eyebrow">Superadmin</p>
-                <h1 class="kdg-title">System Settings</h1>
+                <p class="kdg-eyebrow">[[#{html.superadmin}]]</p>
+                <h1 class="kdg-title">[[#{html.system.settings}]]</h1>
             </div>
         </section>
 
@@ -37,18 +37,17 @@
                 </div>
 
                 <div class="system-setting__body">
-                    <p class="kdg-eyebrow">Travel Groups</p>
-                    <h2>Require approval before joining</h2>
-                    <p>Turn this on when group owners should approve students before they join.</p>
+                    <p class="kdg-eyebrow">[[#{html.travel.groups.2}]]</p>
+                    <h2>[[#{html.require.approval.before.joining}]]</h2>
+                    <p>[[#{html.turn.this.on.when.group.owners.should.approve.students.before}]]</p>
 
                     <span class="system-setting__status"
                           th:classappend="${settings.travelGroupJoinApprovalEnabled} ? ' is-on' : ' is-off'">
                         <i class="bi"
                            th:classappend="${settings.travelGroupJoinApprovalEnabled} ? ' bi-check-circle' : ' bi-lightning-charge'"
                            aria-hidden="true"></i>
-                        <span th:text="${settings.travelGroupJoinApprovalEnabled ? 'Approval mode' : 'Direct join'}">
-                            Direct join
-                        </span>
+                        <span th:if="${settings.travelGroupJoinApprovalEnabled}" th:text="#{html.approval.mode}">Approval mode</span>
+                        <span th:unless="${settings.travelGroupJoinApprovalEnabled}" th:text="#{html.direct.join}">Direct join</span>
                     </span>
                 </div>
 
@@ -66,7 +65,8 @@
                         <span class="system-setting-toggle__track">
                             <span class="system-setting-toggle__thumb"></span>
                         </span>
-                        <span th:text="${settings.travelGroupJoinApprovalEnabled ? 'On' : 'Off'}">Off</span>
+                        <span th:if="${settings.travelGroupJoinApprovalEnabled}" th:text="#{html.on}">On</span>
+                        <span th:unless="${settings.travelGroupJoinApprovalEnabled}" th:text="#{html.off}">Off</span>
                     </button>
                 </form>
             </div>

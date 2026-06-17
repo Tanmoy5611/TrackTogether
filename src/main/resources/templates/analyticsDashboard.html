@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:lang="${currentLanguage}">
+<head>
+    <title th:text="#{analytics.admin.title}">[[#{html.analytics}]] [[#{html.dashboard}]]</title>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="kdg-page">
+<div class="kdg-shell">
+    <header th:replace="~{fragments/nav :: appNav}"></header>
+
+    <main class="kdg-main analytics-page">
+        <div class="analytics-hero">
+            <div>
+                <p class="analytics-eyebrow" th:text="#{analytics.admin.eyebrow}">[[#{html.admin}]] / superadmin reporting</p>
+                <h1 th:text="#{analytics.admin.heading}">[[#{html.analytics}]] dashboard</h1>
+                <p th:text="#{analytics.admin.subtitle}">
+                    Platform-wide travel behaviour, participation, peak times, and CO2 impact based on the dummy data.
+                </p>
+            </div>
+            <a class="kdg-button kdg-button--secondary" th:href="@{/analytics/me}">
+                <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                <span th:text="#{analytics.admin.viewMine}">[[#{html.view}]] my analytics</span>
+            </a>
+        </div>
+
+        <section class="analytics-kpi-grid analytics-kpi-grid--admin" th:aria-label="#{analytics.admin.kpi.main}">
+            <article class="analytics-kpi analytics-kpi--primary">
+                <span class="analytics-kpi__label" th:text="#{analytics.admin.kpi.savings}">Total CO2 saved</span>
+                <strong><span th:text="${dashboard.totalSavingsKg}">0</span> [[#{common.kg}]]</strong>
+                <small th:text="#{analytics.admin.kpi.savings.percent(${dashboard.savingsPercentage})}">
+                    0% lower than the car-alone baseline
+                </small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.admin.kpi.baseline}">Baseline emissions</span>
+                <strong><span th:text="${dashboard.totalBaselineEmissionsKg}">0</span> [[#{common.kg}]]</strong>
+                <small th:text="#{analytics.admin.kpi.baseline.help}">Every participant drives alone</small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.admin.kpi.actual}">Actual emissions</span>
+                <strong><span th:text="${dashboard.totalActualEmissionsKg}">0</span> [[#{common.kg}]]</strong>
+                <small th:text="#{analytics.admin.kpi.actual.help}">Based on selected transport modes</small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.admin.kpi.participants}">Grouped participants</span>
+                <strong th:text="${dashboard.totalParticipants}">0</strong>
+                <small th:text="#{analytics.admin.kpi.participants.help(${dashboard.totalTravelGroups})}">Across 0 travel groups</small>
+            </article>
+            <article class="analytics-kpi">
+                <span class="analytics-kpi__label" th:text="#{analytics.admin.kpi.groupSize}">Average group size</span>
+                <strong th:text="${dashboard.averageGroupSize}">0</strong>
+                <small th:text="#{analytics.admin.kpi.groupSize.help}">[[#{html.participants}]] per travel group</small>
+            </article>
+        </section>
+
+        <section class="analytics-layout analytics-layout--wide-chart">
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.admin.co2.title}">CO2 emissions through time</h2>
+                        <p th:text="#{analytics.admin.co2.subtitle}">Baseline emissions compared with actual travel group emissions.</p>
+                    </div>
+                    <select id="periodSelect" class="analytics-select" aria-label="Period" th:aria-label="#{analytics.admin.co2.period}">
+                        <option value="DAILY" th:text="#{analytics.period.daily}">Daily</option>
+                        <option value="MONTHLY" selected th:text="#{analytics.period.monthly}">Monthly</option>
+                        <option value="QUARTERLY" th:text="#{analytics.period.quarterly}">Quarterly</option>
+                    </select>
+                </div>
+                <div class="analytics-chart analytics-chart--line">
+                    <canvas id="co2Chart"></canvas>
+                </div>
+            </article>
+
+            <article class="analytics-panel analytics-panel--insight">
+                <h2 th:text="#{analytics.admin.transport.title}">[[#{html.transport}]] popularity</h2>
+                <div class="analytics-highlight">
+                    <span th:text="#{analytics.admin.transport.most}">Most used</span>
+                    <strong th:text="${dashboard.transportPopularity.mostPopularTransportMode}">[[#{html.carpool}]]</strong>
+                    <small th:text="#{analytics.admin.transport.count(${dashboard.transportPopularity.mostPopularTransportCount})}">
+                        0 participants
+                    </small>
+                </div>
+                <div class="analytics-highlight analytics-highlight--muted">
+                    <span th:text="#{analytics.admin.transport.least}">Least used</span>
+                    <strong th:text="${dashboard.transportPopularity.leastPopularTransportMode}">[[#{html.walk}]]</strong>
+                    <small th:text="#{analytics.admin.transport.count(${dashboard.transportPopularity.leastPopularTransportCount})}">
+                        0 participants
+                    </small>
+                </div>
+                <div class="analytics-chart analytics-chart--compact">
+                    <canvas id="transportChart"></canvas>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-layout">
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.admin.popularActivities.title}">[[#{html.most.popular.activities}]]</h2>
+                        <p th:text="#{analytics.admin.popularActivities.subtitle}">Ranked by travel group participants.</p>
+                    </div>
+                </div>
+                <div class="analytics-table-wrap">
+                    <table class="analytics-table">
+                        <thead>
+                        <tr>
+                            <th th:text="#{common.activity}">[[#{html.activity}]]</th>
+                            <th class="text-end" th:text="#{analytics.table.participants}">[[#{html.participants}]]</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="activity : ${dashboard.mostPopularActivities}">
+                            <td th:text="${activity.activityName}">[[#{html.activity}]]</td>
+                            <td class="text-end" th:text="${activity.participantCount}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.admin.peak.title}">Peak travel times</h2>
+                        <p th:text="#{analytics.admin.peak.subtitle}">[[#{html.travel.groups}]] grouped by the activity start time.</p>
+                    </div>
+                </div>
+                <div class="analytics-time-grid">
+                    <div class="analytics-time" th:each="bucket : ${dashboard.peakTravelTimes}">
+                        <span th:text="${bucket.timeBucket}">Evening</span>
+                        <strong th:text="${bucket.travelGroupCount}">0</strong>
+                        <div class="analytics-bar">
+                            <span th:style="|width: ${bucket.travelGroupCount == 0 ? 4 : bucket.travelGroupCount * 18}%|"></span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-layout">
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.admin.activitySavings.title}">CO2 savings per activity</h2>
+                        <p th:text="#{analytics.admin.activitySavings.subtitle}">Shows which events create the largest sustainability impact.</p>
+                    </div>
+                </div>
+                <div class="analytics-table-wrap">
+                    <table class="analytics-table">
+                        <thead>
+                        <tr>
+                            <th th:text="#{common.activity}">[[#{html.activity}]]</th>
+                            <th class="text-end" th:text="#{analytics.table.baselineKg}">Baseline kg</th>
+                            <th class="text-end" th:text="#{analytics.table.actualKg}">Actual kg</th>
+                            <th class="text-end" th:text="#{analytics.table.savedKg}">Saved kg</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="activity : ${dashboard.co2SavingsPerActivity}">
+                            <td th:text="${activity.activityName}">[[#{html.activity}]]</td>
+                            <td class="text-end" th:text="${activity.baselineEmissionsKg}">0</td>
+                            <td class="text-end" th:text="${activity.actualEmissionsKg}">0</td>
+                            <td class="text-end analytics-table__strong" th:text="${activity.savingsKg}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article class="analytics-panel">
+                <div class="analytics-panel__header">
+                    <div>
+                        <h2 th:text="#{analytics.admin.tripSavings.title}">Top travel group savings</h2>
+                        <p th:text="#{analytics.admin.tripSavings.subtitle}">[[#{html.the.highest.impact.trips.in.the.dummy.dataset}]]</p>
+                    </div>
+                </div>
+                <div class="analytics-table-wrap">
+                    <table class="analytics-table">
+                        <thead>
+                        <tr>
+                            <th th:text="#{common.activity}">[[#{html.activity}]]</th>
+                            <th th:text="#{common.transport}">[[#{html.transport}]]</th>
+                            <th class="text-end" th:text="#{common.members}">[[#{html.members}]]</th>
+                            <th class="text-end" th:text="#{analytics.table.savedKg}">Saved kg</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="trip : ${dashboard.co2SavingsPerTrip}">
+                            <td th:text="${trip.activityName}">[[#{html.activity}]]</td>
+                            <td th:text="${trip.transportMode}">[[#{html.carpool}]]</td>
+                            <td class="text-end" th:text="${trip.memberCount}">0</td>
+                            <td class="text-end analytics-table__strong" th:text="${trip.savingsKg}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-formula-panel">
+            <div>
+                <p class="analytics-eyebrow" th:text="#{analytics.admin.model.eyebrow}">CO2 calculation model</p>
+                <h2 th:text="#{analytics.admin.model.title}">Baseline vs actual emissions</h2>
+                <p th:text="#{analytics.admin.model.subtitle}">
+                    [[#{html.the.baseline.assumes.that.each.participant.travels.alone.by.car}]]
+                </p>
+            </div>
+            <ul>
+                <li th:text="#{analytics.admin.model.baseline}">Baseline emissions = distance x participants x 0.120 kg CO2/km</li>
+                <li th:text="#{analytics.admin.model.car}">[[#{html.car}]] actual emissions = distance x participants x 0.120 kg CO2/km</li>
+                <li th:text="#{analytics.admin.model.carpool}">[[#{html.carpool}]] actual emissions = distance x 0.120 kg CO2/km for the shared car</li>
+                <li th:text="#{analytics.admin.model.publicTransport}">[[#{html.public.transport}]] actual emissions = distance x participants x 0.040 kg CO2/km</li>
+                <li th:text="#{analytics.admin.model.bikeWalk}">[[#{html.bike}]] and walking actual emissions = 0 kg CO2/km</li>
+                <li th:text="#{analytics.admin.model.formula}">CO2 savings = baseline emissions - actual emissions</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</div>
+
+<script id="analyticsDashboardConfig" type="text/plain" th:inline="javascript">
+{
+    "i18n": {
+        "baseline": /*[[#{analytics.chart.baseline}]]*/ "Baseline emissions (kg)",
+        "actual": /*[[#{analytics.chart.actual}]]*/ "Actual emissions (kg)",
+        "co2Axis": /*[[#{analytics.chart.co2Axis}]]*/ "CO2 emissions (kg)",
+        "timeAxis": /*[[#{analytics.chart.timeAxis}]]*/ "Time",
+        "events": /*[[#{analytics.chart.events}]]*/ "Events",
+        "groupedUsers": /*[[#{analytics.chart.groupedUsers}]]*/ "Users in travel groups",
+        "savings": /*[[#{analytics.chart.savings}]]*/ "Savings",
+        "participants": /*[[#{analytics.table.participants}]]*/ "Participants"
+    },
+    "transportLabels": /*[[${dashboard.transportModeBreakdown.![transportMode]}]]*/ [],
+    "transportCounts": /*[[${dashboard.transportModeBreakdown.![memberCount]}]]*/ []
+}
+</script>
+<script th:src="@{/js/analytics-dashboard.js}"></script>
+</body>
+</html>

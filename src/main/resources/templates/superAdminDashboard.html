@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="en" >
+      th:lang="${currentLanguage}" >
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>[[#{html.dashboard}]]</title>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
 </head>
 <body class="kdg-page">
@@ -15,9 +15,9 @@
     <section class="kdg-card">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h1 class="h3 fw-bold mb-1">Admin Dashboard</h1>
+          <h1 class="h3 fw-bold mb-1">[[#{html.admin.dashboard}]]</h1>
           <p class="text-muted mb-0">
-            Manage activities, analytics, and reports from one place.
+            [[#{html.manage.activities.analytics.and.reports.from.one.place}]]
           </p>
         </div>
       </div>
@@ -31,8 +31,8 @@
               <i class="bi bi-people-fill"></i>
             </div>
             <div>
-              <h2>Users</h2>
-              <p>Manage users and roles</p>
+              <h2>[[#{html.users}]]</h2>
+              <p>[[#{html.manage.users.and.roles}]]</p>
             </div>
           </a>
         </div>
@@ -44,8 +44,8 @@
               <i class="bi bi-calendar-event-fill"></i>
             </div>
             <div>
-              <h2>Activities</h2>
-              <p>View platform activities</p>
+              <h2>[[#{html.activities}]]</h2>
+              <p>[[#{html.view.platform.activities}]]</p>
             </div>
           </a>
         </div>
@@ -57,8 +57,8 @@
               <i class="bi bi-bar-chart-fill"></i>
             </div>
             <div>
-              <h2>Analytics Reports</h2>
-              <p>View usage, travel modes, and CO2 savings</p>
+              <h2>[[#{html.analytics.reports}]]</h2>
+              <p>[[#{html.view.usage.travel.modes.and.co2.savings}]]</p>
             </div>
           </a>
         </div>
@@ -70,8 +70,8 @@
               <i class="bi bi-exclamation-triangle-fill"></i>
             </div>
             <div>
-              <h2>Moderation Reports</h2>
-              <p>Review reported content</p>
+              <h2>[[#{html.moderation.reports}]]</h2>
+              <p>[[#{html.review.reported.content}]]</p>
             </div>
           </a>
         </div>
@@ -83,8 +83,8 @@
               <i class="bi bi-sliders"></i>
             </div>
             <div>
-              <h2>System Settings</h2>
-              <p>Manage platform behavior</p>
+              <h2>[[#{html.system.settings}]]</h2>
+              <p>[[#{html.manage.platform.behavior}]]</p>
             </div>
           </a>
         </div>

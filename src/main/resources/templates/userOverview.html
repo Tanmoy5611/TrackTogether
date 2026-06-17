@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:lang="${currentLanguage}">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title th:text="|${user.name} - User Overview|">User Overview</title>
+    <title th:text="${#messages.msg('html.user.overview.title', user.name)}">User Overview</title>
 </head>
 
 <body class="kdg-page">
@@ -13,18 +13,18 @@
 
     <main class="kdg-main">
 
-        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
-            <a th:href="@{/}">Home</a>
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb" th:aria-label="#{html.breadcrumb}">
+            <a th:href="@{/}">[[#{html.home}]]</a>
             <span>/</span>
-            <span>Profile</span>
+            <span>[[#{html.profile}]]</span>
         </nav>
 
         <section class="kdg-page-header">
             <div>
-                <p class="kdg-eyebrow">User profile</p>
-                <h1 class="kdg-title" th:text="${user.name}">User Name</h1>
+                <p class="kdg-eyebrow">[[#{html.user.profile}]]</p>
+                <h1 class="kdg-title" th:text="${user.name}">User [[#{html.name}]]</h1>
                 <p class="kdg-subtitle">
-                    View your account details and update your travel preferences.
+                    [[#{html.view.your.account.details.and.update.your.travel.preferences}]]
                 </p>
             </div>
         </section>
@@ -34,46 +34,52 @@
             <section class="kdg-panel">
                 <div class="travelgroup-section-heading">
                     <div>
-                        <p class="kdg-eyebrow">Account details</p>
-                        <h2>Personal information</h2>
+                        <p class="kdg-eyebrow">[[#{html.account.details}]]</p>
+                        <h2>[[#{html.personal.information}]]</h2>
                     </div>
                 </div>
 
                 <div class="kdg-meta">
 
                     <div class="kdg-meta__row">
-                        <span class="kdg-meta__label">Name</span>
-                        <p class="kdg-meta__value" th:text="${user.name}">Name</p>
+                        <span class="kdg-meta__label">[[#{html.name}]]</span>
+                        <p class="kdg-meta__value" th:text="${user.name}">[[#{html.name}]]</p>
                     </div>
 
                     <div class="kdg-meta__row">
-                        <span class="kdg-meta__label">Email</span>
+                        <span class="kdg-meta__label">[[#{html.email}]]</span>
                         <p class="kdg-meta__value" th:text="${user.email}">email@example.com</p>
                     </div>
 
                     <div class="kdg-meta__row">
-                        <span class="kdg-meta__label">Status</span>
-                        <p class="kdg-meta__value" th:text="${user.status}">ACTIVE</p>
+                        <span class="kdg-meta__label">[[#{html.status}]]</span>
+                        <p class="kdg-meta__value"
+                           th:text="${user.status == true ? #messages.msg('html.active') : #messages.msg('html.inactive')}">
+                            ACTIVE
+                        </p>
                     </div>
 
                     <div class="kdg-meta__row">
-                        <span class="kdg-meta__label">User type</span>
-                        <p class="kdg-meta__value" th:text="${userType}">Member</p>
-                    </div>
-
-                    <div class="kdg-meta__row" th:if="${userType == 'Member'}">
-                        <span class="kdg-meta__label">Preferred transport mode</span>
+                        <span class="kdg-meta__label">[[#{html.user.type}]]</span>
                         <p class="kdg-meta__value"
-                           th:text="${user.preferredTransportMode ?: 'Not set'}">
-                            Not set
+                           th:text="${userType == 'Member' ? #messages.msg('html.member') : #messages.msg('html.super.admin')}">
+                            [[#{html.member}]]
                         </p>
                     </div>
 
                     <div class="kdg-meta__row" th:if="${userType == 'Member'}">
-                        <span class="kdg-meta__label">Default departure location</span>
+                        <span class="kdg-meta__label">[[#{html.preferred.transport.mode}]]</span>
                         <p class="kdg-meta__value"
-                           th:text="${user.defaultDepartureLocation ?: 'Not set'}">
-                            Not set
+                           th:text="${user.preferredTransportMode != null ? #messages.msg('transportMode.' + user.preferredTransportMode.name()) : #messages.msg('html.not.set')}">
+                            [[#{html.not.set}]]
+                        </p>
+                    </div>
+
+                    <div class="kdg-meta__row" th:if="${userType == 'Member'}">
+                        <span class="kdg-meta__label">[[#{html.default.departure.location}]]</span>
+                        <p class="kdg-meta__value"
+                           th:text="${user.defaultDepartureLocation ?: #messages.msg('html.not.set')}">
+                            [[#{html.not.set}]]
                         </p>
                     </div>
 
@@ -83,15 +89,15 @@
             <details class="profile-preferences"
                      th:if="${canEditTravelPreferences}">
 
-                <summary class="profile-preferences__summary">
-                    Change travel preferences
+                <summary class="profile-preferences__summary" data-tutorial="profile-preferences-summary">
+                    [[#{html.change.travel.preferences}]]
                 </summary>
 
                 <section class="kdg-panel kdg-panel--form profile-preferences__panel">
-                    <p class="kdg-eyebrow">Travel preferences</p>
-                    <h2>Default travel settings</h2>
+                    <p class="kdg-eyebrow">[[#{html.travel.preferences}]]</p>
+                    <h2>[[#{html.default.travel.settings}]]</h2>
                     <p class="kdg-subtitle">
-                        These preferences help TrackTogether suggest better travel groups and routes.
+                        [[#{html.these.preferences.help.tracktogether.suggest.better.travel.groups.and.routes}]]
                     </p>
 
                     <form class="kdg-form"
@@ -105,50 +111,52 @@
 
                         <div class="kdg-form-row">
                             <label class="kdg-label" for="preferredTransportMode">
-                                Preferred transport mode
+                                [[#{html.preferred.transport.mode}]]
                             </label>
 
                             <select class="kdg-control"
                                     id="preferredTransportMode"
                                     name="preferredTransportMode"
+                                    data-tutorial="profile-transport-mode"
                                     required>
                                 <option value=""
                                         disabled
                                         th:selected="${user.preferredTransportMode == null}">
-                                    Select a transport mode
+                                    [[#{html.select.a.transport.mode}]]
                                 </option>
 
                                 <option th:each="mode : ${transportModes}"
                                         th:value="${mode}"
                                         th:text="${mode}"
                                         th:selected="${mode == user.preferredTransportMode}">
-                                    Transport mode
+                                    [[#{html.transport.mode}]]
                                 </option>
                             </select>
 
                             <span class="kdg-help">
-                                Choose the transport option you use most often.
+                                [[#{html.choose.the.transport.option.you.use.most.often}]]
                             </span>
                         </div>
 
                         <div class="kdg-form-row">
                             <label class="kdg-label" for="defaultDepartureLocation">
-                                Default departure location
+                                [[#{html.default.departure.location}]]
                             </label>
 
                             <input class="kdg-control"
                                    id="defaultDepartureLocation"
                                    name="defaultDepartureLocation"
+                                   data-tutorial="profile-departure-location"
                                    type="text"
                                    list="departureLocationSuggestions"
                                    autocomplete="off"
                                    th:value="${user.defaultDepartureLocation}"
-                                   placeholder="Start typing a street or place...">
+                                   placeholder="Start typing a street or place..." th:placeholder="#{html.start.typing.a.street.or.place}">
 
                             <datalist id="departureLocationSuggestions"></datalist>
 
                             <span class="kdg-help">
-                                Optional. Start typing a street, station, campus, or place to save coordinates automatically.
+                                [[#{html.optional.start.typing.a.street.station.campus.or.place.to}]]
                             </span>
                         </div>
 
@@ -165,12 +173,12 @@
                         <div class="kdg-form-actions">
                             <a class="kdg-button kdg-button--secondary"
                                th:href="@{/member/profile}">
-                                Cancel
+                                [[#{html.cancel}]]
                             </a>
 
                             <button class="kdg-button"
                                     type="submit">
-                                Save travel preferences
+                                [[#{html.save.travel.preferences}]]
                             </button>
                         </div>
                     </form>
@@ -183,71 +191,6 @@
 
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const locationInput = document.getElementById("defaultDepartureLocation");
-        const latitudeInput = document.getElementById("defaultLatitude");
-        const longitudeInput = document.getElementById("defaultLongitude");
-        const suggestionsList = document.getElementById("departureLocationSuggestions");
-
-        let locationResults = [];
-        let searchTimeout;
-
-        if (locationInput) {
-            locationInput.addEventListener("input", function () {
-                const query = locationInput.value.trim();
-
-                clearTimeout(searchTimeout);
-
-                if (query.length < 1) {
-                    suggestionsList.innerHTML = "";
-                    locationResults = [];
-                    latitudeInput.value = "";
-                    longitudeInput.value = "";
-                    return;
-                }
-
-                searchTimeout = setTimeout(() => {
-                    fetchLocationSuggestions(query);
-                }, 350);
-            });
-
-            locationInput.addEventListener("change", function () {
-                const selectedLocation = locationResults.find(location =>
-                    location.display_name === locationInput.value
-                );
-
-                if (selectedLocation) {
-                    latitudeInput.value = selectedLocation.lat;
-                    longitudeInput.value = selectedLocation.lon;
-                }
-            });
-        }
-
-        async function fetchLocationSuggestions(query) {
-            try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=be&q=${encodeURIComponent(query)}`
-                );
-
-                if (!response.ok) {
-                    return;
-                }
-
-                locationResults = await response.json();
-                suggestionsList.innerHTML = "";
-
-                locationResults.forEach(location => {
-                    const option = document.createElement("option");
-                    option.value = location.display_name;
-                    suggestionsList.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Could not load location suggestions", error);
-            }
-        }
-    });
-</script>
-
+<script th:src="@{/js/user-overview.js}"></script>
 </body>
 </html>

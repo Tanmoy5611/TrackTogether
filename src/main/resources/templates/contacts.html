@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${currentLanguage}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
+    <title>[[#{html.contacts}]]</title>
+</head>
+
+<body>
+<header th:replace="~{fragments/nav :: appNav}"></header>
+
+<main class="container py-5">
+    <section class="mb-4">
+        <p class="text-uppercase text-muted fw-semibold mb-1">TrackTogether</p>
+        <h1 class="fw-bold mb-2">[[#{html.contacts}]]</h1>
+        <p class="text-muted mb-0">
+            [[#{html.choose.a.member.to.start.or.continue.a.conversation}]]
+        </p>
+    </section>
+
+    <section class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h2>[[#{html.members}]]</h2>
+        </div>
+
+        <div th:if="${#lists.isEmpty(members)}" class="chat-empty">
+            [[#{html.no.other.members.found}]]
+        </div>
+
+        <div th:if="${!#lists.isEmpty(members)}" class="chat-list">
+            <div th:each="member : ${members}" class="chat-list-item">
+                <div class="chat-avatar">
+                    <i class="bi bi-person"></i>
+                </div>
+
+                <div class="chat-list-content">
+                    <strong th:text="${member.name}">[[#{html.member.name}]]</strong>
+                    <span th:text="${member.email}">member@email.com</span>
+                </div>
+
+                <form th:action="@{/chat/start}" method="post">
+                    <input type="hidden" name="memberId" th:value="${member.userId}">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        [[#{html.start.chat}]]
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div class="mt-4">
+        <a th:href="@{/chat}" class="btn btn-secondary">[[#{html.back.to.chats}]]</a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: appFooter}"></footer>
+</body>
+</html>
