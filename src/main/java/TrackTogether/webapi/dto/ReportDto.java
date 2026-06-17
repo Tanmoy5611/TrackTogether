@@ -9,7 +9,7 @@ public record ReportDto(
         UUID reportId,
         String reason,
         LocalDate createdAt,
-        ReportStatus status
+        ReportStatus status,
+        String assignedModeratorName
 ) {
-
 }
