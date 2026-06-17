@@ -1,7 +1,6 @@
 package TrackTogether.webapi.dto;
 
 import TrackTogether.domain.TransportMode;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 // Request body for saving the logged-in member's travel preferences
@@ -10,7 +9,6 @@ public class MemberTravelPreferenceRequestDto {
     @NotNull
     private TransportMode preferredTransportMode;
 
-    @NotBlank
     private String defaultDepartureLocation;
 
     private Double defaultLatitude;

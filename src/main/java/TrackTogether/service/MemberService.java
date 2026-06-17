@@ -4,7 +4,6 @@ import TrackTogether.domain.Member;
 import TrackTogether.domain.TransportMode;
 import TrackTogether.exceptions.NotFoundException;
 import TrackTogether.repository.MemberRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,7 +18,6 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final CurrentUserService currentUserService;
 
-    @Autowired
     public MemberService(MemberRepository memberRepository,
                          CurrentUserService currentUserService) {
         this.memberRepository = memberRepository;
@@ -27,14 +25,15 @@ public class MemberService {
     }
 
     public Member findById(UUID id){
-        return memberRepository.findById(id).orElseThrow();
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
     }
 
     public Optional<Member> findByOriginalId(String id){
         return memberRepository.findByOriginalId(id);
     }
 
-    public Member findByOriginalIdNO(String id){
+    public Member findByOriginalIdOrThrow(String id){
         return memberRepository.findByOriginalId(id).orElseThrow(() -> NotFoundException.foUserOriginalId(id));
     }
 
@@ -46,12 +45,10 @@ public class MemberService {
         memberRepository.save(member);
     }
 
-    // Update travel preferences for the currently logged-in member
     public Member updateCurrentUserTravelPreferences(TransportMode preferredTransportMode,
                                                      String defaultDepartureLocation,
                                                      Double defaultLatitude,
                                                      Double defaultLongitude) {
-        // Always use the logged-in member so one user cannot edit another member
         Member member = currentUserService.getCurrentUser();
         return updateTravelPreferences(
                 member,
@@ -62,7 +59,6 @@ public class MemberService {
         );
     }
 
-    // Update travel preferences for a specific member
     public Member updateTravelPreferences(Member member,
                                           TransportMode preferredTransportMode,
                                           String defaultDepartureLocation,
@@ -72,12 +68,8 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preferred transport mode is required");
         }
 
-        String normalizedDepartureLocation = normalizeOptionalText(defaultDepartureLocation);
-        if (normalizedDepartureLocation == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Default departure location is required");
-        }
-
         validateCoordinates(defaultLatitude, defaultLongitude);
+        String normalizedDepartureLocation = normalizeOptionalText(defaultDepartureLocation);
 
         member.setPreferredTransportMode(preferredTransportMode);
         member.setDefaultDepartureLocation(normalizedDepartureLocation);
@@ -95,7 +87,6 @@ public class MemberService {
         return value.trim();
     }
 
-    // Validate coordinates
     private static void validateCoordinates(Double latitude, Double longitude) {
         if ((latitude == null) != (longitude == null)) {
             throw new ResponseStatusException(

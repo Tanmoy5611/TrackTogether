@@ -3,6 +3,8 @@ package TrackTogether.controller;
 import TrackTogether.domain.Member;
 import TrackTogether.domain.TransportMode;
 import TrackTogether.service.MemberService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,14 +20,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MemberController {
 
     private final MemberService memberService;
+    private final MessageSource messageSource;
 
-    public MemberController(MemberService memberService){
+    public MemberController(MemberService memberService,
+                            MessageSource messageSource){
         this.memberService = memberService;
+        this.messageSource = messageSource;
     }
 
     @GetMapping("/{id}")
     public String getMember(@PathVariable final String id, Model model){
-        model.addAttribute("user",memberService.findByOriginalIdNO(id));
+        model.addAttribute("user",memberService.findByOriginalIdOrThrow(id));
         model.addAttribute("userType","Member");
         model.addAttribute("canEditTravelPreferences", false);
         // Passing modes from Java keeps the Thymeleaf profile page simple
@@ -44,7 +49,6 @@ public class MemberController {
         return "userOverview";
     }
 
-    // Update travel preferences
     @PostMapping("/profile/travel-preferences")
     public String updateTravelPreferences(@RequestParam TransportMode preferredTransportMode,
                                           @RequestParam String defaultDepartureLocation,
@@ -52,7 +56,6 @@ public class MemberController {
                                           @RequestParam(required = false) Double defaultLongitude,
                                           RedirectAttributes redirectAttributes) {
         try {
-            // The profile form only updates the logged-in member
             memberService.updateCurrentUserTravelPreferences(
                     preferredTransportMode,
                     defaultDepartureLocation,
@@ -60,12 +63,16 @@ public class MemberController {
                     defaultLongitude
             );
             redirectAttributes.addFlashAttribute("toastType", "success");
-            redirectAttributes.addFlashAttribute("toastMessage", "Travel preferences saved.");
+            redirectAttributes.addFlashAttribute("toastMessage", message("flash.member.travelPreferencesSaved"));
         } catch (ResponseStatusException exception) {
             redirectAttributes.addFlashAttribute("toastType", "info");
             redirectAttributes.addFlashAttribute("toastMessage", exception.getReason());
         }
 
         return "redirect:/member/profile";
+    }
+
+    private String message(String key, Object... arguments) {
+        return messageSource.getMessage(key, arguments, LocaleContextHolder.getLocale());
     }
 }

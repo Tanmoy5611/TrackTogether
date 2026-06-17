@@ -31,7 +31,7 @@ public class MemberApiController {
 
     @GetMapping("/{originalId}")
     public Member getMemberByOriginalId(@PathVariable String originalId) {
-        return memberService.findByOriginalIdNO(originalId);
+        return memberService.findByOriginalIdOrThrow(originalId);
     }
 
     @PutMapping("/me/travel-preferences")
