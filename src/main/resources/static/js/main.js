@@ -1,6 +1,9 @@
+import { initTutorial } from "./tutorial.js";
+
 document.addEventListener("DOMContentLoaded", () => {
     initNavigation();
     showFlashToast();
+    initTutorial();
 });
 
 function initNavigation() {
@@ -151,3 +154,27 @@ function matchesAny(path, prefixes) {
         file === prefix
     );
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const flashToast = document.getElementById("flashToast");
+
+    if (!flashToast) {
+        return;
+    }
+
+    setTimeout(() => {
+        flashToast.style.transition = "opacity 0.35s ease, transform 0.35s ease";
+        flashToast.style.opacity = "0";
+        flashToast.style.transform = "translateY(-0.5rem)";
+
+        setTimeout(() => {
+            const toastContainer = flashToast.closest(".toast-container");
+
+            if (toastContainer) {
+                toastContainer.remove();
+            } else {
+                flashToast.remove();
+            }
+        }, 400);
+    }, 3000);
+});
