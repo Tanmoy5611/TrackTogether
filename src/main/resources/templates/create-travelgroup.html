@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en"
+<html lang="en" th:lang="${currentLanguage}"
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/style :: appStyles}"></th:block>
-    <title th:text="#{travelgroup.create.title}">Create Travel Group</title>
+    <title th:text="#{travelgroup.create.title}">[[#{html.create.travel.group}]]</title>
     <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}">
+    <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
 </head>
 <body class="kdg-page">
 
@@ -15,20 +15,20 @@
     <header th:replace="~{fragments/nav :: appNav}"></header>
 
     <main class="kdg-main">
-        <nav class="kdg-breadcrumb" aria-label="Breadcrumb">
+        <nav class="kdg-breadcrumb" aria-label="Breadcrumb" th:aria-label="#{html.breadcrumb}">
             <a href="index.html"
                th:href="@{/}">
                 <i class="bi bi-house-door" aria-hidden="true"></i>
-                Home
+                [[#{html.home}]]
             </a>
             <span>&gt;</span>
             <a href="travelgroups.html"
                th:href="@{/travelgroups}">
                 <i class="bi bi-people" aria-hidden="true"></i>
-                Travel Groups
+                [[#{html.travel.groups.2}]]
             </a>
             <span>&gt;</span>
-            <span th:text="#{travelgroup.create.heading}">Create Travel Group</span>
+            <span th:text="#{travelgroup.create.heading}">[[#{html.create.travel.group}]]</span>
         </nav>
 
         <section class="kdg-page-header">
@@ -36,11 +36,11 @@
                 <p class="kdg-eyebrow">TrackTogether</p>
                 <h1 class="kdg-title"
                     th:text="#{travelgroup.create.heading}">
-                    Create Travel Group
+                    [[#{html.create.travel.group}]]
                 </h1>
                 <p class="kdg-subtitle"
                    th:text="#{travelgroup.create.subtitle}">
-                    Fill in the details to create a new travel group.
+                    [[#{html.fill.in.the.details.to.create.a.new.travel.group}]]
                 </p>
             </div>
         </section>
@@ -57,14 +57,14 @@
                     <i class="bi bi-exclamation-triangle kdg-empty__icon" aria-hidden="true"></i>
                     <p th:each="error : ${#fields.globalErrors()}"
                        th:text="${error.defaultMessage}">
-                        Please check the travel group details.
+                        [[#{html.please.check.the.travel.group.details}]]
                     </p>
                 </div>
 
                 <div class="kdg-form-row">
                     <label for="activityId" class="kdg-label">
                         <i class="bi bi-calendar-event" aria-hidden="true"></i>
-                        <span>Select Activity</span>
+                        <span>[[#{html.select.activity}]]</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-list-ul" aria-hidden="true"></i>
@@ -74,7 +74,7 @@
                                 class="kdg-control"
                                 th:errorclass="is-invalid"
                                 required>
-                            <option value="" disabled selected>Select an activity</option>
+                            <option value="" disabled selected>[[#{html.select.an.activity}]]</option>
                             <option th:each="activity : ${activities}"
                                     th:value="${activity.id}"
                                     th:data-location="${activity.location}"
@@ -82,26 +82,26 @@
                                     th:data-longitude="${activity.longitude}"
                                     th:data-departure-limit="${activityDepartureLimits[activity.id]}"
                                     th:text="${activity.name + ' - ' + activity.date + ' - ' + activity.location}">
-                                Activity option
+                                [[#{html.activity.option}]]
                             </option>
                         </select>
                     </div>
                     <div class="kdg-help" th:if="${selectedActivity != null}">
-                        Creating a travel group for the selected activity.
+                        [[#{html.creating.a.travel.group.for.the.selected.activity}]]
                     </div>
                     <div class="kdg-help" th:if="${selectedActivity == null}">
-                        Choose the activity this travel group belongs to.
+                        [[#{html.choose.the.activity.this.travel.group.belongs.to}]]
                     </div>
                     <div class="invalid-feedback"
                          th:text="#{travelgroup.form.activityId.invalid}">
-                        Please enter a valid activity id.
+                        [[#{html.please.enter.a.valid.activity.id}]]
                     </div>
                 </div>
 
                 <div class="kdg-form-row">
                     <label for="maxMembers" class="kdg-label">
                         <i class="bi bi-people" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.maxMembers}">Maximum Members</span>
+                        <span th:text="#{travelgroup.form.maxMembers}">[[#{html.maximum.members}]]</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-person-plus" aria-hidden="true"></i>
@@ -113,40 +113,42 @@
                                th:errorclass="is-invalid"
                                min="1"
                                placeholder="Enter maximum number of members"
-                               required>
+                               required th:placeholder="#{html.enter.maximum.number.of.members}">
                     </div>
                     <div class="invalid-feedback"
                          th:text="#{travelgroup.form.maxMembers.invalid}">
-                        Please enter a valid number greater than 0.
+                        [[#{html.please.enter.a.valid.number.greater.than.0}]]
                     </div>
                 </div>
 
                 <div class="kdg-form-row">
-                    <label for="location" class="kdg-label">
+                    <label for="departureLocation" class="kdg-label">
                         <i class="bi bi-geo-alt" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.location}">Location</span>
+                        <span>[[#{html.departure.location}]]</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-pin-map" aria-hidden="true"></i>
                         <input type="text"
-                               id="location"
-                               name="location"
-                               th:field="*{location}"
+                               id="departureLocation"
+                               name="departureLocation"
+                               th:field="*{departureLocation}"
                                class="kdg-control"
                                th:errorclass="is-invalid"
-                               placeholder="Enter meeting location"
-                               required>
+                               placeholder="Enter where this group starts"
+                               required th:placeholder="#{html.enter.where.this.group.starts}">
                     </div>
+                    <input type="hidden" id="departureLatitude" th:field="*{departureLatitude}">
+                    <input type="hidden" id="departureLongitude" th:field="*{departureLongitude}">
                     <div class="invalid-feedback"
                          th:text="#{travelgroup.form.location.invalid}">
-                        Please enter a location.
+                        [[#{html.please.enter.a.departure.location}]]
                     </div>
                 </div>
 
                 <div class="kdg-form-row">
                     <label for="departureTime" class="kdg-label">
                         <i class="bi bi-clock" aria-hidden="true"></i>
-                        <span>Planned Departure Time</span>
+                        <span>[[#{html.planned.departure.time}]]</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-calendar2-check" aria-hidden="true"></i>
@@ -161,16 +163,42 @@
                                required>
                     </div>
                     <div class="kdg-help" id="departureTimeHelp">
-                        Choose a departure time from now until the selected activity starts.
+                        [[#{html.choose.a.departure.time.from.now.until.the.selected.activity}]]
                     </div>
                     <div class="invalid-feedback"
                          th:if="${#fields.hasErrors('departureTime')}"
                          th:errors="*{departureTime}">
-                        Please choose a planned departure time within the activity range.
+                        [[#{html.please.choose.a.planned.departure.time.within.the.activity.range}]]
                     </div>
                     <div class="invalid-feedback"
                          th:unless="${#fields.hasErrors('departureTime')}">
-                        Please choose a planned departure time from now until the selected activity starts.
+                        [[#{html.please.choose.a.planned.departure.time.from.now.until.the.2}]]
+                    </div>
+                </div>
+
+                <div class="kdg-form-row">
+                    <label for="estimatedArrivalTime" class="kdg-label">
+                        <i class="bi bi-clock-history" aria-hidden="true"></i>
+                        <span>[[#{html.estimated.arrival.time}]]</span>
+                    </label>
+                    <div class="kdg-input-shell">
+                        <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                        <input type="datetime-local"
+                               id="estimatedArrivalTime"
+                               name="estimatedArrivalTime"
+                               class="kdg-control"
+                               th:classappend="${#fields.hasErrors('estimatedArrivalTime')} ? ' is-invalid'"
+                               th:value="${travelGroupForm.estimatedArrivalTime != null ? #temporals.format(travelGroupForm.estimatedArrivalTime, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                               th:min="${minDepartureTime}"
+                               th:max="${maxDepartureTime}">
+                    </div>
+                    <div class="kdg-help">
+                        [[#{html.optional.but.useful.for.checking.whether.the.group.arrives.before}]]
+                    </div>
+                    <div class="invalid-feedback"
+                         th:if="${#fields.hasErrors('estimatedArrivalTime')}"
+                         th:errors="*{estimatedArrivalTime}">
+                        [[#{html.please.choose.an.estimated.arrival.time.before.the.activity.starts}]]
                     </div>
                 </div>
 
@@ -178,26 +206,26 @@
                 <div class="kdg-map-picker">
                     <div class="kdg-map-picker__header">
                         <div>
-                            <p class="kdg-map-picker__eyebrow">Meeting point</p>
-                            <h2>Pick a location on the map</h2>
+                            <p class="kdg-map-picker__eyebrow">[[#{html.meeting.point}]]</p>
+                            <h2>[[#{html.pick.a.location.on.the.map}]]</h2>
                         </div>
                         <button type="button"
                                 class="kdg-button kdg-button--secondary kdg-map-picker__activity-button"
                                 id="useActivityLocation">
                             <i class="bi bi-crosshair" aria-hidden="true"></i>
-                            <span>Use activity location</span>
+                            <span>[[#{html.use.activity.location}]]</span>
                         </button>
                     </div>
                     <div id="travelgroup-location-map" class="kdg-map-picker__map"></div>
                     <p class="kdg-help">
-                        Click the map or type an address. The meeting location field will update automatically.
+                        [[#{html.click.the.map.or.type.an.address.the.departure.location}]]
                     </p>
                 </div>
 
                 <div class="kdg-form-row">
                     <label for="mode" class="kdg-label">
                         <i class="bi bi-signpost-split" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.form.mode}">Transport Mode</span>
+                        <span th:text="#{travelgroup.form.mode}">[[#{html.transport.mode.2}]]</span>
                     </label>
                     <div class="kdg-input-shell">
                         <i class="bi bi-car-front" id="transportModeIcon" aria-hidden="true"></i>
@@ -211,64 +239,64 @@
                                     disabled
                                     selected
                                     th:text="#{travelgroup.form.mode.placeholder}">
-                                Select a transport mode
+                                [[#{html.select.a.transport.mode}]]
                             </option>
                             <option value="CAR"
                                     th:value="CAR"
                                     data-icon="bi-car-front"
                                     th:text="#{transportMode.car}">
-                                Car
+                                [[#{html.car}]]
                             </option>
                             <option value="CARPOOL"
                                     th:value="CARPOOL"
                                     data-icon="bi-people"
                                     th:text="#{transportMode.carpool}">
-                                Carpool
+                                [[#{html.carpool}]]
                             </option>
                             <option value="BIKE"
                                     th:value="BIKE"
                                     data-icon="bi-bicycle"
                                     th:text="#{transportMode.bike}">
-                                Bike
+                                [[#{html.bike}]]
                             </option>
                             <option value="WALK"
                                     th:value="WALK"
                                     data-icon="bi-person-walking"
                                     th:text="#{transportMode.walk}">
-                                Walk
+                                [[#{html.walk}]]
                             </option>
                             <option value="PUBLIC_TRANSPORT"
                                     th:value="PUBLIC_TRANSPORT"
                                     data-icon="bi-bus-front"
                                     th:text="#{transportMode.publicTransport}">
-                                Public Transport
+                                [[#{html.public.transport.2}]]
                             </option>
                         </select>
                     </div>
                     <div class="invalid-feedback"
                          th:text="#{travelgroup.form.mode.invalid}">
-                        Please select a transport mode.
+                        [[#{html.please.select.a.transport.mode}]]
                     </div>
-                    <div class="transport-mode-options" aria-label="Transport mode quick choices">
+                    <div class="transport-mode-options" aria-label="Transport mode quick choices" th:aria-label="#{html.transport.mode.quick.choices}">
                         <button type="button" class="transport-mode-option" data-mode="CAR">
                             <i class="bi bi-car-front" aria-hidden="true"></i>
-                            <span>Car</span>
+                            <span>[[#{html.car}]]</span>
                         </button>
                         <button type="button" class="transport-mode-option" data-mode="CARPOOL">
                             <i class="bi bi-people" aria-hidden="true"></i>
-                            <span>Carpool</span>
+                            <span>[[#{html.carpool}]]</span>
                         </button>
                         <button type="button" class="transport-mode-option" data-mode="BIKE">
                             <i class="bi bi-bicycle" aria-hidden="true"></i>
-                            <span>Bike</span>
+                            <span>[[#{html.bike}]]</span>
                         </button>
                         <button type="button" class="transport-mode-option" data-mode="WALK">
                             <i class="bi bi-person-walking" aria-hidden="true"></i>
-                            <span>Walk</span>
+                            <span>[[#{html.walk}]]</span>
                         </button>
                         <button type="button" class="transport-mode-option" data-mode="PUBLIC_TRANSPORT">
                             <i class="bi bi-bus-front" aria-hidden="true"></i>
-                            <span>Public Transport</span>
+                            <span>[[#{html.public.transport.2}]]</span>
                         </button>
                     </div>
                 </div>
@@ -278,13 +306,13 @@
                        href="travelgroups.html"
                        class="kdg-button kdg-button--secondary">
                         <i class="bi bi-x-lg" aria-hidden="true"></i>
-                        <span th:text="#{common.cancel}">Cancel</span>
+                        <span th:text="#{common.cancel}">[[#{html.cancel}]]</span>
                     </a>
 
                     <button type="submit"
                             class="kdg-button">
                         <i class="bi bi-plus-circle" aria-hidden="true"></i>
-                        <span th:text="#{travelgroup.create.submit}">Create Travel Group</span>
+                        <span th:text="#{travelgroup.create.submit}">[[#{html.create.travel.group}]]</span>
                     </button>
                 </div>
             </form>
@@ -294,8 +322,6 @@
     <footer th:replace="~{fragments/footer :: appFooter}"></footer>
 </div>
 
-<script src="/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
-        th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
 <script defer
         src="../static/js/travelgroup-map.js"
         th:src="@{/js/travelgroup-map.js}"></script>
