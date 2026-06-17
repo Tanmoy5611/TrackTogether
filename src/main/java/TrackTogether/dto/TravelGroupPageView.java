@@ -1,6 +1,7 @@
 package TrackTogether.dto;
 
 import TrackTogether.domain.TravelGroup;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 // View data used by the travel group overview page
+@Getter
 public class TravelGroupPageView {
     private final List<TravelGroup> groups;
     private final List<TravelGroup> myTravelGroups;
@@ -49,51 +51,4 @@ public class TravelGroupPageView {
         this.pendingJoinRequestCounts = pendingJoinRequestCounts;
     }
 
-    public List<TravelGroup> getGroups() {
-        return groups;
-    }
-
-    public List<TravelGroup> getMyTravelGroups() {
-        return myTravelGroups;
-    }
-
-    public List<TravelGroup> getExploreTravelGroups() {
-        return exploreTravelGroups;
-    }
-
-    public Set<UUID> getJoinedGroupIds() {
-        return joinedGroupIds;
-    }
-
-    public Set<UUID> getOwnedGroupIds() {
-        return ownedGroupIds;
-    }
-
-    public Set<UUID> getDeletableOwnedGroupIds() {
-        return deletableOwnedGroupIds;
-    }
-
-    public Map<UUID, Long> getMemberCounts() {
-        return memberCounts;
-    }
-
-    public boolean isJoinApprovalRequired() {
-        return joinApprovalRequired;
-    }
-
-    public String getOwnerCannotLeaveMessage() {
-        return ownerCannotLeaveMessage;
-    }
-
-    public Set<UUID> getPendingJoinRequestGroupIds() {
-        return pendingJoinRequestGroupIds;
-    }
-
-    public Set<UUID> getRejectedJoinRequestGroupIds() {
-        return rejectedJoinRequestGroupIds;
-    }
-
-    public Map<UUID, Long> getPendingJoinRequestCounts() {
-        return pendingJoinRequestCounts;
-    }
 }

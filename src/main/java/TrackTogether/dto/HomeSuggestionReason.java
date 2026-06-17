@@ -1,18 +1,17 @@
 package TrackTogether.dto;
 
+import lombok.Getter;
+
 // Enum used to avoid hardcoded suggestion reason strings in the service
+@Getter
 public enum HomeSuggestionReason {
-    SAME_LOCATION("Same location"),
-    SAME_TIME("Same time"),
-    UPCOMING_THIS_WEEK("Upcoming this week");
+    SAME_LOCATION("home.reason.SAME_LOCATION"),
+    SAME_TIME("home.reason.SAME_TIME"),
+    UPCOMING_THIS_WEEK("home.reason.UPCOMING_THIS_WEEK");
 
-    private final String label;
+    private final String messageKey;
 
-    HomeSuggestionReason(String label) {
-        this.label = label;
-    }
-
-    public String getLabel() {
-        return label;
+    HomeSuggestionReason(String messageKey) {
+        this.messageKey = messageKey;
     }
 }

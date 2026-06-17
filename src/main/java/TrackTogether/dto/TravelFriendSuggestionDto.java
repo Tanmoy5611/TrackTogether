@@ -15,6 +15,8 @@ public class TravelFriendSuggestionDto {
     private final String departureLocation;
     private final LocalDateTime departureTime;
     private final TransportMode transportMode;
+    private final long currentMemberCount;
+    private final int maxMembers;
     private final long availableSpots;
     private final int score;
     private final List<String> matchReasons;
@@ -25,7 +27,8 @@ public class TravelFriendSuggestionDto {
                                      String departureLocation,
                                      LocalDateTime departureTime,
                                      TransportMode transportMode,
-                                     long availableSpots,
+                                     long currentMemberCount,
+                                     int maxMembers,
                                      int score,
                                      List<String> matchReasons) {
         this.groupId = groupId;
@@ -34,7 +37,9 @@ public class TravelFriendSuggestionDto {
         this.departureLocation = departureLocation;
         this.departureTime = departureTime;
         this.transportMode = transportMode;
-        this.availableSpots = availableSpots;
+        this.currentMemberCount = currentMemberCount;
+        this.maxMembers = maxMembers;
+        this.availableSpots = maxMembers - currentMemberCount;
         this.score = score;
         this.matchReasons = List.copyOf(matchReasons);
     }
@@ -61,6 +66,14 @@ public class TravelFriendSuggestionDto {
 
     public TransportMode getTransportMode() {
         return transportMode;
+    }
+
+    public long getCurrentMemberCount() {
+        return currentMemberCount;
+    }
+
+    public int getMaxMembers() {
+        return maxMembers;
     }
 
     public long getAvailableSpots() {
